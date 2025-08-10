@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
   Heart,
   Shield,
@@ -37,6 +39,7 @@ const BloodChainLanding = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const canvasRef = useRef(null);
 
   // Handle scroll for navbar
   useEffect(() => {
@@ -51,6 +54,62 @@ const BloodChainLanding = () => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  // 3D Interactive Blood Drop
+  useEffect(() => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvasRef.current,
+      alpha: true,
+    });
+    renderer.setSize(300, 300);
+
+    // Teardrop shape using LatheGeometry
+    const points = [];
+    for (let i = 0; i < 20; i++) {
+      const x = Math.sin((i * Math.PI) / 20) * (1 - i / 20) * 1.5; // Taper to point
+      const y = (i - 10) * 0.2;
+      points.push(new THREE.Vector2(x, y));
+    }
+    const geometry = new THREE.LatheGeometry(points, 32);
+    const material = new THREE.MeshPhongMaterial({
+      color: 0xb91c1c,
+      shininess: 100,
+      side: THREE.DoubleSide,
+    });
+    const bloodDrop = new THREE.Mesh(geometry, material);
+    scene.add(bloodDrop);
+
+    // Improved Lighting
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+    const ambientLight = new THREE.AmbientLight(0x404040, 2);
+    scene.add(ambientLight);
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+    scene.add(hemisphereLight);
+
+    camera.position.z = 5;
+
+    // Orbit Controls for interaction
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableZoom = false;
+    controls.enablePan = false;
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    return () => {
+      renderer.dispose();
+      controls.dispose();
+    };
   }, []);
 
   const stats = [
@@ -151,6 +210,19 @@ const BloodChainLanding = () => {
               0 0 60px rgba(185, 28, 28, 0.4);
           }
         }
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 1s ease-out forwards;
+        }
         .animate-pulse-glow {
           animation: pulse-glow 2s ease-in-out infinite;
         }
@@ -167,7 +239,7 @@ const BloodChainLanding = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-700 to-red-800 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-pink-600 rounded-lg flex items-center justify-center">
                 <Heart className="w-6 h-6 text-white" />
               </div>
               <span
@@ -183,14 +255,14 @@ const BloodChainLanding = () => {
                 <a
                   key={item}
                   href={`#${item.toLowerCase()}`}
-                  className={`font-medium hover:text-red-700 transition-colors ${
+                  className={`font-medium hover:text-red-600 transition-colors ${
                     scrollY > 50 ? "text-gray-700" : "text-white"
                   }`}
                 >
                   {item}
                 </a>
               ))}
-              <button className="bg-gradient-to-r from-red-700 to-red-800 text-white px-6 py-2 rounded-full font-semibold hover:from-red-800 hover:to-red-900 transform hover:scale-105 transition-all duration-300 animate-pulse-glow">
+              <button className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-300 animate-pulse-glow">
                 Launch App
               </button>
             </div>
@@ -209,10 +281,10 @@ const BloodChainLanding = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br  from-red-600 to-pink-600 flex items-center overflow-hidden">
+      <section className="relative min-h-screen bg-gradient-to-br from-red-600 to-pink-600 flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center">
-          <div className="text-center md:text-left text-white md:w-1/2">
+          <div className="text-center md:text-left text-white md:w-1/2 animate-fade-in">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
               Empowering
               <br />
@@ -236,44 +308,28 @@ const BloodChainLanding = () => {
               for donors, hospitals, and blood banks.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center mb-12">
-              <button className="group bg-white text-red-700 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2 animate-pulse-glow">
+              <button className="group bg-white text-red-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2 animate-pulse-glow">
                 <span>Join as Donor</span>
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="group border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-700 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2">
+              <button className="group border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2">
                 <Play className="w-5 h-5" />
                 <span>Watch Demo</span>
               </button>
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center">
-            <svg
-              width="300"
-              height="300"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 2C8.13401 2 5 5.13401 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13401 15.866 2 12 2Z"
-                fill="#B91C1C"
-              />
-            </svg>
+            <canvas ref={canvasRef} className="w-[300px] h-[300px]" />
           </div>
         </div>
-        {/* <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
-          </div>
-        </div> */}
       </section>
 
       {/* Features Section */}
       <section id="features" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-              Why <span className="text-red-700">BloodChain</span>?
+              Why <span className="text-red-600">BloodChain</span>?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Cutting-edge blockchain technology to ensure trust, transparency,
@@ -284,7 +340,8 @@ const BloodChainLanding = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden"
+                className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden animate-fade-in"
+                style={{ animationDelay: `${index * 0.2}s` }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div
@@ -296,13 +353,13 @@ const BloodChainLanding = () => {
                 >
                   <feature.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4 group-hover:text-red-700 transition-colors">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 group-hover:text-red-600 transition-colors">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
                   {feature.description}
                 </p>
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-700 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </div>
             ))}
           </div>
@@ -312,9 +369,9 @@ const BloodChainLanding = () => {
       {/* Technology Stack */}
       <section id="technology" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-              Powered by <span className="text-red-700">Innovation</span>
+              Powered by <span className="text-red-600">Innovation</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Built on secure, cutting-edge technologies for a reliable blood
@@ -325,7 +382,8 @@ const BloodChainLanding = () => {
             {techStack.map((tech, index) => (
               <div
                 key={index}
-                className="group text-center p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300"
+                className="group text-center p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <tech.icon
                   className={`${tech.color} text-4xl mb-2 group-hover:scale-110 transition-transform`}
@@ -334,13 +392,13 @@ const BloodChainLanding = () => {
               </div>
             ))}
           </div>
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 md:p-12 text-white">
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 md:p-12 text-white animate-fade-in">
             <h3 className="text-2xl md:text-3xl font-bold text-center mb-8">
               System Architecture
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-red-700 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
                   <Database className="w-10 h-10" />
                 </div>
                 <h4 className="font-bold mb-2">Blockchain Layer</h4>
@@ -349,7 +407,7 @@ const BloodChainLanding = () => {
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-red-700 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
                   <Globe className="w-10 h-10" />
                 </div>
                 <h4 className="font-bold mb-2">Storage Layer</h4>
@@ -358,7 +416,7 @@ const BloodChainLanding = () => {
                 </p>
               </div>
               <div className="text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-red-700 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
                   <Shield className="w-10 h-10" />
                 </div>
                 <h4 className="font-bold mb-2">Application Layer</h4>
@@ -374,26 +432,29 @@ const BloodChainLanding = () => {
       {/* Testimonials */}
       <section className="py-20 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Trusted by{" "}
               <span className="text-red-400">Healthcare Leaders</span>
             </h2>
           </div>
-          <div className="relative max-w-4xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 md:p-12 text-center">
-              <div className="text-6xl mb-6">
-                {testimonials[activeTestimonial].avatar}
-              </div>
-              <blockquote className="text-xl md:text-2xl mb-6 italic">
-                "{testimonials[activeTestimonial].content}"
-              </blockquote>
-              <div className="font-bold text-xl">
-                {testimonials[activeTestimonial].name}
-              </div>
-              <div className="text-red-400">
-                {testimonials[activeTestimonial].role}
-              </div>
+          <div className="relative max-w-4xl mx-auto overflow-hidden animate-fade-in">
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${activeTestimonial * 100}%)` }}
+            >
+              {testimonials.map((test, index) => (
+                <div key={index} className="min-w-full flex justify-center">
+                  <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 md:p-12 text-center max-w-md">
+                    <div className="text-6xl mb-6">{test.avatar}</div>
+                    <blockquote className="text-xl md:text-2xl mb-6 italic">
+                      "{test.content}"
+                    </blockquote>
+                    <div className="font-bold text-xl">{test.name}</div>
+                    <div className="text-red-400">{test.role}</div>
+                  </div>
+                </div>
+              ))}
             </div>
             <div className="flex justify-center mt-8 space-x-2">
               {testimonials.map((_, index) => (
@@ -413,8 +474,8 @@ const BloodChainLanding = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-red-700 to-red-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-20 bg-gradient-to-r from-red-600 to-pink-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Join the Life-Saving Revolution
           </h2>
@@ -423,11 +484,11 @@ const BloodChainLanding = () => {
             blood management.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-red-700 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow">
+            <button className="bg-white text-red-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow">
               <Heart className="w-6 h-6" />
               <span>Become a Donor</span>
             </button>
-            <button className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-700 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
+            <button className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
               <Building2 className="w-6 h-6" />
               <span>Partner with Us</span>
             </button>
@@ -441,7 +502,7 @@ const BloodChainLanding = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Heart className="w-8 h-8 text-red-700" />
+                <Heart className="w-8 h-8 text-red-600" />
                 <span className="text-2xl font-bold">BloodChain</span>
               </div>
               <p className="text-gray-400">
