@@ -65,13 +65,13 @@ const BloodChainLanding = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.6, 2000);
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
 
     // Responsive canvas size
     const updateCanvasSize = () => {
       const width =
-        window.innerWidth < 640 ? 200 : window.innerWidth < 1024 ? 300 : 400;
+        window.innerWidth < 640 ? 200 : window.innerWidth < 1024 ? 300 : 900;
       const height = width;
       renderer.setSize(width, height);
       camera.aspect = 1;
@@ -467,7 +467,7 @@ const BloodChainLanding = () => {
           <div className="lg:w-1/2 flex justify-center">
             <canvas
               ref={canvasRef}
-              className="w-[200px] sm:w-[300px] lg:w-[400px] h-[200px] sm:h-[300px] lg:h-[400px]"
+              className="w-[600px] sm:w-[300px] lg:w-[400px] h-[600px] sm:h-[300px] lg:h-[400px]"
             />
           </div>
         </div>
