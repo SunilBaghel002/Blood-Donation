@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
-import * as THREE from "three";
+import React, { useState, useEffect } from "react";
 import {
   Heart,
   Shield,
@@ -23,12 +22,21 @@ import {
   Zap,
   TrendingUp,
 } from "lucide-react";
+import {
+  SiReact,
+  SiNodedotjs,
+  SiMongodb,
+  SiExpress,
+  SiEthereum,
+  SiSolidity,
+  SiIpfs,
+  SiWeb3Dotjs,
+} from "react-icons/si";
 
 const BloodChainLanding = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const canvasRef = useRef(null);
 
   // Handle scroll for navbar
   useEffect(() => {
@@ -43,47 +51,6 @@ const BloodChainLanding = () => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
-
-  // 3D Blood Drop Animation
-  useEffect(() => {
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      alpha: true,
-    });
-    renderer.setSize(300, 300);
-
-    // Create a blood drop shape (approximated as a sphere with scaling)
-    const geometry = new THREE.SphereGeometry(1, 32, 32);
-    const material = new THREE.MeshPhongMaterial({
-      color: 0xb91c1c,
-      shininess: 100,
-    });
-    const bloodDrop = new THREE.Mesh(geometry, material);
-    bloodDrop.scale.set(1, 1.5, 1); // Elongate to resemble a drop
-    scene.add(bloodDrop);
-
-    // Lighting
-    const light = new THREE.PointLight(0xffffff, 1, 100);
-    light.position.set(5, 5, 5);
-    scene.add(light);
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    scene.add(ambientLight);
-
-    camera.position.z = 3;
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-      bloodDrop.rotation.y += 0.01;
-      bloodDrop.position.y = Math.sin(Date.now() * 0.001) * 0.2;
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => renderer.dispose();
   }, []);
 
   const stats = [
@@ -161,37 +128,19 @@ const BloodChainLanding = () => {
   ];
 
   const techStack = [
-    { name: "React", color: "text-blue-500" },
-    { name: "Node.js", color: "text-green-500" },
-    { name: "MongoDB", color: "text-green-600" },
-    { name: "Express", color: "text-gray-600" },
-    { name: "Ethereum", color: "text-purple-500" },
-    { name: "Solidity", color: "text-blue-600" },
-    { name: "IPFS", color: "text-orange-500" },
-    { name: "Web3", color: "text-yellow-500" },
+    { name: "React", color: "text-blue-500", icon: SiReact },
+    { name: "Node.js", color: "text-green-500", icon: SiNodedotjs },
+    { name: "MongoDB", color: "text-green-600", icon: SiMongodb },
+    { name: "Express", color: "text-gray-600", icon: SiExpress },
+    { name: "Ethereum", color: "text-purple-500", icon: SiEthereum },
+    { name: "Solidity", color: "text-blue-600", icon: SiSolidity },
+    { name: "IPFS", color: "text-orange-500", icon: SiIpfs },
+    { name: "Web3", color: "text-yellow-500", icon: SiWeb3Dotjs },
   ];
-
-  const FloatingCard = ({ children, delay = 0 }) => (
-    <div
-      className="transform hover:scale-105 transition-all duration-500 ease-out"
-      style={{ animation: `float 6s ease-in-out infinite ${delay}s` }}
-    >
-      {children}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
       <style jsx>{`
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
         @keyframes pulse-glow {
           0%,
           100% {
@@ -202,21 +151,8 @@ const BloodChainLanding = () => {
               0 0 60px rgba(185, 28, 28, 0.4);
           }
         }
-        @keyframes gradient-shift {
-          0%,
-          100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
         .animate-pulse-glow {
           animation: pulse-glow 2s ease-in-out infinite;
-        }
-        .animate-gradient {
-          background-size: 200% 200%;
-          animation: gradient-shift 3s ease infinite;
         }
       `}</style>
 
@@ -273,60 +209,63 @@ const BloodChainLanding = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-red-700 to-red-800 animate-gradient flex items-center overflow-hidden">
+      <section className="relative min-h-screen bg-gradient-to-br  from-red-600 to-pink-600 flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center">
           <div className="text-center md:text-left text-white md:w-1/2">
-            <FloatingCard>
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                Empowering
-                <br />
-                <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent animate-gradient">
-                  Life-Saving Trust
-                </span>
-              </h1>
-            </FloatingCard>
-            <FloatingCard delay={0.2}>
-              <p className="text-xl md:text-2xl mb-8 max-w-3xl opacity-90">
-                Blockchain-powered blood management ensuring{" "}
-                <span className="font-semibold text-amber-300">
-                  transparency
-                </span>
-                ,
-                <span className="font-semibold text-amber-300">
-                  {" "}
-                  traceability
-                </span>
-                , and
-                <span className="font-semibold text-amber-300">
-                  {" "}
-                  security
-                </span>{" "}
-                for donors, hospitals, and blood banks.
-              </p>
-            </FloatingCard>
-            <FloatingCard delay={0.4}>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center mb-12">
-                <button className="group bg-white text-red-700 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2 animate-pulse-glow">
-                  <span>Join as Donor</span>
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button className="group border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-700 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2">
-                  <Play className="w-5 h-5" />
-                  <span>Watch Demo</span>
-                </button>
-              </div>
-            </FloatingCard>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+              Empowering
+              <br />
+              <span className="bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
+                Life-Saving Trust
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl opacity-90">
+              Blockchain-powered blood management ensuring{" "}
+              <span className="font-semibold text-amber-300">transparency</span>
+              ,
+              <span className="font-semibold text-amber-300">
+                {" "}
+                traceability
+              </span>
+              , and
+              <span className="font-semibold text-amber-300">
+                {" "}
+                security
+              </span>{" "}
+              for donors, hospitals, and blood banks.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center mb-12">
+              <button className="group bg-white text-red-700 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2 animate-pulse-glow">
+                <span>Join as Donor</span>
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button className="group border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-700 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2">
+                <Play className="w-5 h-5" />
+                <span>Watch Demo</span>
+              </button>
+            </div>
           </div>
           <div className="md:w-1/2 flex justify-center">
-            <canvas ref={canvasRef} className="w-[300px] h-[300px]" />
+            <svg
+              width="300"
+              height="300"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2C8.13401 2 5 5.13401 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13401 15.866 2 12 2Z"
+                fill="#B91C1C"
+              />
+            </svg>
           </div>
         </div>
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        {/* <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
           <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
             <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
           </div>
-        </div>
+        </div> */}
       </section>
 
       {/* Features Section */}
@@ -343,27 +282,28 @@ const BloodChainLanding = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <FloatingCard key={index} delay={index * 0.1}>
-                <div className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden">
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-10`}
-                    ></div>
-                  </div>
+              <div
+                key={index}
+                className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden"
+              >
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div
-                    className={`relative w-16 h-16 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <feature.icon className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-4 group-hover:text-red-700 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {feature.description}
-                  </p>
-                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-700 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-10`}
+                  ></div>
                 </div>
-              </FloatingCard>
+                <div
+                  className={`relative w-16 h-16 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                >
+                  <feature.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 group-hover:text-red-700 transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {feature.description}
+                </p>
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-700 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              </div>
             ))}
           </div>
         </div>
@@ -383,16 +323,15 @@ const BloodChainLanding = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
             {techStack.map((tech, index) => (
-              <FloatingCard key={index} delay={index * 0.05}>
-                <div className="group text-center p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300">
-                  <div
-                    className={`text-4xl font-bold ${tech.color} mb-2 group-hover:scale-110 transition-transform`}
-                  >
-                    {tech.name.charAt(0)}
-                  </div>
-                  <div className="font-semibold text-gray-800">{tech.name}</div>
-                </div>
-              </FloatingCard>
+              <div
+                key={index}
+                className="group text-center p-6 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300"
+              >
+                <tech.icon
+                  className={`${tech.color} text-4xl mb-2 group-hover:scale-110 transition-transform`}
+                />
+                <div className="font-semibold text-gray-800">{tech.name}</div>
+              </div>
             ))}
           </div>
           <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 md:p-12 text-white">
@@ -476,25 +415,23 @@ const BloodChainLanding = () => {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-red-700 to-red-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <FloatingCard>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Join the Life-Saving Revolution
-            </h2>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
-              Empower donors, hospitals, and blood banks with secure,
-              transparent blood management.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white text-red-700 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow">
-                <Heart className="w-6 h-6" />
-                <span>Become a Donor</span>
-              </button>
-              <button className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-700 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
-                <Building2 className="w-6 h-6" />
-                <span>Partner with Us</span>
-              </button>
-            </div>
-          </FloatingCard>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Join the Life-Saving Revolution
+          </h2>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
+            Empower donors, hospitals, and blood banks with secure, transparent
+            blood management.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-white text-red-700 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow">
+              <Heart className="w-6 h-6" />
+              <span>Become a Donor</span>
+            </button>
+            <button className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-700 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
+              <Building2 className="w-6 h-6" />
+              <span>Partner with Us</span>
+            </button>
+          </div>
         </div>
       </section>
 
