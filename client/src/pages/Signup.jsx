@@ -28,7 +28,7 @@ const Signup = () => {
           </button>
         </form>
         <div className="mt-6 text-center">
-          <p>Or sign up with</p>
+          <p>Or sign up with Google</p>
           <button className="mt-2 bg-black text-white py-2 px-4 rounded w-full hover:bg-gray-900 transition">Sign up with X</button>
         </div>
         <p className="text-center mt-4">
