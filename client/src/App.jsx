@@ -1,6 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import BloodChainLanding from "./pages/landing";
-import BloodManagementSystem from "./pages/start";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import BloodChainLanding from './pages/landing';
+import BloodManagementSystem from './pages/start';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 function App() {
   return (
@@ -8,6 +10,8 @@ function App() {
       <Routes>
         <Route path="/" element={<BloodChainLanding />} />
         <Route path="/dashboard" element={<BloodManagementSystem />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
       </Routes>
     </Router>
   );
