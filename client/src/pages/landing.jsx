@@ -23,6 +23,10 @@ import {
   Star,
   Zap,
   TrendingUp,
+  User,
+  Hospital,
+  Banknote,
+  UserCheck,
 } from "lucide-react";
 import {
   SiReact,
@@ -112,11 +116,27 @@ const BloodChainLanding = () => {
     };
   }, []);
 
-  const stats = [
-    { value: "1,247", label: "Lives Saved", icon: Heart },
-    { value: "23", label: "Blood Banks", icon: Building2 },
-    { value: "100%", label: "Transparency", icon: Shield },
-    { value: "3,456", label: "Blockchain TXs", icon: Database },
+  const impactStats = [
+    { value: "118M+", label: "Global Blood Donations Annually (WHO)", icon: Droplets },
+    { value: "40%", label: "Donations from 16% of World Population", icon: Globe },
+    { value: "Every 2s", label: "Someone Needs Blood Worldwide", icon: Clock },
+    { value: "$1.4B", label: "Blockchain Healthcare Market (2024)", icon: TrendingUp },
+    { value: "34%", label: "CAGR for Blockchain in Healthcare", icon: Zap },
+  ];
+
+  const howItWorksSteps = [
+    { title: "Donor Registers", description: "Secure registration with blockchain verification." },
+    { title: "Blood Donation", description: "Event logged immutably on Ethereum." },
+    { title: "Inventory Update", description: "Blood banks track units in real-time." },
+    { title: "Hospital Request", description: "Verified transfers with smart contracts." },
+    { title: "Trace & Use", description: "Full traceability from donor to recipient." },
+  ];
+
+  const roleBenefits = [
+    { role: "Donors", icon: User, benefits: ["Track your impact", "Get alerts for needs", "Earn rewards via NFTs"] },
+    { role: "Hospitals", icon: Hospital, benefits: ["Verify blood authenticity", "Request units seamlessly", "Access real-time inventory"] },
+    { role: "Blood Banks", icon: Banknote, benefits: ["Manage inventory transparently", "Automate validations", "Reduce waste with AI predictions"] },
+    { role: "Admins", icon: UserCheck, benefits: ["Oversee permissions", "Monitor system health", "Ensure compliance"] },
   ];
 
   const features = [
@@ -226,6 +246,12 @@ const BloodChainLanding = () => {
         .animate-pulse-glow {
           animation: pulse-glow 2s ease-in-out infinite;
         }
+          .parallax-bg {
+          background-attachment: fixed;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-size: cover;
+        }
       `}</style>
 
       {/* Navigation */}
@@ -281,7 +307,7 @@ const BloodChainLanding = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-red-600 to-pink-600 flex items-center overflow-hidden">
+      <section className="relative min-h-screen bg-gradient-to-br from-red-600 to-pink-600 flex items-center overflow-hidden parallax-bg" style={{ backgroundImage: "url('path/to/subtle-blood-pattern.jpg')" }}>
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center">
           <div className="text-center md:text-left text-white md:w-1/2 animate-fade-in">
@@ -320,6 +346,102 @@ const BloodChainLanding = () => {
           </div>
           <div className="md:w-1/2 flex justify-center">
             <canvas ref={canvasRef} className="w-[300px] h-[300px]" />
+          </div>
+        </div>
+        <p className="text-lg mt-4">Join 118M+ donors saving lives with blockchain transparency.</p>
+      </section>
+
+      {/* New Impact Stats Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+              Our <span className="text-red-600">Global Impact</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              BloodChain addresses critical shortages and inefficiencies in the global blood supply chain.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+            {impactStats.map((stat, index) => (
+              <div key={index} className="text-center p-6 bg-gray-50 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
+                <stat.icon className="w-12 h-12 mx-auto mb-4 text-red-600" />
+                <div className="text-3xl font-bold text-gray-800 mb-2">{stat.value}</div>
+                <div className="text-gray-600">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* New Impact Stats Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+              Our <span className="text-red-600">Global Impact</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              BloodChain addresses critical shortages and inefficiencies in the global blood supply chain.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+            {impactStats.map((stat, index) => (
+              <div key={index} className="text-center p-6 bg-gray-50 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
+                <stat.icon className="w-12 h-12 mx-auto mb-4 text-red-600" />
+                <div className="text-3xl font-bold text-gray-800 mb-2">{stat.value}</div>
+                <div className="text-gray-600">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* New How It Works Section */}
+      <section id="how-it-works" className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+              How <span className="text-red-600">BloodChain</span> Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              A seamless, decentralized process ensuring safety and efficiency.
+            </p>
+          </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            {howItWorksSteps.map((step, index) => (
+              <div key={index} className="text-center p-6 bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
+                <div className="text-2xl font-bold mb-2">{index + 1}. {step.title}</div>
+                <p className="text-gray-600">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* New Benefits by Role Section */}
+      <section id="benefits" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+              Benefits for <span className="text-red-600">Every Role</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Tailored features for donors, hospitals, blood banks, and admins.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {roleBenefits.map((role, index) => (
+              <div key={index} className="p-6 bg-gray-50 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
+                <role.icon className="w-12 h-12 mx-auto mb-4 text-red-600" />
+                <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">{role.role}</h3>
+                <ul className="list-disc list-inside text-gray-600">
+                  {role.benefits.map((benefit, i) => (
+                    <li key={i}>{benefit}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -540,7 +662,7 @@ const BloodChainLanding = () => {
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
             <p>
               &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for
-              humanity.
+              humanity. <a href="/privacy" className="hover:text-white">Privacy Policy</a> | <a href="/terms" className="hover:text-white">Terms of Service</a>
             </p>
           </div>
         </div>
