@@ -59,12 +59,12 @@ const BloodChainLanding = () => {
   // 3D Interactive Blood Drop
   useEffect(() => {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.9, 2000);
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
       alpha: true,
     });
-    renderer.setSize(300, 300);
+    renderer.setSize(900, 900);
 
     // Teardrop shape using LatheGeometry
     const points = [];
@@ -76,7 +76,7 @@ const BloodChainLanding = () => {
     const geometry = new THREE.LatheGeometry(points, 32);
     const material = new THREE.MeshPhongMaterial({
       color: 0xb91c1c,
-      shininess: 100,
+      shininess: 300,
       side: THREE.DoubleSide,
     });
     const bloodDrop = new THREE.Mesh(geometry, material);
