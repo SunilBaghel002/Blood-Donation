@@ -282,7 +282,7 @@ const Signup = () => {
                       value={formData.firstName}
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                        errors.firstName ? "border-red-500" : "border-gray-200"
+                        errors.firstName ? "border-red-500" : "border-gray-200 outline-0"
                       }`}
                       placeholder=" "
                       aria-label="First Name"
@@ -306,7 +306,7 @@ const Signup = () => {
                       value={formData.lastName}
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                        errors.lastName ? "border-red-500" : "border-gray-200"
+                        errors.lastName ? "border-red-500" : "border-gray-200 outline-0"
                       }`}
                       placeholder=" "
                       aria-label="Last Name"
@@ -331,7 +331,7 @@ const Signup = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors.email ? "border-red-500" : "border-gray-200"
+                      errors.email ? "border-red-500" : "border-gray-200 outline-0"
                     }`}
                     placeholder=" "
                     aria-label="Email"
@@ -357,7 +357,7 @@ const Signup = () => {
                   value={formData.otp}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                    errors.otp ? "border-red-500" : "border-gray-200"
+                    errors.otp ? "border-red-500" : "border-gray-200 outline-0"
                   }`}
                   placeholder=" "
                   aria-label="OTP"
@@ -388,7 +388,7 @@ const Signup = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors.password ? "border-red-500" : "border-gray-200"
+                      errors.password ? "border-red-500" : "border-gray-200 outline-0"
                     }`}
                     placeholder=" "
                     aria-label="Password"
@@ -425,7 +425,7 @@ const Signup = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-0 transition-all ${
                       errors.confirmPassword
                         ? "border-red-500"
                         : "border-gray-200"
