@@ -7,9 +7,7 @@ import {
   EyeOff,
   Shield,
   CheckCircle,
-  ArrowUp,
-  Menu,
-  X,
+  ArrowLeft,
   ChevronRight,
   AlertCircle,
   Fingerprint,
@@ -17,8 +15,6 @@ import {
 } from "lucide-react";
 
 const Login = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [particles, setParticles] = useState([]);
@@ -28,13 +24,6 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
-
-  // Handle scroll for navbar and back-to-top
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Generate floating particles
   useEffect(() => {
@@ -181,107 +170,31 @@ const Login = () => {
           }
         }
         .floating-label {
-          transform: translateY(0);
+          top: 50%;
+          transform: translateY(-50%);
           transition: all 0.3s ease;
+          pointer-events: none;
         }
-        .input-filled .floating-label,
-        input:focus ~ .floating-label {
-          transform: translateY(-24px);
+        input:focus ~ .floating-label,
+        input:not(:placeholder-shown) ~ .floating-label {
+          top: -8px;
+          transform: translateY(0);
           font-size: 0.75rem;
           color: #f87171;
+          background: #fff;
+          padding: 0 4px;
         }
       `}</style>
 
-      {/* Navigation */}
-      <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          scrollY > 50
-            ? "bg-white/95 backdrop-blur-md shadow-md"
-            : "bg-transparent"
-        }`}
-        aria-label="Main navigation"
+      {/* Back to Home Button */}
+      <button
+        className="absolute top-6 left-6 flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors animate-fade-in"
+        onClick={() => (window.location.href = "/")}
+        aria-label="Back to Home"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-pink-500 rounded-lg flex items-center justify-center">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <span
-                className={`text-2xl font-bold ${
-                  scrollY > 50 ? "text-gray-900" : "text-white"
-                }`}
-              >
-                BloodChain
-              </span>
-            </div>
-            <div className="hidden md:flex items-center space-x-6">
-              {[
-                "Features",
-                "Technology",
-                "How It Works",
-                "Benefits",
-                "Contact",
-              ].map((item) => (
-                <a
-                  key={item}
-                  href={`/#${item.toLowerCase().replace(" ", "-")}`}
-                  className={`font-medium text-lg hover:text-red-500 transition-colors ${
-                    scrollY > 50 ? "text-gray-800" : "text-white"
-                  }`}
-                >
-                  {item}
-                </a>
-              ))}
-              <a
-                href="/signup"
-                className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 animate-pulse-glow"
-              >
-                Sign Up
-              </a>
-            </div>
-            <button
-              className="md:hidden text-white"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-            >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-          </div>
-          {isMenuOpen && (
-            <div className="md:hidden bg-white/95 backdrop-blur-md shadow-md">
-              <div className="flex flex-col space-y-4 py-4 px-6">
-                {[
-                  "Features",
-                  "Technology",
-                  "How It Works",
-                  "Benefits",
-                  "Contact",
-                ].map((item) => (
-                  <a
-                    key={item}
-                    href={`/#${item.toLowerCase().replace(" ", "-")}`}
-                    className="text-gray-800 font-medium hover:text-red-500 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item}
-                  </a>
-                ))}
-                <a
-                  href="/signup"
-                  className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold text-center hover:from-red-700 hover:to-pink-600 transition-all"
-                >
-                  Sign Up
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+        <ArrowLeft className="w-5 h-5" />
+        <span>Back to Home</span>
+      </button>
 
       {/* Login Section */}
       <section
@@ -313,12 +226,12 @@ const Login = () => {
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
                   errors.email ? "border-red-500" : "border-gray-200"
-                } ${formData.email ? "input-filled" : ""}`}
+                }`}
                 placeholder=" "
                 aria-label="Email"
                 required
               />
-              <label className="absolute left-10 top-3 text-gray-400 floating-label pointer-events-none">
+              <label className="absolute left-10 floating-label text-gray-400">
                 Email Address
               </label>
               {errors.email && (
@@ -337,12 +250,12 @@ const Login = () => {
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
                   errors.password ? "border-red-500" : "border-gray-200"
-                } ${formData.password ? "input-filled" : ""}`}
+                }`}
                 placeholder=" "
                 aria-label="Password"
                 required
               />
-              <label className="absolute left-10 top-3 text-gray-400 floating-label pointer-events-none">
+              <label className="absolute left-10 floating-label text-gray-400">
                 Password
               </label>
               <button
@@ -471,17 +384,6 @@ const Login = () => {
           </div>
         </div>
       </section>
-
-      {/* Back to Top Button */}
-      <button
-        className={`fixed bottom-6 right-6 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 ${
-          scrollY > 300 ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        aria-label="Scroll to top"
-      >
-        <ArrowUp className="w-6 h-6" />
-      </button>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8">
