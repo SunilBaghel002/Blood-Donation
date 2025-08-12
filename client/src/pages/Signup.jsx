@@ -215,7 +215,7 @@ const Signup = () => {
       `}</style>
 
       {/* Navigation */}
-      <nav
+      {/* <nav
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           scrollY > 50
             ? "bg-white/95 backdrop-blur-md shadow-md"
@@ -303,7 +303,7 @@ const Signup = () => {
             </div>
           )}
         </div>
-      </nav>
+      </nav> */}
 
       {/* Signup Section */}
       <section
