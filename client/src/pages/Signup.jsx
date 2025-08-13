@@ -70,8 +70,6 @@ const Signup = () => {
     } else if (step === 2) {
       if (!formData.otp) {
         newErrors.otp = "OTP is required";
-      } else if (!/^\d{6}$/.test(formData.otp)) {
-        newErrors.otp = "OTP must be a 6-digit number";
       }
     } else if (step === 3) {
       if (!formData.password) {
@@ -139,7 +137,7 @@ const Signup = () => {
         setSuccess(data.message);
         localStorage.setItem("token", data.token); // Store JWT
         setTimeout(() => {
-          window.location.href = "/login";
+          window.location.href = "/dashboard";
         }, 1500);
       }
     } catch (error) {
@@ -329,7 +327,7 @@ const Signup = () => {
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
                         errors.firstName
                           ? "border-red-500"
-                          : "border-gray-200 outline-0"
+                          : "border-red-300 outline-0"
                       }`}
                       placeholder=" "
                       aria-label="First Name"
@@ -355,7 +353,7 @@ const Signup = () => {
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
                         errors.lastName
                           ? "border-red-500"
-                          : "border-gray-200 outline-0"
+                          : "border-red-300 outline-0"
                       }`}
                       placeholder=" "
                       aria-label="Last Name"
@@ -382,7 +380,7 @@ const Signup = () => {
                     className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
                       errors.email
                         ? "border-red-500"
-                        : "border-gray-200 outline-0"
+                        : "border-red-300 outline-0"
                     }`}
                     placeholder=" "
                     aria-label="Email"
