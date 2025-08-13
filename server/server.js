@@ -15,7 +15,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'client', 'dist')));
+// app.use(express.static(path.join(__dirname, 'client', 'dist')));
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -280,9 +280,9 @@ app.post('/api/auth/connect-wallet', async (req, res) => {
 });
 
 // Serve Frontend
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+// });
 
 // Start Server
 const PORT = process.env.PORT || 5000;
