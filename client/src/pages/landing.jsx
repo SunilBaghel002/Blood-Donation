@@ -39,12 +39,14 @@ import {
   SiIpfs,
   SiWeb3Dotjs,
 } from "react-icons/si";
+import bloodCellsVideo from "../assets/blood-cells.mp4";
 
 const BloodChainLanding = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const canvasRef = useRef(null);
+  const videoRef = useRef(null);
 
   // Handle scroll for navbar and back-to-top
   useEffect(() => {
@@ -59,6 +61,15 @@ const BloodChainLanding = () => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Play video on mount
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch((error) => {
+        console.error("Video autoplay failed:", error);
+      });
+    }
   }, []);
 
   // 3D Interactive Blood Drop with responsive sizing
@@ -316,16 +327,14 @@ const BloodChainLanding = () => {
         .animate-pulse-glow {
           animation: pulse-glow 2s ease-in-out infinite;
         }
-        .parallax-bg {
-          background-attachment: fixed;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
-        }
-        @media (max-width: 768px) {
-          .parallax-bg {
-            background-attachment: scroll;
-          }
+        .video-bg {
+          object-fit: cover;
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 0;
         }
       `}</style>
 
@@ -421,12 +430,19 @@ const BloodChainLanding = () => {
       </nav>
 
       {/* Hero Section */}
-      <section
-        className="relative min-h-screen bg-gradient-to-br from-red-600 to-pink-500 flex items-center overflow-hidden parallax-bg"
-        style={{
-          backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
-        }}
-      >
+      <section className="relative min-h-screen bg-gradient-to-br from-red-600/5 to-pink-500/5 flex items-center overflow-hidden">
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="video-bg"
+          aria-hidden="true"
+        >
+          <source src={bloodCellsVideo} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-8">
           <div className="text-center lg:text-left text-white lg:w-1/2 animate-fade-in">
