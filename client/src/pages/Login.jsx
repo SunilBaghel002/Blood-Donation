@@ -1,29 +1,18 @@
-import React, { useState, useEffect } from "react";
-import {
-  Heart,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Shield,
-  CheckCircle,
-  ArrowLeft,
-  ChevronRight,
-  AlertCircle,
-  Fingerprint,
-  Smartphone,
-} from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { Heart, Mail, Lock, Eye, EyeOff, Shield, CheckCircle, ArrowLeft, ChevronRight, AlertCircle, Fingerprint, Smartphone } from 'lucide-react';
+import bloodCellsVideo from '../assets/blood-cells.mp4';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [particles, setParticles] = useState([]);
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
   const [errors, setErrors] = useState({});
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState('');
+  const videoRef = useRef(null);
 
   // Generate floating particles
   useEffect(() => {
@@ -38,25 +27,34 @@ const Login = () => {
     setParticles(newParticles);
   }, []);
 
+  // Play video on mount
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch((error) => {
+        console.error("Video autoplay failed:", error);
+      });
+    }
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
     if (!formData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
+      newErrors.email = 'Email is invalid';
     }
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+      newErrors.password = 'Password must be at least 8 characters';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -68,13 +66,13 @@ const Login = () => {
     setIsLoading(true);
     setErrors({});
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setSuccess("Login successful! Redirecting to dashboard...");
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setSuccess('Login successful! Redirecting to dashboard...');
       setTimeout(() => {
-        console.log("Redirecting to dashboard...");
+        console.log('Redirecting to dashboard...');
       }, 1500);
     } catch (error) {
-      setErrors({ general: "Invalid email or password. Please try again." });
+      setErrors({ general: 'Invalid email or password. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -83,14 +81,11 @@ const Login = () => {
   const connectWallet = async () => {
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setFormData((prev) => ({
-        ...prev,
-        walletAddress: "0x742d35Cc6565C42c42...",
-      }));
-      setSuccess("Wallet connected successfully!");
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setFormData(prev => ({ ...prev, walletAddress: '0x742d35Cc6565C42c42...' }));
+      setSuccess('Wallet connected successfully!');
     } catch (error) {
-      setErrors({ wallet: "Failed to connect wallet" });
+      setErrors({ wallet: 'Failed to connect wallet' });
     } finally {
       setIsLoading(false);
     }
@@ -113,61 +108,31 @@ const Login = () => {
     <div className="min-h-screen bg-white font-sans">
       <style jsx>{`
         @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) scale(1);
-            opacity: 0.4;
-          }
-          50% {
-            transform: translateY(-80px) scale(1.2);
-            opacity: 0.7;
-          }
+          0%, 100% { transform: translateY(0px) scale(1); opacity: 0.4; }
+          50% { transform: translateY(-80px) scale(1.2); opacity: 0.7; }
         }
         @keyframes pulse-size {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.3);
-          }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.3); }
         }
         @keyframes pulse-glow {
-          0%,
-          100% {
-            box-shadow: 0 0 15px rgba(185, 28, 28, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 30px rgba(185, 28, 28, 0.7),
-              0 0 50px rgba(185, 28, 28, 0.5);
-          }
+          0%, 100% { box-shadow: 0 0 15px rgba(185, 28, 28, 0.4); }
+          50% { box-shadow: 0 0 30px rgba(185, 28, 28, 0.7), 0 0 50px rgba(185, 28, 28, 0.5); }
         }
         @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .animate-fade-in {
-          animation: fade-in 1s ease-out forwards;
-        }
-        .animate-pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        .parallax-bg {
-          background-attachment: fixed;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
-        }
-        @media (max-width: 768px) {
-          .parallax-bg {
-            background-attachment: scroll;
-          }
+        .animate-fade-in { animation: fade-in 1s ease-out forwards; }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .video-bg {
+          object-fit: cover;
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: -1;
         }
         .floating-label {
           top: 50%;
@@ -184,12 +149,21 @@ const Login = () => {
           background: #fff;
           padding: 0 4px;
         }
+          .video-bg {
+          object-fit: cover;
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 0;
+        }
       `}</style>
 
       {/* Back to Home Button */}
       <button
         className="absolute top-6 left-6 flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors animate-fade-in"
-        onClick={() => (window.location.href = "/")}
+        onClick={() => window.location.href = '/'}
         aria-label="Back to Home"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -198,11 +172,20 @@ const Login = () => {
 
       {/* Login Section */}
       <section
-        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-600 to-pink-500 parallax-bg relative overflow-hidden"
-        style={{
-          backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
-        }}
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-600/5 to-pink-500/5 relative overflow-hidden"
       >
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="video-bg"
+          aria-hidden="true"
+        >
+          <source src={bloodCellsVideo} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
         <div className="absolute inset-0 bg-black/40"></div>
         {particles.map((particle) => (
           <FloatingParticle key={particle.id} particle={particle} />
@@ -212,9 +195,7 @@ const Login = () => {
         <div className="relative bg-white/95 backdrop-blur-md p-6 sm:p-8 lg:p-12 rounded-2xl shadow-xl max-w-md w-full mx-4 animate-fade-in">
           <div className="flex items-center justify-center space-x-2 mb-6">
             <Heart className="w-8 h-8 text-red-600" />
-            <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 animate-fade-in">
-              Sign In to BloodChain
-            </h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 animate-fade-in">Sign In to BloodChain</h2>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="relative">
@@ -225,55 +206,45 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                  errors.email ? "border-red-500" : "border-gray-200"
+                  errors.email ? 'border-red-500' : 'border-gray-200'
                 }`}
                 placeholder=" "
                 aria-label="Email"
                 required
               />
-              <label className="absolute left-10 floating-label text-gray-400">
-                Email Address
-              </label>
+              <label className="absolute left-10 floating-label text-gray-400">Email Address</label>
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                  <AlertCircle className="w-4 h-4 mr-1" />
-                  {errors.email}
+                  <AlertCircle className="w-4 h-4 mr-1" />{errors.email}
                 </p>
               )}
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                  errors.password ? "border-red-500" : "border-gray-200"
+                  errors.password ? 'border-red-500' : 'border-gray-200'
                 }`}
                 placeholder=" "
                 aria-label="Password"
                 required
               />
-              <label className="absolute left-10 floating-label text-gray-400">
-                Password
-              </label>
+              <label className="absolute left-10 floating-label text-gray-400">Password</label>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                  <AlertCircle className="w-4 h-4 mr-1" />
-                  {errors.password}
+                  <AlertCircle className="w-4 h-4 mr-1" />{errors.password}
                 </p>
               )}
             </div>
@@ -286,26 +257,21 @@ const Login = () => {
                 />
                 <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </label>
-              <a
-                href="/forgot-password"
-                className="text-sm text-red-600 hover:text-red-500 font-medium"
-              >
+              <a href="/forgot-password" className="text-sm text-red-600 hover:text-red-500 font-medium">
                 Forgot password?
               </a>
             </div>
             {errors.general && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
                 <p className="text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  {errors.general}
+                  <AlertCircle className="w-4 h-4 mr-2" />{errors.general}
                 </p>
               </div>
             )}
             {success && (
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in">
                 <p className="text-sm text-green-600 flex items-center">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  {success}
+                  <CheckCircle className="w-4 h-4 mr-2" />{success}
                 </p>
               </div>
             )}
@@ -329,9 +295,7 @@ const Login = () => {
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Or continue with
-                </span>
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -356,26 +320,16 @@ const Login = () => {
             </div>
           </form>
           <p className="text-center mt-6 text-sm text-gray-600">
-            New here?{" "}
-            <a
-              href="/signup"
-              className="text-red-600 hover:text-red-500 font-medium"
-            >
-              Sign up
-            </a>
+            New here? <a href="/signup" className="text-red-600 hover:text-red-500 font-medium">Sign up</a>
           </p>
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-600 font-medium">
-                Bank-level Security
-              </p>
+              <p className="text-xs text-gray-600 font-medium">Bank-level Security</p>
             </div>
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <Heart className="w-8 h-8 text-red-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-600 font-medium">
-                1000+ Lives Saved
-              </p>
+              <p className="text-xs text-gray-600 font-medium">1000+ Lives Saved</p>
             </div>
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <CheckCircle className="w-8 h-8 text-blue-600 mx-auto mb-2" />
@@ -386,21 +340,15 @@ const Login = () => {
       </section>
 
       {/* Footer */}
-      {/* <footer className="bg-gray-900 text-white py-8">
+      <footer className="bg-gray-900 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-sm sm:text-base">
           <p>
-            &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for
-            humanity.{" "}
-            <a href="/privacy" className="hover:text-white">
-              Privacy Policy
-            </a>{" "}
-            |{" "}
-            <a href="/terms" className="hover:text-white">
-              Terms of Service
-            </a>
+            &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for humanity.{' '}
+            <a href="/privacy" className="hover:text-white">Privacy Policy</a> |{' '}
+            <a href="/terms" className="hover:text-white">Terms of Service</a>
           </p>
         </div>
-      </footer> */}
+      </footer>
     </div>
   );
 };
