@@ -284,11 +284,11 @@ const Signup = () => {
       {/* Signup Section */}
       <section
         className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-600 to-pink-500 parallax-bg relative overflow-hidden"
-        style={{
-          backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
-        }}
+        // style={{
+        //   backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
+        // }}
       >
-        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/10"></div>
         {particles.map((particle) => (
           <FloatingParticle key={particle.id} particle={particle} />
         ))}
