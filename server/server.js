@@ -8,9 +8,9 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = 'your_jwt_secret'; // Change this to a secure secret
-const EMAIL_USER = 'your_email@gmail.com'; // Your email
-const EMAIL_PASS = 'your_app_password'; // App password for Gmail
+const JWT_SECRET = 'your_jwt_secret'; 
+const EMAIL_USER = process.env.EMAIL_USER; 
+const EMAIL_PASS = process.env.EMAIL_PASS; 
 
 app.use(cors());
 app.use(bodyParser.json());
