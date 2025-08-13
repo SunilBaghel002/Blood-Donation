@@ -63,51 +63,59 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validateForm()) return;
-  setIsLoading(true);
-  setErrors({});
-  try {
-    const response = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: formData.email, password: formData.password }),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Invalid email or password');
-    setSuccess(data.message);
-    localStorage.setItem('token', data.token); // Store JWT
-    setTimeout(() => {
-      console.log('Redirecting to dashboard...');
-      window.location.href = '/dashboard'; // Adjust to your dashboard route
-    }, 1500);
-  } catch (error) {
-    setErrors({ general: error.message });
-  } finally {
-    setIsLoading(false);
-  }
-};
+    e.preventDefault();
+    if (!validateForm()) return;
+    setIsLoading(true);
+    setErrors({});
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Invalid email or password");
+      setSuccess(data.message);
+      localStorage.setItem("token", data.token); // Store JWT
+      setTimeout(() => {
+        console.log("Redirecting to dashboard...");
+        window.location.href = "/dashboard"; // Adjust to your dashboard route
+      }, 1500);
+    } catch (error) {
+      setErrors({ general: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-const connectWallet = async () => {
-  setIsLoading(true);
-  try {
-    // Placeholder: Replace with actual wallet connection (e.g., MetaMask)
-    const walletAddress = '0x742d35Cc6565C42c42...'; // Mock address
-    const response = await fetch('http://localhost:5000/api/auth/connect-wallet', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: formData.email, walletAddress }),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Failed to connect wallet');
-    setFormData((prev) => ({ ...prev, walletAddress }));
-    setSuccess(data.message);
-  } catch (error) {
-    setErrors({ wallet: error.message });
-  } finally {
-    setIsLoading(false);
-  }
-};
+  const connectWallet = async () => {
+    setIsLoading(true);
+    try {
+      // Placeholder: Replace with actual wallet connection (e.g., MetaMask)
+      const walletAddress = "0x742d35Cc6565C42c42..."; // Mock address
+      const response = await fetch(
+        "http://localhost:5000/api/auth/connect-wallet",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, walletAddress }),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to connect wallet");
+      setFormData((prev) => ({ ...prev, walletAddress }));
+      setSuccess(data.message);
+    } catch (error) {
+      setErrors({ wallet: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const FloatingParticle = ({ particle }) => (
     <div

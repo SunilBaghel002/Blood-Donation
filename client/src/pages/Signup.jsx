@@ -88,80 +88,91 @@ const Signup = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validateStep()) return;
-  setIsLoading(true);
-  setErrors({});
-  try {
-    if (step === 1) {
-      const response = await fetch('http://localhost:5000/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to send OTP');
-      setSuccess(data.message);
-      setStep(2);
-    } else if (step === 2) {
-      const response = await fetch('http://localhost:5000/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, otp: formData.otp }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to verify OTP');
-      setSuccess(data.message);
-      setStep(3);
-    } else if (step === 3) {
-      const response = await fetch('http://localhost:5000/api/auth/complete-signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create account');
-      setSuccess(data.message);
-      localStorage.setItem('token', data.token); // Store JWT
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 1500);
+    e.preventDefault();
+    if (!validateStep()) return;
+    setIsLoading(true);
+    setErrors({});
+    try {
+      if (step === 1) {
+        const response = await fetch("http://localhost:5000/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to send OTP");
+        setSuccess(data.message);
+        setStep(2);
+      } else if (step === 2) {
+        const response = await fetch(
+          "http://localhost:5000/api/auth/verify-otp",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email, otp: formData.otp }),
+          }
+        );
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to verify OTP");
+        setSuccess(data.message);
+        setStep(3);
+      } else if (step === 3) {
+        const response = await fetch(
+          "http://localhost:5000/api/auth/complete-signup",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+              confirmPassword: formData.confirmPassword,
+            }),
+          }
+        );
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to create account");
+        setSuccess(data.message);
+        localStorage.setItem("token", data.token); // Store JWT
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1500);
+      }
+    } catch (error) {
+      setErrors({ general: error.message });
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    setErrors({ general: error.message });
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
-const connectWallet = async () => {
-  setIsLoading(true);
-  try {
-    // Placeholder: Replace with actual wallet connection (e.g., MetaMask)
-    const walletAddress = '0x742d35Cc6565C42c42...'; // Mock address
-    const response = await fetch('http://localhost:5000/api/auth/connect-wallet', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: formData.email, walletAddress }),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Failed to connect wallet');
-    setFormData((prev) => ({ ...prev, walletAddress }));
-    setSuccess(data.message);
-  } catch (error) {
-    setErrors({ wallet: error.message });
-  } finally {
-    setIsLoading(false);
-  }
-};
+  const connectWallet = async () => {
+    setIsLoading(true);
+    try {
+      // Placeholder: Replace with actual wallet connection (e.g., MetaMask)
+      const walletAddress = "0x742d35Cc6565C42c42..."; // Mock address
+      const response = await fetch(
+        "http://localhost:5000/api/auth/connect-wallet",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, walletAddress }),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to connect wallet");
+      setFormData((prev) => ({ ...prev, walletAddress }));
+      setSuccess(data.message);
+    } catch (error) {
+      setErrors({ wallet: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const FloatingParticle = ({ particle }) => (
     <div
@@ -316,7 +327,9 @@ const connectWallet = async () => {
                       value={formData.firstName}
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                        errors.firstName ? "border-red-500" : "border-gray-200 outline-0"
+                        errors.firstName
+                          ? "border-red-500"
+                          : "border-gray-200 outline-0"
                       }`}
                       placeholder=" "
                       aria-label="First Name"
@@ -340,7 +353,9 @@ const connectWallet = async () => {
                       value={formData.lastName}
                       onChange={handleInputChange}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                        errors.lastName ? "border-red-500" : "border-gray-200 outline-0"
+                        errors.lastName
+                          ? "border-red-500"
+                          : "border-gray-200 outline-0"
                       }`}
                       placeholder=" "
                       aria-label="Last Name"
@@ -365,7 +380,9 @@ const connectWallet = async () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors.email ? "border-red-500" : "border-gray-200 outline-0"
+                      errors.email
+                        ? "border-red-500"
+                        : "border-gray-200 outline-0"
                     }`}
                     placeholder=" "
                     aria-label="Email"
@@ -422,7 +439,9 @@ const connectWallet = async () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors.password ? "border-red-500" : "border-gray-200 outline-0"
+                      errors.password
+                        ? "border-red-500"
+                        : "border-gray-200 outline-0"
                     }`}
                     placeholder=" "
                     aria-label="Password"
