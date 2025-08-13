@@ -405,14 +405,14 @@ const Signup = () => {
                   name="otp"
                   value={formData.otp}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                    errors.otp ? "border-red-500" : "border-gray-200 outline-0"
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all outline-0 ${
+                    errors.otp ? "border-red-500" : "border-red-300 outline-0"
                   }`}
                   placeholder=" "
                   aria-label="OTP"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-400">
+                <label className="absolute left-4 top-0.5 floating-label text-gray-400">
                   Enter 6-digit OTP
                 </label>
                 {errors.otp && (
@@ -439,7 +439,7 @@ const Signup = () => {
                     className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
                       errors.password
                         ? "border-red-500"
-                        : "border-gray-200 outline-0"
+                        : "border-red-300 outline-0"
                     }`}
                     placeholder=" "
                     aria-label="Password"
@@ -479,7 +479,7 @@ const Signup = () => {
                     className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-0 transition-all ${
                       errors.confirmPassword
                         ? "border-red-500"
-                        : "border-gray-200"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Confirm Password"
