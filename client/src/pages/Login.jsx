@@ -220,11 +220,11 @@ const Login = () => {
       {/* Login Section */}
       <section
         className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-600 to-pink-500 parallax-bg relative overflow-hidden"
-        style={{
-          backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
-        }}
+        // style={{
+        //   backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
+        // }}
       >
-        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/10"></div>
         {particles.map((particle) => (
           <FloatingParticle key={particle.id} particle={particle} />
         ))}
@@ -246,7 +246,7 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                  errors.email ? "border-red-500" : "border-gray-200"
+                  errors.email ? "border-red-500" : "border-red-300"
                 }`}
                 placeholder=" "
                 aria-label="Email"
@@ -270,7 +270,7 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleInputChange}
                 className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                  errors.password ? "border-red-500" : "border-gray-200"
+                  errors.password ? "border-red-500" : "border-red-300"
                 }`}
                 placeholder=" "
                 aria-label="Password"
