@@ -15,13 +15,22 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-// app.use(express.static(path.join(__dirname, 'client', 'dist')));
+app.use((req, res, next) => {
+  console.log(`Request: ${req.method} ${req.url}`);
+  if (req.url.startsWith('http://') || req.url.startsWith('https://')) {
+    return res.status(400).json({ error: 'Invalid URL' });
+  }
+  next();
+});
+app.use(express.static(path.join(__dirname, 'client', 'dist')));
 
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI
-    );
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     console.log('MongoDB connected');
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -32,15 +41,34 @@ connectDB();
 
 // User Schema
 const userSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  firstName: { type: String, required: function() { return this.role === 'Donor'; } },
+  lastName: { type: String, required: function() { return this.role === 'Donor'; } },
   email: { type: String, required: true, unique: true },
   password: { type: String },
+  role: { type: String, required: true, enum: ['Donor', 'Hospital', 'BloodBank'] },
   otp: { type: String },
   otpExpires: { type: Date },
   isVerified: { type: Boolean, default: false },
   walletAddress: { type: String },
   createdAt: { type: Date, default: Date.now },
+  donorInfo: {
+    bloodGroup: { type: String, enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] },
+    donationCount: { type: Number, default: 0 },
+    lastDonationDate: { type: Date },
+    medicalConditions: { type: String },
+  },
+  hospitalInfo: {
+    name: { type: String },
+    location: { type: String },
+    bedCount: { type: Number },
+    contactNumber: { type: String },
+  },
+  bloodBankInfo: {
+    name: { type: String },
+    location: { type: String },
+    bloodStorageCapacity: { type: Number },
+    contactNumber: { type: String },
+  },
 });
 
 const User = mongoose.model('User', userSchema);
@@ -83,11 +111,17 @@ const sendOTPEmail = async (email, otp) => {
 
 // Step 1: Initiate Signup (Store details and send OTP)
 app.post('/api/auth/signup', async (req, res) => {
-  const { firstName, lastName, email } = req.body;
+  const { firstName, lastName, email, role } = req.body;
 
   // Validation
-  if (!firstName || !lastName || !email) {
-    return res.status(400).json({ error: 'All fields are required' });
+  if (!email || !role) {
+    return res.status(400).json({ error: 'Email and role are required' });
+  }
+  if (!['Donor', 'Hospital', 'BloodBank'].includes(role)) {
+    return res.status(400).json({ error: 'Invalid role' });
+  }
+  if (role === 'Donor' && (!firstName || !lastName)) {
+    return res.status(400).json({ error: 'First name and last name are required for donors' });
   }
   if (!/\S+@\S+\.\S+/.test(email)) {
     return res.status(400).json({ error: 'Invalid email format' });
@@ -106,9 +140,10 @@ app.post('/api/auth/signup', async (req, res) => {
 
     // Create user with unverified status
     const user = new User({
-      firstName,
-      lastName,
+      firstName: role === 'Donor' ? firstName : undefined,
+      lastName: role === 'Donor' ? lastName : undefined,
       email,
+      role,
       otp,
       otpExpires,
     });
@@ -118,7 +153,7 @@ app.post('/api/auth/signup', async (req, res) => {
     // Send OTP email
     await sendOTPEmail(email, otp);
 
-    res.status(200).json({ message: 'OTP sent to your email', email });
+    res.status(200).json({ message: 'OTP sent to your email', email, role });
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -155,7 +190,7 @@ app.post('/api/auth/verify-otp', async (req, res) => {
     user.isVerified = true;
     await user.save();
 
-    res.status(200).json({ message: 'OTP verified successfully' });
+    res.status(200).json({ message: 'OTP verified successfully', role: user.role });
   } catch (error) {
     console.error('OTP verification error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -193,22 +228,97 @@ app.post('/api/auth/complete-signup', async (req, res) => {
     user.password = await bcrypt.hash(password, salt);
     await user.save();
 
+    res.status(200).json({
+      message: 'Password set successfully. Please complete the questionnaire.',
+      role: user.role,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error('Complete signup error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Step 4: Submit Questionnaire
+app.post('/api/auth/submit-questionnaire', async (req, res) => {
+  const { email, role, questionnaire } = req.body;
+
+  if (!email || !role || !questionnaire) {
+    return res.status(400).json({ error: 'Email, role, and questionnaire data are required' });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    if (!user.isVerified) {
+      return res.status(400).json({ error: 'User not verified' });
+    }
+    if (!user.password) {
+      return res.status(400).json({ error: 'Password not set' });
+    }
+
+    // Validate and update role-specific info
+    if (role === 'Donor') {
+      const { bloodGroup, donationCount, lastDonationDate, medicalConditions } = questionnaire;
+      if (!bloodGroup || !['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].includes(bloodGroup)) {
+        return res.status(400).json({ error: 'Invalid blood group' });
+      }
+      user.donorInfo = {
+        bloodGroup,
+        donationCount: Number(donationCount) || 0,
+        lastDonationDate: lastDonationDate ? new Date(lastDonationDate) : undefined,
+        medicalConditions,
+      };
+    } else if (role === 'Hospital') {
+      const { name, location, bedCount, contactNumber } = questionnaire;
+      if (!name || !location || !bedCount || !contactNumber) {
+        return res.status(400).json({ error: 'All hospital fields are required' });
+      }
+      user.hospitalInfo = {
+        name,
+        location,
+        bedCount: Number(bedCount),
+        contactNumber,
+      };
+    } else if (role === 'BloodBank') {
+      const { name, location, bloodStorageCapacity, contactNumber } = questionnaire;
+      if (!name || !location || !bloodStorageCapacity || !contactNumber) {
+        return res.status(400).json({ error: 'All blood bank fields are required' });
+      }
+      user.bloodBankInfo = {
+        name,
+        location,
+        bloodStorageCapacity: Number(bloodStorageCapacity),
+        contactNumber,
+      };
+    } else {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    await user.save();
+
     // Generate JWT
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
 
     res.status(200).json({
-      message: 'Account created successfully',
+      message: 'Questionnaire submitted successfully',
       token,
       user: {
+        email: user.email,
+        role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
-        email: user.email,
+        donorInfo: user.donorInfo,
+        hospitalInfo: user.hospitalInfo,
+        bloodBankInfo: user.bloodBankInfo,
       },
     });
   } catch (error) {
-    console.error('Complete signup error:', error);
+    console.error('Questionnaire submission error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -244,9 +354,13 @@ app.post('/api/auth/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
+        email: user.email,
+        role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
-        email: user.email,
+        donorInfo: user.donorInfo,
+        hospitalInfo: user.hospitalInfo,
+        bloodBankInfo: user.bloodBankInfo,
       },
     });
   } catch (error) {
@@ -255,7 +369,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Connect Wallet (Placeholder - Update with actual wallet integration)
+// Connect Wallet (Placeholder)
 app.post('/api/auth/connect-wallet', async (req, res) => {
   const { email, walletAddress } = req.body;
 
@@ -279,9 +393,20 @@ app.post('/api/auth/connect-wallet', async (req, res) => {
   }
 });
 
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // Serve Frontend
 // app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+//   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'), (err) => {
+//     if (err) {
+//       console.error('Error serving index.html:', err);
+//       res.status(500).json({ error: 'Failed to serve frontend' });
+//     }
+//   });
 // });
 
 // Start Server
