@@ -78,17 +78,27 @@ const Login = () => {
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Invalid email or password");
+      if (!response.ok)
+        throw new Error(data.error || "Invalid email or password");
       setSuccess(data.message);
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
       // Optionally store role-specific data if needed
       if (data.user.role === "Donor") {
-        localStorage.setItem("donorInfo", JSON.stringify(data.user.donorInfo || {}));
+        localStorage.setItem(
+          "donorInfo",
+          JSON.stringify(data.user.donorInfo || {})
+        );
       } else if (data.user.role === "Hospital") {
-        localStorage.setItem("hospitalInfo", JSON.stringify(data.user.hospitalInfo || {}));
+        localStorage.setItem(
+          "hospitalInfo",
+          JSON.stringify(data.user.hospitalInfo || {})
+        );
       } else if (data.user.role === "BloodBank") {
-        localStorage.setItem("bloodBankInfo", JSON.stringify(data.user.bloodBankInfo || {}));
+        localStorage.setItem(
+          "bloodBankInfo",
+          JSON.stringify(data.user.bloodBankInfo || {})
+        );
       }
       setTimeout(() => {
         console.log("Redirecting to dashboard...");
@@ -106,13 +116,17 @@ const Login = () => {
     try {
       // Placeholder: Replace with actual wallet connection (e.g., MetaMask)
       const walletAddress = "0x742d35Cc6565C42c42..."; // Mock address
-      const response = await fetch("http://localhost:5000/api/auth/connect-wallet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, walletAddress }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/auth/connect-wallet",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, walletAddress }),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to connect wallet");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to connect wallet");
       setFormData((prev) => ({ ...prev, walletAddress }));
       setSuccess(data.message);
     } catch (error) {
@@ -290,7 +304,11 @@ const Login = () => {
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
@@ -379,7 +397,10 @@ const Login = () => {
           </form>
           <p className="text-center mt-6 text-sm text-gray-600">
             New here?{" "}
-            <a href="/signup" className="text-red-600 hover:text-red-500 font-medium">
+            <a
+              href="/signup"
+              className="text-red-600 hover:text-red-500 font-medium"
+            >
               Sign up
             </a>
           </p>
