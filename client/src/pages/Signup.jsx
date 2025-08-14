@@ -27,8 +27,23 @@ const Signup = () => {
     confirmPassword: "",
     firstName: "",
     lastName: "",
+    role: "Donor",
     otp: "",
     walletAddress: "",
+    questionnaire: {
+      bloodGroup: "",
+      donationCount: "",
+      lastDonationDate: "",
+      medicalConditions: "",
+      hospitalName: "",
+      hospitalLocation: "",
+      bedCount: "",
+      hospitalContactNumber: "",
+      bloodBankName: "",
+      bloodBankLocation: "",
+      bloodStorageCapacity: "",
+      bloodBankContactNumber: "",
+    },
   });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
@@ -48,20 +63,34 @@ const Signup = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (name.includes("questionnaire.")) {
+      const field = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        questionnaire: {
+          ...prev.questionnaire,
+          [field]: type === "checkbox" ? checked : value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
+    if (errors[name] || errors[field]) {
+      setErrors((prev) => ({ ...prev, [name]: "", [field]: "" }));
     }
   };
 
   const validateStep = () => {
     const newErrors = {};
     if (step === 1) {
-      if (!formData.firstName) newErrors.firstName = "First name is required";
-      if (!formData.lastName) newErrors.lastName = "Last name is required";
+      if (!formData.role) newErrors.role = "Role is required";
+      if (formData.role === "Donor") {
+        if (!formData.firstName) newErrors.firstName = "First name is required";
+        if (!formData.lastName) newErrors.lastName = "Last name is required";
+      }
       if (!formData.email) {
         newErrors.email = "Email is required";
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -70,6 +99,8 @@ const Signup = () => {
     } else if (step === 2) {
       if (!formData.otp) {
         newErrors.otp = "OTP is required";
+      } else if (!/^\w{6}$/.test(formData.otp)) {
+        newErrors.otp = "OTP must be a 6-character code";
       }
     } else if (step === 3) {
       if (!formData.password) {
@@ -79,6 +110,30 @@ const Signup = () => {
       }
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = "Passwords do not match";
+      }
+    } else if (step === 4) {
+      if (formData.role === "Donor") {
+        if (!formData.questionnaire.bloodGroup) {
+          newErrors.bloodGroup = "Blood group is required";
+        }
+      } else if (formData.role === "Hospital") {
+        if (!formData.questionnaire.hospitalName)
+          newErrors.hospitalName = "Hospital name is required";
+        if (!formData.questionnaire.hospitalLocation)
+          newErrors.hospitalLocation = "Location is required";
+        if (!formData.questionnaire.bedCount)
+          newErrors.bedCount = "Bed count is required";
+        if (!formData.questionnaire.hospitalContactNumber)
+          newErrors.hospitalContactNumber = "Contact number is required";
+      } else if (formData.role === "BloodBank") {
+        if (!formData.questionnaire.bloodBankName)
+          newErrors.bloodBankName = "Blood bank name is required";
+        if (!formData.questionnaire.bloodBankLocation)
+          newErrors.bloodBankLocation = "Location is required";
+        if (!formData.questionnaire.bloodStorageCapacity)
+          newErrors.bloodStorageCapacity = "Storage capacity is required";
+        if (!formData.questionnaire.bloodBankContactNumber)
+          newErrors.bloodBankContactNumber = "Contact number is required";
       }
     }
     setErrors(newErrors);
@@ -99,6 +154,7 @@ const Signup = () => {
             firstName: formData.firstName,
             lastName: formData.lastName,
             email: formData.email,
+            role: formData.role,
           }),
         });
         const data = await response.json();
@@ -133,9 +189,28 @@ const Signup = () => {
         );
         const data = await response.json();
         if (!response.ok)
-          throw new Error(data.error || "Failed to create account");
+          throw new Error(data.error || "Failed to set password");
         setSuccess(data.message);
-        localStorage.setItem("token", data.token); // Store JWT
+        setStep(4);
+      } else if (step === 4) {
+        const response = await fetch(
+          "http://localhost:5000/api/auth/submit-questionnaire",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: formData.email,
+              role: formData.role,
+              questionnaire: formData.questionnaire,
+            }),
+          }
+        );
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to submit questionnaire");
+        setSuccess(data.message);
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.user.role);
         setTimeout(() => {
           window.location.href = "/dashboard";
         }, 1500);
@@ -252,7 +327,11 @@ const Signup = () => {
           pointer-events: none;
         }
         input:focus ~ .floating-label,
-        input:not(:placeholder-shown) ~ .floating-label {
+        input:not(:placeholder-shown) ~ .floating-label,
+        select:focus ~ .floating-label,
+        select:not([value=""]) ~ .floating-label,
+        textarea:focus ~ .floating-label,
+        textarea:not(:placeholder-shown) ~ .floating-label {
           top: -8px;
           transform: translateY(0);
           font-size: 0.75rem;
@@ -263,8 +342,8 @@ const Signup = () => {
         .progress-bar {
           background: linear-gradient(
             to right,
-            #dc2626 ${(step / 3) * 100}%,
-            #e5e7eb ${(step / 3) * 100}%
+            #dc2626 ${(step / 4) * 100}%,
+            #e5e7eb ${(step / 4) * 100}%
           );
         }
       `}</style>
@@ -308,68 +387,93 @@ const Signup = () => {
                   ? "Account Details"
                   : step === 2
                   ? "Verify OTP"
-                  : "Set Password"}
+                  : step === 3
+                  ? "Set Password"
+                  : "Questionnaire"}
               </span>
-              <span>{step}/3</span>
+              <span>{step}/4</span>
             </div>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {step === 1 && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                        errors.firstName
-                          ? "border-red-500"
-                          : "border-red-300 outline-0"
-                      }`}
-                      placeholder=" "
-                      aria-label="First Name"
-                      required
-                    />
-                    <label className="absolute left-10 floating-label text-gray-400">
-                      First Name
-                    </label>
-                    {errors.firstName && (
-                      <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                        <AlertCircle className="w-4 h-4 mr-1" />
-                        {errors.firstName}
-                      </p>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                        errors.lastName
-                          ? "border-red-500"
-                          : "border-red-300 outline-0"
-                      }`}
-                      placeholder=" "
-                      aria-label="Last Name"
-                      required
-                    />
-                    <label className="absolute left-10 floating-label text-gray-400">
-                      Last Name
-                    </label>
-                    {errors.lastName && (
-                      <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                        <AlertCircle className="w-4 h-4 mr-1" />
-                        {errors.lastName}
-                      </p>
-                    )}
-                  </div>
+                <div className="relative">
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.role ? "border-red-500" : "border-red-300"
+                    }`}
+                    aria-label="Role"
+                    required
+                  >
+                    <option value="Donor">Donor</option>
+                    <option value="Hospital">Hospital</option>
+                    <option value="BloodBank">Blood Bank</option>
+                  </select>
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Role
+                  </label>
+                  {errors.role && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.role}
+                    </p>
+                  )}
                 </div>
+                {formData.role === "Donor" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                          errors.firstName ? "border-red-500" : "border-red-300"
+                        }`}
+                        placeholder=" "
+                        aria-label="First Name"
+                        required
+                      />
+                      <label className="absolute left-10 floating-label text-gray-400">
+                        First Name
+                      </label>
+                      {errors.firstName && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.firstName}
+                        </p>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                          errors.lastName ? "border-red-500" : "border-red-300"
+                        }`}
+                        placeholder=" "
+                        aria-label="Last Name"
+                        required
+                      />
+                      <label className="absolute left-10 floating-label text-gray-400">
+                        Last Name
+                      </label>
+                      {errors.lastName && (
+                        <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.lastName}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
@@ -378,9 +482,7 @@ const Signup = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors.email
-                        ? "border-red-500"
-                        : "border-red-300 outline-0"
+                      errors.email ? "border-red-500" : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Email"
@@ -405,14 +507,14 @@ const Signup = () => {
                   name="otp"
                   value={formData.otp}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all outline-0 ${
-                    errors.otp ? "border-red-500" : "border-red-300 outline-0"
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors.otp ? "border-red-500" : "border-red-300"
                   }`}
                   placeholder=" "
                   aria-label="OTP"
                   required
                 />
-                <label className="absolute left-4 top-0.5 floating-label text-gray-400">
+                <label className="absolute left-4 floating-label text-gray-400">
                   Enter 6-digit OTP
                 </label>
                 {errors.otp && (
@@ -437,9 +539,7 @@ const Signup = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors.password
-                        ? "border-red-500"
-                        : "border-red-300 outline-0"
+                      errors.password ? "border-red-500" : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Password"
@@ -476,7 +576,7 @@ const Signup = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-0 transition-all ${
+                    className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
                       errors.confirmPassword
                         ? "border-red-500"
                         : "border-red-300"
@@ -537,6 +637,291 @@ const Signup = () => {
                 </div>
               </>
             )}
+            {step === 4 && formData.role === "Donor" && (
+              <div className="space-y-6">
+                <div className="relative">
+                  <select
+                    name="questionnaire.bloodGroup"
+                    value={formData.questionnaire.bloodGroup}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.bloodGroup ? "border-red-500" : "border-red-300"
+                    }`}
+                    aria-label="Blood Group"
+                    required
+                  >
+                    <option value="">Select Blood Group</option>
+                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                      (bg) => (
+                        <option key={bg} value={bg}>
+                          {bg}
+                        </option>
+                      )
+                    )}
+                  </select>
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Blood Group
+                  </label>
+                  {errors.bloodGroup && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.bloodGroup}
+                    </p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="questionnaire.donationCount"
+                    value={formData.questionnaire.donationCount}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.donationCount ? "border-red-500" : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Donation Count"
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Number of Donations
+                  </label>
+                  {errors.donationCount && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.donationCount}
+                    </p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="date"
+                    name="questionnaire.lastDonationDate"
+                    value={formData.questionnaire.lastDonationDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    placeholder=" "
+                    aria-label="Last Donation Date"
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Last Donation Date
+                  </label>
+                </div>
+                <div className="relative">
+                  <textarea
+                    name="questionnaire.medicalConditions"
+                    value={formData.questionnaire.medicalConditions}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    placeholder=" "
+                    aria-label="Medical Conditions"
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Medical Conditions
+                  </label>
+                </div>
+              </div>
+            )}
+            {step === 4 && formData.role === "Hospital" && (
+              <div className="space-y-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="questionnaire.hospitalName"
+                    value={formData.questionnaire.hospitalName}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.hospitalName ? "border-red-500" : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Hospital Name"
+                    required
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Hospital Name
+                  </label>
+                  {errors.hospitalName && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.hospitalName}
+                    </p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="questionnaire.hospitalLocation"
+                    value={formData.questionnaire.hospitalLocation}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.hospitalLocation
+                        ? "border-red-500"
+                        : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Location"
+                    required
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Location
+                  </label>
+                  {errors.hospitalLocation && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.hospitalLocation}
+                    </p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="questionnaire.bedCount"
+                    value={formData.questionnaire.bedCount}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.bedCount ? "border-red-500" : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Bed Count"
+                    required
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Bed Count
+                  </label>
+                  {errors.bedCount && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.bedCount}
+                    </p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="questionnaire.hospitalContactNumber"
+                    value={formData.questionnaire.hospitalContactNumber}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.hospitalContactNumber
+                        ? "border-red-500"
+                        : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Contact Number"
+                    required
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Contact Number
+                  </label>
+                  {errors.hospitalContactNumber && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.hospitalContactNumber}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            {step === 4 && formData.role === "BloodBank" && (
+              <div className="space-y-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="questionnaire.bloodBankName"
+                    value={formData.questionnaire.bloodBankName}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.bloodBankName ? "border-red-500" : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Blood Bank Name"
+                    required
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Blood Bank Name
+                  </label>
+                  {errors.bloodBankName && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.bloodBankName}
+                    </p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="questionnaire.bloodBankLocation"
+                    value={formData.questionnaire.bloodBankLocation}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.bloodBankLocation
+                        ? "border-red-500"
+                        : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Location"
+                    required
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Location
+                  </label>
+                  {errors.bloodBankLocation && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.bloodBankLocation}
+                    </p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="questionnaire.bloodStorageCapacity"
+                    value={formData.questionnaire.bloodStorageCapacity}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.bloodStorageCapacity
+                        ? "border-red-500"
+                        : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Blood Storage Capacity"
+                    required
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Blood Storage Capacity (units)
+                  </label>
+                  {errors.bloodStorageCapacity && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.bloodStorageCapacity}
+                    </p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="questionnaire.bloodBankContactNumber"
+                    value={formData.questionnaire.bloodBankContactNumber}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                      errors.bloodBankContactNumber
+                        ? "border-red-500"
+                        : "border-red-300"
+                    }`}
+                    placeholder=" "
+                    aria-label="Contact Number"
+                    required
+                  />
+                  <label className="absolute left-4 floating-label text-gray-400">
+                    Contact Number
+                  </label>
+                  {errors.bloodBankContactNumber && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.bloodBankContactNumber}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
             {errors.general && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
                 <p className="text-sm text-red-600 flex items-center">
@@ -553,36 +938,48 @@ const Signup = () => {
                 </p>
               </div>
             )}
-            {step < 3 && (
+            {step < 4 && (
               <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-red-600 to-pink-500 text-white py-3 rounded-lg font-semibold text-lg hover:from-red-700 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 animate-pulse-glow flex items-center justify-center space-x-2"
-                aria-label={step === 1 ? "Send OTP" : "Verify OTP"}
+                aria-label={
+                  step === 1
+                    ? "Send OTP"
+                    : step === 2
+                    ? "Verify OTP"
+                    : "Set Password"
+                }
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>{step === 1 ? "Send OTP" : "Verify OTP"}</span>
+                    <span>
+                      {step === 1
+                        ? "Send OTP"
+                        : step === 2
+                        ? "Verify OTP"
+                        : "Set Password"}
+                    </span>
                     <ChevronRight className="w-5 h-5" />
                   </>
                 )}
               </button>
             )}
-            {step === 3 && (
+            {step === 4 && (
               <>
                 <button
                   type="submit"
                   disabled={isLoading}
                   className="w-full bg-gradient-to-r from-red-600 to-pink-500 text-white py-3 rounded-lg font-semibold text-lg hover:from-red-700 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 animate-pulse-glow flex items-center justify-center space-x-2"
-                  aria-label="Create Account"
+                  aria-label="Submit Questionnaire"
                 >
                   {isLoading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Create Account</span>
+                      <span>Submit Questionnaire</span>
                       <ChevronRight className="w-5 h-5" />
                     </>
                   )}
