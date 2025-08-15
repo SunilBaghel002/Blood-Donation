@@ -1,4 +1,3 @@
-```javascriptreact
 import React, { useState, useEffect } from "react";
 import {
   Heart,
@@ -952,4 +951,3 @@ const Signup = () => {
 };
 
 export default Signup;
-```
