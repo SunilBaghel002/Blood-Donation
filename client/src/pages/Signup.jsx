@@ -129,16 +129,20 @@ const Signup = () => {
         if (!formData.questionnaire.bedCount)
           newErrors["questionnaire.bedCount"] = "Bed count is required";
         if (!formData.questionnaire.hospitalContactNumber)
-          newErrors["questionnaire.hospitalContactNumber"] = "Contact number is required";
+          newErrors["questionnaire.hospitalContactNumber"] =
+            "Contact number is required";
       } else if (formData.role === "BloodBank") {
         if (!formData.questionnaire.bloodBankName)
-          newErrors["questionnaire.bloodBankName"] = "Blood bank name is required";
+          newErrors["questionnaire.bloodBankName"] =
+            "Blood bank name is required";
         if (!formData.questionnaire.bloodBankLocation)
           newErrors["questionnaire.bloodBankLocation"] = "Location is required";
         if (!formData.questionnaire.bloodStorageCapacity)
-          newErrors["questionnaire.bloodStorageCapacity"] = "Storage capacity is required";
+          newErrors["questionnaire.bloodStorageCapacity"] =
+            "Storage capacity is required";
         if (!formData.questionnaire.bloodBankContactNumber)
-          newErrors["questionnaire.bloodBankContactNumber"] = "Contact number is required";
+          newErrors["questionnaire.bloodBankContactNumber"] =
+            "Contact number is required";
       }
     }
     setErrors(newErrors);
@@ -167,41 +171,52 @@ const Signup = () => {
         setSuccess(data.message);
         setStep(2);
       } else if (step === 2) {
-        const response = await fetch("http://localhost:5000/api/auth/verify-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: formData.email, otp: formData.otp }),
-        });
+        const response = await fetch(
+          "http://localhost:5000/api/auth/verify-otp",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email, otp: formData.otp }),
+          }
+        );
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Failed to verify OTP");
         setSuccess(data.message);
         setStep(3);
       } else if (step === 3) {
-        const response = await fetch("http://localhost:5000/api/auth/complete-signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-            confirmPassword: formData.confirmPassword,
-          }),
-        });
+        const response = await fetch(
+          "http://localhost:5000/api/auth/complete-signup",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+              confirmPassword: formData.confirmPassword,
+            }),
+          }
+        );
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Failed to set password");
+        if (!response.ok)
+          throw new Error(data.error || "Failed to set password");
         setSuccess(data.message);
         setStep(4);
       } else if (step === 4) {
-        const response = await fetch("http://localhost:5000/api/auth/submit-questionnaire", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: formData.email,
-            role: formData.role,
-            questionnaire: formData.questionnaire,
-          }),
-        });
+        const response = await fetch(
+          "http://localhost:5000/api/auth/submit-questionnaire",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: formData.email,
+              role: formData.role,
+              questionnaire: formData.questionnaire,
+            }),
+          }
+        );
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Failed to submit questionnaire");
+        if (!response.ok)
+          throw new Error(data.error || "Failed to submit questionnaire");
         setSuccess(data.message);
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.user.role);
@@ -220,16 +235,20 @@ const Signup = () => {
     setIsLoading(true);
     try {
       const walletAddress = "0x742d35Cc6565C42c42..."; // Mock address
-      const response = await fetch("http://localhost:5000/api/auth/connect-wallet", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ email: formData.email, walletAddress }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/auth/connect-wallet",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ email: formData.email, walletAddress }),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to connect wallet");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to connect wallet");
       setFormData((prev) => ({ ...prev, walletAddress }));
       setSuccess(data.message);
     } catch (error) {
@@ -302,7 +321,9 @@ const Signup = () => {
               padding: 0 4px;
             }
             .progress-bar {
-              background: linear-gradient(to right, #dc2626 ${(step / 4) * 100}%, #e5e7eb ${(step / 4) * 100}%);
+              background: linear-gradient(to right, #dc2626 ${
+                (step / 4) * 100
+              }%, #e5e7eb ${(step / 4) * 100}%);
             }
           `}
         </style>
@@ -317,9 +338,7 @@ const Signup = () => {
         <span>Back to Home</span>
       </button>
 
-      <section
-        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-600 to-pink-500 parallax-bg relative overflow-hidden"
-      >
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-600 to-pink-500 parallax-bg relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         {particles.map((particle) => (
           <FloatingParticle key={particle.id} particle={particle} />
@@ -507,9 +526,15 @@ const Signup = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                   {errors.password && (
                     <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
@@ -526,7 +551,9 @@ const Signup = () => {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors.confirmPassword ? "border-red-500" : "border-red-300"
+                      errors.confirmPassword
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Confirm Password"
@@ -539,9 +566,17 @@ const Signup = () => {
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    aria-label={
+                      showConfirmPassword
+                        ? "Hide confirm password"
+                        : "Show confirm password"
+                    }
                   >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                   {errors.confirmPassword && (
                     <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
@@ -559,11 +594,17 @@ const Signup = () => {
                   />
                   <label className="ml-2 text-sm text-gray-600">
                     I agree to the{" "}
-                    <a href="/terms" className="text-red-600 hover:text-red-500 font-medium">
+                    <a
+                      href="/terms"
+                      className="text-red-600 hover:text-red-500 font-medium"
+                    >
                       Terms of Service
                     </a>{" "}
                     and{" "}
-                    <a href="/privacy" className="text-red-600 hover:text-red-500 font-medium">
+                    <a
+                      href="/privacy"
+                      className="text-red-600 hover:text-red-500 font-medium"
+                    >
                       Privacy Policy
                     </a>
                   </label>
@@ -578,17 +619,21 @@ const Signup = () => {
                     value={formData.questionnaire.bloodGroup}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bloodGroup"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.bloodGroup"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     aria-label="Blood Group"
                     required
                   >
                     <option value="">Select Blood Group</option>
-                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
-                      <option key={bg} value={bg}>
-                        {bg}
-                      </option>
-                    ))}
+                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                      (bg) => (
+                        <option key={bg} value={bg}>
+                          {bg}
+                        </option>
+                      )
+                    )}
                   </select>
                   <label className="absolute left-4 floating-label text-gray-400">
                     Blood Group
@@ -607,7 +652,9 @@ const Signup = () => {
                     value={formData.questionnaire.donationCount}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.donationCount"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.donationCount"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Donation Count"
@@ -660,7 +707,9 @@ const Signup = () => {
                     value={formData.questionnaire.hospitalName}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.hospitalName"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.hospitalName"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Hospital Name"
@@ -683,7 +732,9 @@ const Signup = () => {
                     value={formData.questionnaire.hospitalLocation}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.hospitalLocation"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.hospitalLocation"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Location"
@@ -706,7 +757,9 @@ const Signup = () => {
                     value={formData.questionnaire.bedCount}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bedCount"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.bedCount"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Bed Count"
@@ -729,7 +782,9 @@ const Signup = () => {
                     value={formData.questionnaire.hospitalContactNumber}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.hospitalContactNumber"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.hospitalContactNumber"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Contact Number"
@@ -756,7 +811,9 @@ const Signup = () => {
                     value={formData.questionnaire.bloodBankName}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bloodBankName"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.bloodBankName"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Blood Bank Name"
@@ -779,7 +836,9 @@ const Signup = () => {
                     value={formData.questionnaire.bloodBankLocation}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bloodBankLocation"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.bloodBankLocation"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Location"
@@ -802,7 +861,9 @@ const Signup = () => {
                     value={formData.questionnaire.bloodStorageCapacity}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bloodStorageCapacity"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.bloodStorageCapacity"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Blood Storage Capacity"
@@ -825,7 +886,9 @@ const Signup = () => {
                     value={formData.questionnaire.bloodBankContactNumber}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bloodBankContactNumber"] ? "border-red-500" : "border-red-300"
+                      errors["questionnaire.bloodBankContactNumber"]
+                        ? "border-red-500"
+                        : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Contact Number"
@@ -864,13 +927,25 @@ const Signup = () => {
                 type="submit"
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-red-600 to-pink-500 text-white py-3 rounded-lg font-semibold text-lg hover:from-red-700 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 animate-pulse-glow flex items-center justify-center space-x-2"
-                aria-label={step === 1 ? "Send OTP" : step === 2 ? "Verify OTP" : "Set Password"}
+                aria-label={
+                  step === 1
+                    ? "Send OTP"
+                    : step === 2
+                    ? "Verify OTP"
+                    : "Set Password"
+                }
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>{step === 1 ? "Send OTP" : step === 2 ? "Verify OTP" : "Set Password"}</span>
+                    <span>
+                      {step === 1
+                        ? "Send OTP"
+                        : step === 2
+                        ? "Verify OTP"
+                        : "Set Password"}
+                    </span>
                     <ChevronRight className="w-5 h-5" />
                   </>
                 )}
@@ -898,7 +973,9 @@ const Signup = () => {
                     <div className="w-full border-t border-gray-200" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                    <span className="px-2 bg-white text-gray-500">
+                      Or continue with
+                    </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -926,18 +1003,25 @@ const Signup = () => {
           </form>
           <p className="text-center mt-6 text-sm text-gray-600">
             Already have an account?{" "}
-            <a href="/login" className="text-red-600 hover:text-red-500 font-medium">
+            <a
+              href="/login"
+              className="text-red-600 hover:text-red-500 font-medium"
+            >
               Sign in
             </a>
           </p>
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-600 font-medium">Bank-level Security</p>
+              <p className="text-xs text-gray-600 font-medium">
+                Bank-level Security
+              </p>
             </div>
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <Heart className="w-8 h-8 text-red-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-600 font-medium">1000+ Lives Saved</p>
+              <p className="text-xs text-gray-600 font-medium">
+                1000+ Lives Saved
+              </p>
             </div>
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <CheckCircle className="w-8 h-8 text-blue-600 mx-auto mb-2" />
