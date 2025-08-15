@@ -1,14 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, Shield, Users, Building2, Activity, ChevronRight, CheckCircle, Clock, MapPin, Droplets, Database, FileText, Lock, Globe, Eye, Gift, BookOpen, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  Heart,
+  Shield,
+  Users,
+  Building2,
+  Activity,
+  ChevronRight,
+  CheckCircle,
+  Clock,
+  MapPin,
+  Droplets,
+  Database,
+  FileText,
+  Lock,
+  Globe,
+  Eye,
+  Gift,
+  BookOpen,
+  AlertCircle,
+} from "lucide-react";
 
 const BloodManagementSystem = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [userType, setUserType] = useState(localStorage.getItem('role') || 'Donor');
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [userType, setUserType] = useState(
+    localStorage.getItem("role") || "Donor"
+  );
   const [connectedWallet, setConnectedWallet] = useState(false);
   const [notifications, setNotifications] = useState(0);
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Mock data replaced with API calls
   const [bloodInventory, setBloodInventory] = useState([]);
@@ -20,21 +41,23 @@ const BloodManagementSystem = () => {
 
   // Educational content
   const educationalContent = {
-    title: 'Why Donate Blood?',
+    title: "Why Donate Blood?",
     articles: [
       {
-        title: 'The Importance of Blood Donation',
-        content: 'One blood donation can save up to three lives. Blood is needed for surgeries, trauma care, and treating chronic illnesses like cancer.',
+        title: "The Importance of Blood Donation",
+        content:
+          "One blood donation can save up to three lives. Blood is needed for surgeries, trauma care, and treating chronic illnesses like cancer.",
       },
       {
-        title: 'Who Can Donate?',
-        content: 'Healthy adults aged 17-65, weighing at least 110 lbs, and meeting medical criteria can donate blood every 56 days.',
+        title: "Who Can Donate?",
+        content:
+          "Healthy adults aged 17-65, weighing at least 110 lbs, and meeting medical criteria can donate blood every 56 days.",
       },
     ],
     facts: [
-      '1 donation can save up to 3 lives.',
-      'Blood cannot be manufactured; it must come from donors.',
-      'Every 2 seconds, someone needs blood in the U.S.',
+      "1 donation can save up to 3 lives.",
+      "Blood cannot be manufactured; it must come from donors.",
+      "Every 2 seconds, someone needs blood in the U.S.",
     ],
   };
 
@@ -43,24 +66,25 @@ const BloodManagementSystem = () => {
     const fetchUserData = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('Please log in to access the dashboard');
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Please log in to access the dashboard");
 
-        const response = await fetch('http://localhost:5000/api/auth/me', {
+        const response = await fetch("http://localhost:5000/api/auth/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to fetch user data');
+        if (!response.ok)
+          throw new Error(data.error || "Failed to fetch user data");
 
         setUserData(data.user);
         setUserType(data.user.role);
 
         // Fetch role-specific data
-        if (data.user.role === 'BloodBank') {
+        if (data.user.role === "BloodBank") {
           await fetchBloodBankData(token);
-        } else if (data.user.role === 'Hospital') {
+        } else if (data.user.role === "Hospital") {
           await fetchHospitalData(token);
-        } else if (data.user.role === 'Donor') {
+        } else if (data.user.role === "Donor") {
           await fetchDonorData(token);
         }
       } catch (err) {
@@ -77,9 +101,15 @@ const BloodManagementSystem = () => {
   const fetchBloodBankData = async (token) => {
     try {
       const [donorsRes, inventoryRes, requestsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/bloodbank/donors', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:5000/api/bloodbank/inventory', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:5000/api/bloodbank/requests', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/bloodbank/donors", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/bloodbank/inventory", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/bloodbank/requests", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const donorsData = await donorsRes.json();
@@ -87,7 +117,7 @@ const BloodManagementSystem = () => {
       const requestsData = await requestsRes.json();
 
       if (!donorsRes.ok || !inventoryRes.ok || !requestsRes.ok) {
-        throw new Error('Failed to fetch blood bank data');
+        throw new Error("Failed to fetch blood bank data");
       }
 
       setDonors(donorsData.donors || []);
@@ -102,9 +132,15 @@ const BloodManagementSystem = () => {
   const fetchHospitalData = async (token) => {
     try {
       const [requestsRes, inventoryRes, transactionsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/hospital/requests', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:5000/api/hospital/inventory', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:5000/api/hospital/transactions', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/hospital/requests", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/hospital/inventory", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/hospital/transactions", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const requestsData = await requestsRes.json();
@@ -112,7 +148,7 @@ const BloodManagementSystem = () => {
       const transactionsData = await transactionsRes.json();
 
       if (!requestsRes.ok || !inventoryRes.ok || !transactionsRes.ok) {
-        throw new Error('Failed to fetch hospital data');
+        throw new Error("Failed to fetch hospital data");
       }
 
       setRequests(requestsData.requests || []);
@@ -127,15 +163,19 @@ const BloodManagementSystem = () => {
   const fetchDonorData = async (token) => {
     try {
       const [historyRes, rewardsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/donor/history', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('http://localhost:5000/api/donor/rewards', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/donor/history", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/donor/rewards", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const historyData = await historyRes.json();
       const rewardsData = await rewardsRes.json();
 
       if (!historyRes.ok || !rewardsRes.ok) {
-        throw new Error('Failed to fetch donor data');
+        throw new Error("Failed to fetch donor data");
       }
 
       setDonationHistory(historyData.history || []);
@@ -149,13 +189,23 @@ const BloodManagementSystem = () => {
   const connectWallet = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/connect-wallet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ email: userData?.email, walletAddress: '0x742d35Cc6565C42c42...' }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/auth/connect-wallet",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            email: userData?.email,
+            walletAddress: "0x742d35Cc6565C42c42...",
+          }),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to connect wallet');
+      if (!response.ok)
+        throw new Error(data.error || "Failed to connect wallet");
       setConnectedWallet(true);
     } catch (err) {
       setError(err.message);
@@ -168,13 +218,20 @@ const BloodManagementSystem = () => {
   const handleBloodRequest = async (bloodType, quantity) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/hospital/request-blood', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ bloodType, quantity }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/hospital/request-blood",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ bloodType, quantity }),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to request blood');
+      if (!response.ok)
+        throw new Error(data.error || "Failed to request blood");
       setRequests([...requests, data.request]);
     } catch (err) {
       setError(err.message);
@@ -187,13 +244,16 @@ const BloodManagementSystem = () => {
   const issueReward = async (recipientId, points) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/rewards/issue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+      const response = await fetch("http://localhost:5000/api/rewards/issue", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
         body: JSON.stringify({ recipientId, points }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to issue reward');
+      if (!response.ok) throw new Error(data.error || "Failed to issue reward");
       setRewards({ ...rewards, points: rewards.points + points });
     } catch (err) {
       setError(err.message);
@@ -204,11 +264,16 @@ const BloodManagementSystem = () => {
 
   const getDemandColor = (demand) => {
     switch (demand) {
-      case 'Critical': return 'text-red-600 bg-red-50';
-      case 'High': return 'text-orange-600 bg-orange-50';
-      case 'Medium': return 'text-yellow-600 bg-yellow-50';
-      case 'Low': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case "Critical":
+        return "text-red-600 bg-red-50";
+      case "High":
+        return "text-orange-600 bg-orange-50";
+      case "Medium":
+        return "text-yellow-600 bg-yellow-50";
+      case "Low":
+        return "text-green-600 bg-green-50";
+      default:
+        return "text-gray-600 bg-gray-50";
     }
   };
 
@@ -240,25 +305,35 @@ const BloodManagementSystem = () => {
             onClick={connectWallet}
             disabled={isLoading}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              connectedWallet ? 'bg-green-500 text-white' : 'bg-white text-red-600 hover:bg-gray-50'
+              connectedWallet
+                ? "bg-green-500 text-white"
+                : "bg-white text-red-600 hover:bg-gray-50"
             }`}
           >
-            {isLoading ? 'Connecting...' : connectedWallet ? '✓ Connected' : 'Connect Wallet'}
+            {isLoading
+              ? "Connecting..."
+              : connectedWallet
+              ? "✓ Connected"
+              : "Connect Wallet"}
           </button>
         </div>
       </div>
       <div className="flex space-x-1 bg-white/10 rounded-lg p-1">
-        {['dashboard', 'inventory', 'transactions', 'profile', 'education'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-md font-medium capitalize transition-all ${
-              activeTab === tab ? 'bg-white text-red-600' : 'text-white hover:bg-white/20'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+        {["dashboard", "inventory", "transactions", "profile", "education"].map(
+          (tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-md font-medium capitalize transition-all ${
+                activeTab === tab
+                  ? "bg-white text-red-600"
+                  : "text-white hover:bg-white/20"
+              }`}
+            >
+              {tab}
+            </button>
+          )
+        )}
       </div>
     </div>
   );
@@ -271,7 +346,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Donors</p>
-              <p className="text-2xl font-bold text-gray-800">{donors.length}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {donors.length}
+              </p>
             </div>
             <Users className="w-10 h-10 text-red-500" />
           </div>
@@ -280,7 +357,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Blood Units</p>
-              <p className="text-2xl font-bold text-gray-800">{bloodInventory.reduce((sum, item) => sum + item.units, 0)}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {bloodInventory.reduce((sum, item) => sum + item.units, 0)}
+              </p>
             </div>
             <Droplets className="w-10 h-10 text-blue-500" />
           </div>
@@ -289,7 +368,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Pending Requests</p>
-              <p className="text-2xl font-bold text-gray-800">{requests.filter(r => r.status === 'Pending').length}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {requests.filter((r) => r.status === "Pending").length}
+              </p>
             </div>
             <FileText className="w-10 h-10 text-green-500" />
           </div>
@@ -298,7 +379,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Rewards Issued</p>
-              <p className="text-2xl font-bold text-gray-800">{rewards.points}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {rewards.points}
+              </p>
             </div>
             <Gift className="w-10 h-10 text-purple-500" />
           </div>
@@ -323,10 +406,19 @@ const BloodManagementSystem = () => {
             </thead>
             <tbody>
               {donors.map((donor, index) => (
-                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-4">{donor.firstName} {donor.lastName}</td>
-                  <td className="py-3 px-4">{donor.donorInfo?.bloodGroup || 'N/A'}</td>
-                  <td className="py-3 px-4">{donor.donorInfo?.lastDonationDate || 'N/A'}</td>
+                <tr
+                  key={index}
+                  className="border-b border-gray-100 hover:bg-gray-50"
+                >
+                  <td className="py-3 px-4">
+                    {donor.firstName} {donor.lastName}
+                  </td>
+                  <td className="py-3 px-4">
+                    {donor.donorInfo?.bloodGroup || "N/A"}
+                  </td>
+                  <td className="py-3 px-4">
+                    {donor.donorInfo?.lastDonationDate || "N/A"}
+                  </td>
                   <td className="py-3 px-4">
                     <button
                       onClick={() => issueReward(donor._id, 10)}
@@ -350,14 +442,23 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-3">
           {requests.map((request, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
               <div>
                 <p className="font-medium">Hospital: {request.hospitalName}</p>
-                <p className="text-sm text-gray-600">Blood Type: {request.bloodType} • Quantity: {request.quantity}</p>
+                <p className="text-sm text-gray-600">
+                  Blood Type: {request.bloodType} • Quantity: {request.quantity}
+                </p>
               </div>
               <div className="flex items-center space-x-2">
-                <button className="px-3 py-1 bg-green-500 text-white rounded-lg">Approve</button>
-                <button className="px-3 py-1 bg-red-500 text-white rounded-lg">Reject</button>
+                <button className="px-3 py-1 bg-green-500 text-white rounded-lg">
+                  Approve
+                </button>
+                <button className="px-3 py-1 bg-red-500 text-white rounded-lg">
+                  Reject
+                </button>
               </div>
             </div>
           ))}
@@ -374,7 +475,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Blood Requests</p>
-              <p className="text-2xl font-bold text-gray-800">{requests.length}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {requests.length}
+              </p>
             </div>
             <FileText className="w-10 h-10 text-red-500" />
           </div>
@@ -383,7 +486,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Blood Units Received</p>
-              <p className="text-2xl font-bold text-gray-800">{bloodInventory.reduce((sum, item) => sum + item.units, 0)}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {bloodInventory.reduce((sum, item) => sum + item.units, 0)}
+              </p>
             </div>
             <Droplets className="w-10 h-10 text-blue-500" />
           </div>
@@ -392,7 +497,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Rewards Issued</p>
-              <p className="text-2xl font-bold text-gray-800">{rewards.points}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {rewards.points}
+              </p>
             </div>
             <Gift className="w-10 h-10 text-green-500" />
           </div>
@@ -401,7 +508,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Blockchain TXs</p>
-              <p className="text-2xl font-bold text-gray-800">{transactions.length}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {transactions.length}
+              </p>
             </div>
             <Database className="w-10 h-10 text-purple-500" />
           </div>
@@ -416,23 +525,35 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Blood Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Blood Type
+            </label>
             <select
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
               onChange={(e) => handleBloodRequest(e.target.value, 1)}
             >
               <option value="">Select Blood Type</option>
-              {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                (type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                )
+              )}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Quantity (units)</label>
-            <input type="number" className="w-full border border-gray-300 rounded-lg px-3 py-2" min="1" />
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quantity (units)
+            </label>
+            <input
+              type="number"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              min="1"
+            />
           </div>
           <button
-            onClick={() => handleBloodRequest('O+', 1)} // Example; replace with form values
+            onClick={() => handleBloodRequest("O+", 1)} // Example; replace with form values
             className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
           >
             Submit Request
@@ -448,7 +569,10 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-3">
           {transactions.map((tx, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
               <div>
                 <p className="font-medium">Blood Type: {tx.bloodType}</p>
                 <p className="text-sm text-gray-600">Used: {tx.timestamp}</p>
@@ -474,7 +598,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Total Donations</p>
-              <p className="text-2xl font-bold text-gray-800">{donationHistory.length}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {donationHistory.length}
+              </p>
             </div>
             <Heart className="w-10 h-10 text-red-500" />
           </div>
@@ -483,7 +609,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Reward Points</p>
-              <p className="text-2xl font-bold text-gray-800">{rewards.points}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {rewards.points}
+              </p>
             </div>
             <Gift className="w-10 h-10 text-green-500" />
           </div>
@@ -492,7 +620,9 @@ const BloodManagementSystem = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">Badges Earned</p>
-              <p className="text-2xl font-bold text-gray-800">{rewards.badges.length}</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {rewards.badges.length}
+              </p>
             </div>
             <Shield className="w-10 h-10 text-blue-500" />
           </div>
@@ -521,11 +651,15 @@ const BloodManagementSystem = () => {
                     <Droplets className="w-4 h-4 text-red-600 mr-1" />
                     <span className="font-medium">{donation.bloodType}</span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    donation.status === 'Used' ? 'bg-green-100 text-green-800' :
-                    donation.status === 'In Use' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      donation.status === "Used"
+                        ? "bg-green-100 text-green-800"
+                        : donation.status === "In Use"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
                     {donation.status}
                   </span>
                 </div>
@@ -552,7 +686,9 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Blood Bank</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Blood Bank
+            </label>
             <select className="w-full border border-gray-300 rounded-lg px-3 py-2">
               <option>City Blood Bank</option>
               <option>University Hospital Blood Center</option>
@@ -560,8 +696,13 @@ const BloodManagementSystem = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Date</label>
-            <input type="date" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Preferred Date
+            </label>
+            <input
+              type="date"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            />
           </div>
           <button className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
             Schedule Donation
@@ -610,15 +751,23 @@ const BloodManagementSystem = () => {
             <div key={index} className="border border-gray-200 rounded-lg p-4">
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h4 className="text-xl font-bold text-gray-800">{blood.type}</h4>
-                  <p className="text-2xl font-bold text-red-600">{blood.units} units</p>
+                  <h4 className="text-xl font-bold text-gray-800">
+                    {blood.type}
+                  </h4>
+                  <p className="text-2xl font-bold text-red-600">
+                    {blood.units} units
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                   <Droplets className="w-6 h-6 text-red-600" />
                 </div>
               </div>
               <div className="space-y-2">
-                <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getDemandColor(blood.demand)}`}>
+                <div
+                  className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getDemandColor(
+                    blood.demand
+                  )}`}
+                >
                   {blood.demand} Demand
                 </div>
                 <p className="text-sm text-gray-600 flex items-center">
@@ -650,19 +799,36 @@ const BloodManagementSystem = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Transaction Hash</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Type</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Blood Type</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Timestamp</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Action</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">
+                  Transaction Hash
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">
+                  Type
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">
+                  Blood Type
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">
+                  Timestamp
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">
+                  Status
+                </th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((tx, index) => (
-                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr
+                  key={index}
+                  className="border-b border-gray-100 hover:bg-gray-50"
+                >
                   <td className="py-3 px-4">
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">{tx.id}</code>
+                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                      {tx.id}
+                    </code>
                   </td>
                   <td className="py-3 px-4">{tx.type}</td>
                   <td className="py-3 px-4">
@@ -673,11 +839,15 @@ const BloodManagementSystem = () => {
                   </td>
                   <td className="py-3 px-4 text-gray-600">{tx.timestamp}</td>
                   <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      tx.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
-                      tx.status === 'In Transit' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        tx.status === "Confirmed"
+                          ? "bg-green-100 text-green-800"
+                          : tx.status === "In Transit"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
                       {tx.status}
                     </span>
                   </td>
@@ -703,25 +873,45 @@ const BloodManagementSystem = () => {
           Profile
         </h3>
         <div className="space-y-4">
-          <p><strong>Name:</strong> {userData?.firstName} {userData?.lastName}</p>
-          <p><strong>Email:</strong> {userData?.email}</p>
-          <p><strong>Role:</strong> {userData?.role}</p>
-          {userData?.role === 'Donor' && (
+          <p>
+            <strong>Name:</strong> {userData?.firstName} {userData?.lastName}
+          </p>
+          <p>
+            <strong>Email:</strong> {userData?.email}
+          </p>
+          <p>
+            <strong>Role:</strong> {userData?.role}
+          </p>
+          {userData?.role === "Donor" && (
             <>
-              <p><strong>Blood Group:</strong> {userData?.donorInfo?.bloodGroup}</p>
-              <p><strong>Donation Count:</strong> {userData?.donorInfo?.donationCount}</p>
+              <p>
+                <strong>Blood Group:</strong> {userData?.donorInfo?.bloodGroup}
+              </p>
+              <p>
+                <strong>Donation Count:</strong>{" "}
+                {userData?.donorInfo?.donationCount}
+              </p>
             </>
           )}
-          {userData?.role === 'Hospital' && (
+          {userData?.role === "Hospital" && (
             <>
-              <p><strong>Hospital Name:</strong> {userData?.hospitalInfo?.name}</p>
-              <p><strong>Location:</strong> {userData?.hospitalInfo?.location}</p>
+              <p>
+                <strong>Hospital Name:</strong> {userData?.hospitalInfo?.name}
+              </p>
+              <p>
+                <strong>Location:</strong> {userData?.hospitalInfo?.location}
+              </p>
             </>
           )}
-          {userData?.role === 'BloodBank' && (
+          {userData?.role === "BloodBank" && (
             <>
-              <p><strong>Blood Bank Name:</strong> {userData?.bloodBankInfo?.name}</p>
-              <p><strong>Location:</strong> {userData?.bloodBankInfo?.location}</p>
+              <p>
+                <strong>Blood Bank Name:</strong>{" "}
+                {userData?.bloodBankInfo?.name}
+              </p>
+              <p>
+                <strong>Location:</strong> {userData?.bloodBankInfo?.location}
+              </p>
             </>
           )}
         </div>
@@ -734,7 +924,9 @@ const BloodManagementSystem = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <span className="text-sm font-medium">Personal Data Encrypted</span>
+              <span className="text-sm font-medium">
+                Personal Data Encrypted
+              </span>
               <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
@@ -749,8 +941,9 @@ const BloodManagementSystem = () => {
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-800 mb-2">Data Protection</h4>
             <p className="text-sm text-blue-700">
-              Your personal information is encrypted and stored off-chain in MongoDB,
-              while only verification hashes and metadata are stored on the Ethereum blockchain.
+              Your personal information is encrypted and stored off-chain in
+              MongoDB, while only verification hashes and metadata are stored on
+              the Ethereum blockchain.
             </p>
           </div>
         </div>
@@ -775,15 +968,22 @@ const BloodManagementSystem = () => {
       );
     }
     switch (activeTab) {
-      case 'dashboard':
-        return userType === 'BloodBank' ? renderBloodBankDashboard() :
-               userType === 'Hospital' ? renderHospitalDashboard() :
-               renderDonorDashboard();
-      case 'inventory': return renderInventory();
-      case 'transactions': return renderTransactions();
-      case 'profile': return renderProfile();
-      case 'education': return renderEducationTab();
-      default: return renderDonorDashboard();
+      case "dashboard":
+        return userType === "BloodBank"
+          ? renderBloodBankDashboard()
+          : userType === "Hospital"
+          ? renderHospitalDashboard()
+          : renderDonorDashboard();
+      case "inventory":
+        return renderInventory();
+      case "transactions":
+        return renderTransactions();
+      case "profile":
+        return renderProfile();
+      case "education":
+        return renderEducationTab();
+      default:
+        return renderDonorDashboard();
     }
   };
 
@@ -791,12 +991,13 @@ const BloodManagementSystem = () => {
     <div className="min-h-screen bg-gray-50">
       <style jsx>{`
         @keyframes pulse-glow {
-          0%, 100% {
+          0%,
+          100% {
             box-shadow: 0 0 15px rgba(185, 28, 28, 0.4);
           }
           50% {
             box-shadow: 0 0 30px rgba(185, 28, 28, 0.7),
-                        0 0 50px rgba(185, 28, 28, 0.5);
+              0 0 50px rgba(185, 28, 28, 0.5);
           }
         }
         .animate-pulse-glow {
