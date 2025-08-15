@@ -233,6 +233,7 @@ app.post("/api/auth/signup", async (req, res) => {
       return res.status(400).json({ error: "Email already registered" });
     }
     const otp = generateOTP();
+    console.log("otp is", otp)
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     const user = new User({
       firstName: role === "Donor" ? firstName : undefined,
