@@ -23,7 +23,9 @@ import {
 
 const BloodManagementSystem = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [userType, setUserType] = useState(localStorage.getItem("role") || "Donor");
+  const [userType, setUserType] = useState(
+    localStorage.getItem("role") || "Donor"
+  );
   const [connectedWallet, setConnectedWallet] = useState(false);
   const [notifications, setNotifications] = useState(0);
   const [userData, setUserData] = useState(null);
@@ -39,9 +41,21 @@ const BloodManagementSystem = () => {
   const [transactions, setTransactions] = useState([]);
   const [rewards, setRewards] = useState({ points: 0, badges: [] });
   const [bloodBanks, setBloodBanks] = useState([]);
-  const [scheduleData, setScheduleData] = useState({ bloodBankId: "", date: "", time: "" });
-  const [donationRecord, setDonationRecord] = useState({ donorId: "", bloodType: "", units: 1 });
-  const [bloodRequest, setBloodRequest] = useState({ bloodBankId: "", bloodType: "", quantity: 1 });
+  const [scheduleData, setScheduleData] = useState({
+    bloodBankId: "",
+    date: "",
+    time: "",
+  });
+  const [donationRecord, setDonationRecord] = useState({
+    donorId: "",
+    bloodType: "",
+    units: 1,
+  });
+  const [bloodRequest, setBloodRequest] = useState({
+    bloodBankId: "",
+    bloodType: "",
+    quantity: 1,
+  });
 
   // Animation variants for messages
   const messageVariants = {
@@ -56,11 +70,13 @@ const BloodManagementSystem = () => {
     articles: [
       {
         title: "The Importance of Blood Donation",
-        content: "One blood donation can save up to three lives. Blood is needed for surgeries, trauma care, and treating chronic illnesses like cancer.",
+        content:
+          "One blood donation can save up to three lives. Blood is needed for surgeries, trauma care, and treating chronic illnesses like cancer.",
       },
       {
         title: "Who Can Donate?",
-        content: "Healthy adults aged 17-65, weighing at least 110 lbs, and meeting medical criteria can donate blood every 56 days.",
+        content:
+          "Healthy adults aged 17-65, weighing at least 110 lbs, and meeting medical criteria can donate blood every 56 days.",
       },
     ],
     facts: [
@@ -107,7 +123,8 @@ const BloodManagementSystem = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Failed to fetch user data");
+        if (!response.ok)
+          throw new Error(data.error || "Failed to fetch user data");
 
         setUserData(data.user);
         setUserType(data.user.role);
@@ -136,11 +153,15 @@ const BloodManagementSystem = () => {
   // Fetch registered blood banks
   const fetchBloodBanks = async (token) => {
     try {
-      const response = await fetch("http://localhost:5000/api/bloodbank/registered", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/bloodbank/registered",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to fetch blood banks");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to fetch blood banks");
       setBloodBanks(data.bloodBanks || []);
     } catch (err) {
       setError(err.message);
@@ -151,9 +172,15 @@ const BloodManagementSystem = () => {
   const fetchBloodBankData = async (token) => {
     try {
       const [donorsRes, inventoryRes, requestsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/bloodbank/donors", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/bloodbank/inventory", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/bloodbank/requests", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/bloodbank/donors", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/bloodbank/inventory", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/bloodbank/requests", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const donorsData = await donorsRes.json();
@@ -176,9 +203,15 @@ const BloodManagementSystem = () => {
   const fetchHospitalData = async (token) => {
     try {
       const [requestsRes, inventoryRes, transactionsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/hospital/requests", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/hospital/inventory", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/hospital/transactions", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/hospital/requests", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/hospital/inventory", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/hospital/transactions", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const requestsData = await requestsRes.json();
@@ -201,8 +234,12 @@ const BloodManagementSystem = () => {
   const fetchDonorData = async (token) => {
     try {
       const [historyRes, rewardsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/donor/history", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/donor/rewards", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/donor/history", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/donor/rewards", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const historyData = await historyRes.json();
@@ -223,19 +260,23 @@ const BloodManagementSystem = () => {
   const connectWallet = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/connect-wallet", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          email: userData?.email,
-          walletAddress: "0x742d35Cc6565C42c42...",
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/auth/connect-wallet",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            email: userData?.email,
+            walletAddress: "0x742d35Cc6565C42c42...",
+          }),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to connect wallet");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to connect wallet");
       setConnectedWallet(true);
       setSuccess("Wallet connected successfully");
     } catch (err) {
@@ -259,10 +300,14 @@ const BloodManagementSystem = () => {
         body: JSON.stringify(scheduleData),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to schedule donation");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to schedule donation");
       setSuccess("Donation scheduled successfully");
       setScheduleData({ bloodBankId: "", date: "", time: "" });
-      setDonationHistory([...donationHistory, { ...scheduleData, status: "Scheduled" }]);
+      setDonationHistory([
+        ...donationHistory,
+        { ...scheduleData, status: "Scheduled" },
+      ]);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -275,16 +320,20 @@ const BloodManagementSystem = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/bloodbank/record-donation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(donationRecord),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/bloodbank/record-donation",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(donationRecord),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to record donation");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to record donation");
       setSuccess("Donation recorded successfully");
       setDonationRecord({ donorId: "", bloodType: "", units: 1 });
       // Issue reward automatically
@@ -308,16 +357,20 @@ const BloodManagementSystem = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/hospital/request-blood", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(bloodRequest),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/hospital/request-blood",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(bloodRequest),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to request blood");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to request blood");
       setSuccess("Blood request submitted successfully");
       setRequests([...requests, data.request]);
       setBloodRequest({ bloodBankId: "", bloodType: "", quantity: 1 });
@@ -337,7 +390,11 @@ const BloodManagementSystem = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ recipientId, points, badge: points >= 50 ? "Gold Donor" : "Silver Donor" }),
+        body: JSON.stringify({
+          recipientId,
+          points,
+          badge: points >= 50 ? "Gold Donor" : "Silver Donor",
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to issue reward");
@@ -422,26 +479,36 @@ const BloodManagementSystem = () => {
             onClick={connectWallet}
             disabled={isLoading}
             className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${
-              connectedWallet ? "bg-green-500 text-white" : "bg-white text-red-500 hover:bg-red-50"
+              connectedWallet
+                ? "bg-green-500 text-white"
+                : "bg-white text-red-500 hover:bg-red-50"
             }`}
           >
-            {isLoading ? "Connecting..." : connectedWallet ? "✓ Connected" : "Connect Wallet"}
+            {isLoading
+              ? "Connecting..."
+              : connectedWallet
+              ? "✓ Connected"
+              : "Connect Wallet"}
           </motion.button>
         </div>
       </div>
       <div className="flex space-x-1 bg-white/10 rounded-lg p-1 mt-4 max-w-7xl mx-auto">
-        {["dashboard", "inventory", "transactions", "profile", "education"].map((tab) => (
-          <motion.button
-            key={tab}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => setActiveTab(tab)}
-            className={`px-3 py-2 rounded-md font-medium text-sm capitalize transition-all ${
-              activeTab === tab ? "bg-white text-red-500" : "text-white hover:bg-white/20"
-            }`}
-          >
-            {tab}
-          </motion.button>
-        ))}
+        {["dashboard", "inventory", "transactions", "profile", "education"].map(
+          (tab) => (
+            <motion.button
+              key={tab}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 py-2 rounded-md font-medium text-sm capitalize transition-all ${
+                activeTab === tab
+                  ? "bg-white text-red-500"
+                  : "text-white hover:bg-white/20"
+              }`}
+            >
+              {tab}
+            </motion.button>
+          )
+        )}
       </div>
     </motion.header>
   );
@@ -450,10 +517,30 @@ const BloodManagementSystem = () => {
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: "Total Donors", value: donors.length, icon: Users, color: "border-red-500" },
-          { label: "Blood Units", value: bloodInventory.reduce((sum, item) => sum + item.units, 0), icon: Droplets, color: "border-blue-500" },
-          { label: "Pending Requests", value: requests.filter((r) => r.status === "Pending").length, icon: FileText, color: "border-green-500" },
-          { label: "Rewards Issued", value: rewards.points, icon: Gift, color: "border-purple-500" },
+          {
+            label: "Total Donors",
+            value: donors.length,
+            icon: Users,
+            color: "border-red-500",
+          },
+          {
+            label: "Blood Units",
+            value: bloodInventory.reduce((sum, item) => sum + item.units, 0),
+            icon: Droplets,
+            color: "border-blue-500",
+          },
+          {
+            label: "Pending Requests",
+            value: requests.filter((r) => r.status === "Pending").length,
+            icon: FileText,
+            color: "border-green-500",
+          },
+          {
+            label: "Rewards Issued",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-purple-500",
+          },
         ].map((metric, index) => (
           <motion.div
             key={index}
@@ -465,7 +552,9 @@ const BloodManagementSystem = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{metric.label}</p>
-                <p className="text-2xl font-semibold text-gray-800">{metric.value}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
               </div>
               <metric.icon className="w-8 h-8 text-gray-500" />
             </div>
@@ -487,17 +576,30 @@ const BloodManagementSystem = () => {
             <thead>
               <tr className="border-b border-red-100">
                 <th className="text-left py-3 px-4 text-gray-600">Name</th>
-                <th className="text-left py-3 px-4 text-gray-600">Blood Type</th>
-                <th className="text-left py-3 px-4 text-gray-600">Last Donation</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Blood Type
+                </th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Last Donation
+                </th>
                 <th className="text-left py-3 px-4 text-gray-600">Action</th>
               </tr>
             </thead>
             <tbody>
               {donors.map((donor, index) => (
-                <tr key={index} className="border-b border-red-50 hover:bg-red-50/50">
-                  <td className="py-3 px-4">{donor.firstName} {donor.lastName}</td>
-                  <td className="py-3 px-4">{donor.donorInfo?.bloodGroup || "N/A"}</td>
-                  <td className="py-3 px-4">{donor.donorInfo?.lastDonationDate || "N/A"}</td>
+                <tr
+                  key={index}
+                  className="border-b border-red-50 hover:bg-red-50/50"
+                >
+                  <td className="py-3 px-4">
+                    {donor.firstName} {donor.lastName}
+                  </td>
+                  <td className="py-3 px-4">
+                    {donor.donorInfo?.bloodGroup || "N/A"}
+                  </td>
+                  <td className="py-3 px-4">
+                    {donor.donorInfo?.lastDonationDate || "N/A"}
+                  </td>
                   <td className="py-3 px-4">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -524,11 +626,19 @@ const BloodManagementSystem = () => {
           <FileText className="w-5 h-5 mr-2 text-green-500" />
           Record Donation
         </h3>
-        <form onSubmit={handleRecordDonation} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form
+          onSubmit={handleRecordDonation}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
           <div className="relative">
             <select
               value={donationRecord.donorId}
-              onChange={(e) => setDonationRecord({ ...donationRecord, donorId: e.target.value })}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  donorId: e.target.value,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               required
             >
@@ -539,32 +649,52 @@ const BloodManagementSystem = () => {
                 </option>
               ))}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Donor</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Donor
+            </label>
           </div>
           <div className="relative">
             <select
               value={donationRecord.bloodType}
-              onChange={(e) => setDonationRecord({ ...donationRecord, bloodType: e.target.value })}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  bloodType: e.target.value,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               required
             >
               <option value="">Select Blood Type</option>
-              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                (type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                )
+              )}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Blood Type</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Blood Type
+            </label>
           </div>
           <div className="relative">
             <input
               type="number"
               value={donationRecord.units}
-              onChange={(e) => setDonationRecord({ ...donationRecord, units: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  units: parseInt(e.target.value),
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               min="1"
               required
             />
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Units</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Units
+            </label>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -596,9 +726,14 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-3">
           {requests.map((request, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg">
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg"
+            >
               <div>
-                <p className="font-medium text-gray-800">Hospital: {request.hospitalName}</p>
+                <p className="font-medium text-gray-800">
+                  Hospital: {request.hospitalName}
+                </p>
                 <p className="text-sm text-gray-500">
                   Blood Type: {request.bloodType} • Quantity: {request.quantity}
                 </p>
@@ -630,10 +765,30 @@ const BloodManagementSystem = () => {
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: "Blood Requests", value: requests.length, icon: FileText, color: "border-red-500" },
-          { label: "Blood Units Received", value: bloodInventory.reduce((sum, item) => sum + item.units, 0), icon: Droplets, color: "border-blue-500" },
-          { label: "Rewards Issued", value: rewards.points, icon: Gift, color: "border-green-500" },
-          { label: "Blockchain TXs", value: transactions.length, icon: Database, color: "border-purple-500" },
+          {
+            label: "Blood Requests",
+            value: requests.length,
+            icon: FileText,
+            color: "border-red-500",
+          },
+          {
+            label: "Blood Units Received",
+            value: bloodInventory.reduce((sum, item) => sum + item.units, 0),
+            icon: Droplets,
+            color: "border-blue-500",
+          },
+          {
+            label: "Rewards Issued",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-green-500",
+          },
+          {
+            label: "Blockchain TXs",
+            value: transactions.length,
+            icon: Database,
+            color: "border-purple-500",
+          },
         ].map((metric, index) => (
           <motion.div
             key={index}
@@ -645,7 +800,9 @@ const BloodManagementSystem = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{metric.label}</p>
-                <p className="text-2xl font-semibold text-gray-800">{metric.value}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
               </div>
               <metric.icon className="w-8 h-8 text-gray-500" />
             </div>
@@ -662,45 +819,72 @@ const BloodManagementSystem = () => {
           <FileText className="w-5 h-5 mr-2 text-blue-500" />
           Request Blood
         </h3>
-        <form onSubmit={handleBloodRequest} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form
+          onSubmit={handleBloodRequest}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
           <div className="relative">
             <select
               value={bloodRequest.bloodBankId}
-              onChange={(e) => setBloodRequest({ ...bloodRequest, bloodBankId: e.target.value })}
+              onChange={(e) =>
+                setBloodRequest({
+                  ...bloodRequest,
+                  bloodBankId: e.target.value,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               required
             >
               <option value="">Select Blood Bank</option>
               {bloodBanks.map((bank) => (
-                <option key={bank._id} value={bank._id}>{bank.name}</option>
+                <option key={bank._id} value={bank._id}>
+                  {bank.name}
+                </option>
               ))}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Blood Bank</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Blood Bank
+            </label>
           </div>
           <div className="relative">
             <select
               value={bloodRequest.bloodType}
-              onChange={(e) => setBloodRequest({ ...bloodRequest, bloodType: e.target.value })}
+              onChange={(e) =>
+                setBloodRequest({ ...bloodRequest, bloodType: e.target.value })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               required
             >
               <option value="">Select Blood Type</option>
-              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                (type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                )
+              )}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Blood Type</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Blood Type
+            </label>
           </div>
           <div className="relative">
             <input
               type="number"
               value={bloodRequest.quantity}
-              onChange={(e) => setBloodRequest({ ...bloodRequest, quantity: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setBloodRequest({
+                  ...bloodRequest,
+                  quantity: parseInt(e.target.value),
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               min="1"
               required
             />
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Quantity (units)</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Quantity (units)
+            </label>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -732,9 +916,14 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-3">
           {transactions.map((tx, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg">
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg"
+            >
               <div>
-                <p className="font-medium text-gray-800">Blood Type: {tx.bloodType}</p>
+                <p className="font-medium text-gray-800">
+                  Blood Type: {tx.bloodType}
+                </p>
                 <p className="text-sm text-gray-500">Used: {tx.timestamp}</p>
               </div>
               <motion.button
@@ -756,9 +945,24 @@ const BloodManagementSystem = () => {
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: "Total Donations", value: donationHistory.length, icon: Heart, color: "border-red-500" },
-          { label: "Reward Points", value: rewards.points, icon: Gift, color: "border-green-500" },
-          { label: "Badges Earned", value: rewards.badges.length, icon: Shield, color: "border-blue-500" },
+          {
+            label: "Total Donations",
+            value: donationHistory.length,
+            icon: Heart,
+            color: "border-red-500",
+          },
+          {
+            label: "Reward Points",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-green-500",
+          },
+          {
+            label: "Badges Earned",
+            value: rewards.badges.length,
+            icon: Shield,
+            color: "border-blue-500",
+          },
         ].map((metric, index) => (
           <motion.div
             key={index}
@@ -770,7 +974,9 @@ const BloodManagementSystem = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{metric.label}</p>
-                <p className="text-2xl font-semibold text-gray-800">{metric.value}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
               </div>
               <metric.icon className="w-8 h-8 text-gray-500" />
             </div>
@@ -789,13 +995,19 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-4">
           {donationHistory.map((donation, index) => (
-            <div key={index} className="border border-red-100 rounded-lg p-4 bg-red-50/50">
+            <div
+              key={index}
+              className="border border-red-100 rounded-lg p-4 bg-red-50/50"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="font-medium text-gray-800">{donation.date}</p>
                   <p className="text-sm text-gray-500 flex items-center">
                     <MapPin className="w-4 h-4 mr-1" />
-                    {donation.location || bloodBanks.find((b) => b._id === donation.bloodBankId)?.name || "N/A"}
+                    {donation.location ||
+                      bloodBanks.find((b) => b._id === donation.bloodBankId)
+                        ?.name ||
+                      "N/A"}
                   </p>
                 </div>
                 <div className="text-right">
@@ -845,40 +1057,60 @@ const BloodManagementSystem = () => {
           <Calendar className="w-5 h-5 mr-2 text-red-500" />
           Schedule Donation
         </h3>
-        <form onSubmit={handleScheduleDonation} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form
+          onSubmit={handleScheduleDonation}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
           <div className="relative">
             <select
               value={scheduleData.bloodBankId}
-              onChange={(e) => setScheduleData({ ...scheduleData, bloodBankId: e.target.value })}
+              onChange={(e) =>
+                setScheduleData({
+                  ...scheduleData,
+                  bloodBankId: e.target.value,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               required
             >
               <option value="">Select Blood Bank</option>
               {bloodBanks.map((bank) => (
-                <option key={bank._id} value={bank._id}>{bank.name}</option>
+                <option key={bank._id} value={bank._id}>
+                  {bank.name}
+                </option>
               ))}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Blood Bank</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Blood Bank
+            </label>
           </div>
           <div className="relative">
             <input
               type="date"
               value={scheduleData.date}
-              onChange={(e) => setScheduleData({ ...scheduleData, date: e.target.value })}
+              onChange={(e) =>
+                setScheduleData({ ...scheduleData, date: e.target.value })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               required
             />
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Date</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Date
+            </label>
           </div>
           <div className="relative">
             <input
               type="time"
               value={scheduleData.time}
-              onChange={(e) => setScheduleData({ ...scheduleData, time: e.target.value })}
+              onChange={(e) =>
+                setScheduleData({ ...scheduleData, time: e.target.value })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               required
             />
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">Time</label>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Time
+            </label>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -914,7 +1146,10 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-4">
           {educationalContent.articles.map((article, index) => (
-            <div key={index} className="border border-red-100 rounded-lg p-4 bg-red-50/50">
+            <div
+              key={index}
+              className="border border-red-100 rounded-lg p-4 bg-red-50/50"
+            >
               <h4 className="font-medium text-gray-800">{article.title}</h4>
               <p className="text-sm text-gray-500 mt-2">{article.content}</p>
             </div>
@@ -954,15 +1189,23 @@ const BloodManagementSystem = () => {
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h4 className="text-xl font-semibold text-gray-800">{blood.type}</h4>
-                  <p className="text-2xl font-semibold text-red-500">{blood.units} units</p>
+                  <h4 className="text-xl font-semibold text-gray-800">
+                    {blood.type}
+                  </h4>
+                  <p className="text-2xl font-semibold text-red-500">
+                    {blood.units} units
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                   <Droplets className="w-5 h-5 text-red-500" />
                 </div>
               </div>
               <div className="space-y-2">
-                <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getDemandColor(blood.demand)}`}>
+                <div
+                  className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getDemandColor(
+                    blood.demand
+                  )}`}
+                >
                   {blood.demand} Demand
                 </div>
                 <p className="text-sm text-gray-500 flex items-center">
@@ -998,9 +1241,13 @@ const BloodManagementSystem = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-red-100">
-                <th className="text-left py-3 px-4 text-gray-600">Transaction Hash</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Transaction Hash
+                </th>
                 <th className="text-left py-3 px-4 text-gray-600">Type</th>
-                <th className="text-left py-3 px-4 text-gray-600">Blood Type</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Blood Type
+                </th>
                 <th className="text-left py-3 px-4 text-gray-600">Timestamp</th>
                 <th className="text-left py-3 px-4 text-gray-600">Status</th>
                 <th className="text-left py-3 px-4 text-gray-600">Action</th>
@@ -1008,9 +1255,14 @@ const BloodManagementSystem = () => {
             </thead>
             <tbody>
               {transactions.map((tx, index) => (
-                <tr key={index} className="border-b border-red-50 hover:bg-red-50/50">
+                <tr
+                  key={index}
+                  className="border-b border-red-50 hover:bg-red-50/50"
+                >
                   <td className="py-3 px-4">
-                    <code className="text-sm bg-red-100 px-2 py-1 rounded">{tx.id}</code>
+                    <code className="text-sm bg-red-100 px-2 py-1 rounded">
+                      {tx.id}
+                    </code>
                   </td>
                   <td className="py-3 px-4">{tx.type}</td>
                   <td className="py-3 px-4">
@@ -1078,7 +1330,8 @@ const BloodManagementSystem = () => {
                 <strong>Blood Group:</strong> {userData?.donorInfo?.bloodGroup}
               </p>
               <p className="text-gray-500">
-                <strong>Donation Count:</strong> {userData?.donorInfo?.donationCount}
+                <strong>Donation Count:</strong>{" "}
+                {userData?.donorInfo?.donationCount}
               </p>
             </>
           )}
@@ -1095,7 +1348,8 @@ const BloodManagementSystem = () => {
           {userData?.role === "BloodBank" && (
             <>
               <p className="text-gray-500">
-                <strong>Blood Bank Name:</strong> {userData?.bloodBankInfo?.name}
+                <strong>Blood Bank Name:</strong>{" "}
+                {userData?.bloodBankInfo?.name}
               </p>
               <p className="text-gray-500">
                 <strong>Location:</strong> {userData?.bloodBankInfo?.location}
@@ -1120,8 +1374,13 @@ const BloodManagementSystem = () => {
               "IPFS Document Storage",
               "Blockchain Verified",
             ].map((item, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg">
-                <span className="text-sm font-medium text-gray-500">{item}</span>
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg"
+              >
+                <span className="text-sm font-medium text-gray-500">
+                  {item}
+                </span>
                 <CheckCircle className="w-5 h-5 text-green-500" />
               </div>
             ))}
@@ -1129,7 +1388,9 @@ const BloodManagementSystem = () => {
           <div className="bg-blue-50/50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-800 mb-2">Data Protection</h4>
             <p className="text-sm text-blue-600">
-              Your personal information is encrypted and stored off-chain in MongoDB, while only verification hashes and metadata are stored on the Ethereum blockchain.
+              Your personal information is encrypted and stored off-chain in
+              MongoDB, while only verification hashes and metadata are stored on
+              the Ethereum blockchain.
             </p>
           </div>
         </div>
