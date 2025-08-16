@@ -50,6 +50,17 @@ const Signup = () => {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
 
+  // Auto-dismiss messages after 5 seconds
+  useEffect(() => {
+    if (success || errors.general) {
+      const timer = setTimeout(() => {
+        setSuccess("");
+        setErrors((prev) => ({ ...prev, general: "" }));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, errors.general]);
+
   // Generate blood droplet particles
   useEffect(() => {
     const newParticles = Array.from({ length: 10 }, (_, i) => ({
@@ -73,6 +84,13 @@ const Signup = () => {
       transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
     },
     exit: { opacity: 0, x: -100, scale: 0.8, transition: { duration: 0.4 } },
+  };
+
+  // Animation variants for messages
+  const messageVariants = {
+    initial: { opacity: 0, y: -20, x: 20 },
+    animate: { opacity: 1, y: 0, x: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, y: -20, x: 20, transition: { duration: 0.3 } },
   };
 
   const handleInputChange = (e) => {
@@ -132,6 +150,15 @@ const Signup = () => {
       if (formData.role === "Donor") {
         if (subStep === 1 && !formData.questionnaire.bloodGroup) {
           newErrors["questionnaire.bloodGroup"] = "Blood group is required";
+        } else if (subStep === 2 && !formData.questionnaire.donationCount) {
+          newErrors["questionnaire.donationCount"] =
+            "Donation count is required";
+        } else if (subStep === 3 && !formData.questionnaire.lastDonationDate) {
+          newErrors["questionnaire.lastDonationDate"] =
+            "Last donation date is required";
+        } else if (subStep === 4 && !formData.questionnaire.medicalConditions) {
+          newErrors["questionnaire.medicalConditions"] =
+            "Medical conditions are required";
         }
       } else if (formData.role === "Hospital") {
         if (subStep === 1 && !formData.questionnaire.hospitalName) {
@@ -170,14 +197,9 @@ const Signup = () => {
 
   const handleNextQuestion = () => {
     if (!validateStep()) return;
-    if (formData.role === "Donor" && subStep < 4) {
+    if (subStep < 4) {
       setSubStep(subStep + 1);
-    } else if (
-      (formData.role === "Hospital" || formData.role === "BloodBank") &&
-      subStep < 4
-    ) {
-      setSubStep(subStep + 1);
-    } else {
+    } else if (subStep === 4) {
       handleSubmit({ preventDefault: () => {} });
     }
   };
@@ -192,6 +214,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (step < 4 && !validateStep()) return;
+    if (step === 4 && subStep < 4) return; // Prevent submission until all sub-steps are complete
     setIsLoading(true);
     setErrors({});
     try {
@@ -242,7 +265,7 @@ const Signup = () => {
         setSuccess(data.message);
         setStep(4);
         setSubStep(1);
-      } else if (step === 4) {
+      } else if (step === 4 && subStep === 4) {
         let questionnaireData = {};
         if (formData.role === "Donor") {
           questionnaireData = {
@@ -425,6 +448,7 @@ const Signup = () => {
                   }`}
                   placeholder=" "
                   aria-label="Donation Count"
+                  required
                 />
                 <label className="absolute left-4 floating-label text-gray-500">
                   Number of Donations
@@ -463,13 +487,24 @@ const Signup = () => {
                   name="questionnaire.lastDonationDate"
                   value={formData.questionnaire.lastDonationDate}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0"
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
+                    errors["questionnaire.lastDonationDate"]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   placeholder=" "
                   aria-label="Last Donation Date"
+                  required
                 />
                 <label className="absolute left-4 floating-label text-gray-500">
                   Last Donation Date
                 </label>
+                {errors["questionnaire.lastDonationDate"] && (
+                  <p className="mt-1 text-sm text-red-500 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.lastDonationDate"]}
+                  </p>
+                )}
               </motion.div>
             </motion.div>
           );
@@ -497,13 +532,24 @@ const Signup = () => {
                   name="questionnaire.medicalConditions"
                   value={formData.questionnaire.medicalConditions}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0"
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
+                    errors["questionnaire.medicalConditions"]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   placeholder=" "
                   aria-label="Medical Conditions"
+                  required
                 />
                 <label className="absolute left-4 floating-label text-gray-500">
                   Medical Conditions
                 </label>
+                {errors["questionnaire.medicalConditions"] && (
+                  <p className="mt-1 text-sm text-red-500 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.medicalConditions"]}
+                  </p>
+                )}
               </motion.div>
             </motion.div>
           );
@@ -892,6 +938,10 @@ const Signup = () => {
               from { opacity: 0; transform: translateY(20px); }
               to { opacity: 1; transform: translateY(0); }
             }
+            @keyframes message-slide {
+              from { opacity: 0; transform: translateY(-20px) translateX(20px); }
+              to { opacity: 1; transform: translateY(0) translateX(0); }
+            }
             @keyframes progress {
               0% { width: 0%; }
               100% { width: ${(step < 4 ? step / 4 : subStep / 4) * 100}%; }
@@ -899,6 +949,7 @@ const Signup = () => {
             .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
             .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
             .animate-progress { animation: progress 0.5s ease-out forwards; }
+            .animate-message { animation: message-slide 0.3s ease-out forwards; }
             .parallax-bg {
               background-attachment: fixed;
               background-position: center;
@@ -930,8 +981,50 @@ const Signup = () => {
               width: ${(step < 4 ? step / 4 : subStep / 4) * 100}%;
               background: linear-gradient(to right, #ef4444, #f472b6);
             }
+            .message-container {
+              position: fixed;
+              top: 1rem;
+              right: 1rem;
+              z-index: 1000;
+              max-width: 300px;
+            }
           `}
         </style>
+      </div>
+
+      <div className="message-container">
+        <AnimatePresence>
+          {errors.general && (
+            <motion.div
+              key="error-message"
+              variants={messageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="p-3 bg-red-50 border border-red-200 rounded-lg animate-message mb-2"
+            >
+              <p className="text-sm text-red-500 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-2" />
+                {errors.general}
+              </p>
+            </motion.div>
+          )}
+          {success && (
+            <motion.div
+              key="success-message"
+              variants={messageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="p-3 bg-green-50 border border-green-200 rounded-lg animate-message"
+            >
+              <p className="text-sm text-green-600 flex items-center">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {success}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <button
@@ -1191,7 +1284,7 @@ const Signup = () => {
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-red-500 border-red-200 rounded focus:ring-red-400 mt-1 outline-0"
-                    aria-label="Agree to Terms and Privacy Policy"
+                    aria-label=" Agree to Terms and Privacy Policy"
                     required
                   />
                   <label className="ml-2 text-sm text-gray-500">
@@ -1214,101 +1307,77 @@ const Signup = () => {
               </>
             )}
             {step === 4 && (
-              <AnimatePresence mode="wait">
-                {errors.general && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in mb-6"
-                  >
-                    <p className="text-sm text-red-500 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-2" />
-                      {errors.general}
-                    </p>
-                  </motion.div>
-                )}
-                {success && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in mb-6"
-                  >
-                    <p className="text-sm text-green-600 flex items-center">
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      {success}
-                    </p>
-                  </motion.div>
-                )}
+              <AnimatePresence>
                 {renderQuestionnaire()}
-                <motion.div className="flex justify-between mt-6 gap-3">
-                  {subStep > 1 && (
+                <motion.div className="space-y-6 mt-6">
+                  <div className="flex justify-between gap-3">
+                    {subStep > 1 && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handlePrevQuestion}
+                        className="px-4 py-2 text-gray-600 border border-red-200 bg-red-50 rounded-lg font-medium flex items-center gap-2 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> Back
+                      </motion.button>
+                    )}
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={handlePrevQuestion}
-                      className="px-4 py-2 text-gray-600 border border-red-200 bg-red-50 rounded-lg font-medium flex items-center gap-2 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all"
+                      onClick={handleNextQuestion}
+                      disabled={isLoading}
+                      className="flex-1 bg-gradient-to-r from-red-500 to-pink-400 text-white py-2 rounded-lg font-medium text-base hover:from-red-600 hover:to-pink-500 hover:shadow-md hover:shadow-red-500/50 transition-all animate-pulse-glow flex items-center justify-center space-x-2"
+                      aria-label={
+                        subStep === 4 ? "Submit Questionnaire" : "Next Question"
+                      }
                     >
-                      <ArrowLeft className="w-4 h-4" /> Back
+                      {isLoading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <span>
+                            {subStep === 4 ? "Submit Questionnaire" : "Next"}
+                          </span>
+                          <ChevronRight className="w-4 h-4" />
+                        </>
+                      )}
                     </motion.button>
+                  </div>
+                  {subStep === 4 && (
+                    <>
+                      <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-red-100" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-2 bg-transparent text-gray-500">
+                            Or continue with
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={connectWallet}
+                          disabled={isLoading}
+                          className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all disabled:opacity-50"
+                          aria-label="Connect Wallet"
+                        >
+                          <Fingerprint className="w-4 h-4 mr-2" />
+                          Connect Wallet
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all"
+                          aria-label="Sign up with Biometric"
+                        >
+                          <Smartphone className="w-4 h-4 mr-2" />
+                          Biometric
+                        </button>
+                      </div>
+                    </>
                   )}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleNextQuestion}
-                    disabled={isLoading}
-                    className="flex-1 bg-gradient-to-r from-red-500 to-pink-400 text-white py-2 rounded-lg font-medium text-base hover:from-red-600 hover:to-pink-500 hover:shadow-md hover:shadow-red-500/50 transition-all animate-pulse-glow flex items-center justify-center space-x-2"
-                    aria-label={
-                      subStep === 4 ? "Submit Questionnaire" : "Next Question"
-                    }
-                  >
-                    {isLoading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <span>
-                          {subStep === 4 ? "Submit Questionnaire" : "Next"}
-                        </span>
-                        <ChevronRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </motion.button>
                 </motion.div>
-                {subStep === 4 && (
-                  <>
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-red-100" />
-                      </div>
-                      <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-transparent text-gray-500">
-                          Or continue with
-                        </span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={connectWallet}
-                        disabled={isLoading}
-                        className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all disabled:opacity-50"
-                        aria-label="Connect Wallet"
-                      >
-                        <Fingerprint className="w-4 h-4 mr-2" />
-                        Connect Wallet
-                      </button>
-                      <button
-                        type="button"
-                        className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all"
-                        aria-label="Sign up with Biometric"
-                      >
-                        <Smartphone className="w-4 h-4 mr-2" />
-                        Biometric
-                      </button>
-                    </div>
-                  </>
-                )}
               </AnimatePresence>
             )}
             {step < 4 && (
