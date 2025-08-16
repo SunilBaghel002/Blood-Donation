@@ -415,7 +415,7 @@ const Signup = () => {
                   name="questionnaire.donationCount"
                   value={formData.questionnaire.donationCount}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all outline-0 ${
                     errors["questionnaire.donationCount"]
                       ? "border-red-500"
                       : "border-red-300"
@@ -1010,7 +1010,7 @@ const Signup = () => {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all outline-0 ${
                           errors.firstName ? "border-red-500" : "border-red-300"
                         }`}
                         placeholder=" "
@@ -1034,7 +1034,7 @@ const Signup = () => {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all outline-0 ${
                           errors.lastName ? "border-red-500" : "border-red-300"
                         }`}
                         placeholder=" "
