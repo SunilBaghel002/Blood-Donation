@@ -151,11 +151,14 @@ const Signup = () => {
         if (subStep === 1 && !formData.questionnaire.bloodGroup) {
           newErrors["questionnaire.bloodGroup"] = "Blood group is required";
         } else if (subStep === 2 && !formData.questionnaire.donationCount) {
-          newErrors["questionnaire.donationCount"] = "Donation count is required";
+          newErrors["questionnaire.donationCount"] =
+            "Donation count is required";
         } else if (subStep === 3 && !formData.questionnaire.lastDonationDate) {
-          newErrors["questionnaire.lastDonationDate"] = "Last donation date is required";
+          newErrors["questionnaire.lastDonationDate"] =
+            "Last donation date is required";
         } else if (subStep === 4 && !formData.questionnaire.medicalConditions) {
-          newErrors["questionnaire.medicalConditions"] = "Medical conditions are required";
+          newErrors["questionnaire.medicalConditions"] =
+            "Medical conditions are required";
         }
       } else if (formData.role === "Hospital") {
         if (subStep === 1 && !formData.questionnaire.hospitalName) {
@@ -485,7 +488,9 @@ const Signup = () => {
                   value={formData.questionnaire.lastDonationDate}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.lastDonationDate"] ? "border-red-500" : ""
+                    errors["questionnaire.lastDonationDate"]
+                      ? "border-red-500"
+                      : ""
                   }`}
                   placeholder=" "
                   aria-label="Last Donation Date"
@@ -528,7 +533,9 @@ const Signup = () => {
                   value={formData.questionnaire.medicalConditions}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.medicalConditions"] ? "border-red-500" : ""
+                    errors["questionnaire.medicalConditions"]
+                      ? "border-red-500"
+                      : ""
                   }`}
                   placeholder=" "
                   aria-label="Medical Conditions"
