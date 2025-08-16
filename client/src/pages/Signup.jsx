@@ -1,4 +1,6 @@
+```javascriptreact
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
   Mail,
@@ -20,6 +22,7 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [subStep, setSubStep] = useState(1); // For questionnaire sub-steps
   const [particles, setParticles] = useState([]);
   const [formData, setFormData] = useState({
     email: "",
@@ -39,10 +42,10 @@ const Signup = () => {
       hospitalLocation: "",
       bedCount: "",
       hospitalContactNumber: "",
-      name: "", // Changed from bloodBankName
-      location: "", // Changed from bloodBankLocation
+      name: "",
+      location: "",
       bloodStorageCapacity: "",
-      contactNumber: "", // Changed from bloodBankContactNumber
+      contactNumber: "",
     },
   });
   const [errors, setErrors] = useState({});
@@ -61,6 +64,18 @@ const Signup = () => {
     setParticles(newParticles);
   }, []);
 
+  // Animation variants for questions
+  const questionVariants = {
+    initial: { opacity: 0, x: 100, scale: 0.8 },
+    animate: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+    },
+    exit: { opacity: 0, x: -100, scale: 0.8, transition: { duration: 0.4 } },
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name.includes("questionnaire.")) {
@@ -72,7 +87,6 @@ const Signup = () => {
           [field]: type === "checkbox" ? checked : value,
         },
       }));
-      // Clear error for the specific questionnaire field
       if (errors[`questionnaire.${field}`]) {
         setErrors((prev) => ({ ...prev, [`questionnaire.${field}`]: "" }));
       }
@@ -81,7 +95,6 @@ const Signup = () => {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       }));
-      // Clear error for the top-level field
       if (errors[name]) {
         setErrors((prev) => ({ ...prev, [name]: "" }));
       }
@@ -118,39 +131,56 @@ const Signup = () => {
       }
     } else if (step === 4) {
       if (formData.role === "Donor") {
-        if (!formData.questionnaire.bloodGroup) {
+        if (subStep === 1 && !formData.questionnaire.bloodGroup) {
           newErrors["questionnaire.bloodGroup"] = "Blood group is required";
         }
       } else if (formData.role === "Hospital") {
-        if (!formData.questionnaire.hospitalName)
+        if (subStep === 1 && !formData.questionnaire.hospitalName) {
           newErrors["questionnaire.hospitalName"] = "Hospital name is required";
-        if (!formData.questionnaire.hospitalLocation)
+        } else if (subStep === 2 && !formData.questionnaire.hospitalLocation) {
           newErrors["questionnaire.hospitalLocation"] = "Location is required";
-        if (!formData.questionnaire.bedCount)
+        } else if (subStep === 3 && !formData.questionnaire.bedCount) {
           newErrors["questionnaire.bedCount"] = "Bed count is required";
-        if (!formData.questionnaire.hospitalContactNumber)
-          newErrors["questionnaire.hospitalContactNumber"] =
-            "Contact number is required";
+        } else if (subStep === 4 && !formData.questionnaire.hospitalContactNumber) {
+          newErrors["questionnaire.hospitalContactNumber"] = "Contact number is required";
+        }
       } else if (formData.role === "BloodBank") {
-        if (!formData.questionnaire.name)
+        if (subStep === 1 && !formData.questionnaire.name) {
           newErrors["questionnaire.name"] = "Blood bank name is required";
-        if (!formData.questionnaire.location)
+        } else if (subStep === 2 && !formData.questionnaire.location) {
           newErrors["questionnaire.location"] = "Location is required";
-        if (!formData.questionnaire.bloodStorageCapacity)
-          newErrors["questionnaire.bloodStorageCapacity"] =
-            "Storage capacity is required";
-        if (!formData.questionnaire.contactNumber)
-          newErrors["questionnaire.contactNumber"] =
-            "Contact number is required";
+        } else if (subStep === 3 && !formData.questionnaire.bloodStorageCapacity) {
+          newErrors["questionnaire.bloodStorageCapacity"] = "Storage capacity is required";
+        } else if (subStep === 4 && !formData.questionnaire.contactNumber) {
+          newErrors["questionnaire.contactNumber"] = "Contact number is required";
+        }
       }
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleNextQuestion = () => {
+    if (!validateStep()) return;
+    if (formData.role === "Donor" && subStep < 4) {
+      setSubStep(subStep + 1);
+    } else if ((formData.role === "Hospital" || formData.role === "BloodBank") && subStep < 4) {
+      setSubStep(subStep + 1);
+    } else {
+      handleSubmit({ preventDefault: () => {} }); // Trigger final submission
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    setErrors({});
+    if (subStep > 1) {
+      setSubStep(subStep - 1);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep()) return;
+    if (step < 4 && !validateStep()) return;
     setIsLoading(true);
     setErrors({});
     try {
@@ -170,38 +200,31 @@ const Signup = () => {
         setSuccess(data.message);
         setStep(2);
       } else if (step === 2) {
-        const response = await fetch(
-          "http://localhost:5000/api/auth/verify-otp",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: formData.email, otp: formData.otp }),
-          }
-        );
+        const response = await fetch("http://localhost:5000/api/auth/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, otp: formData.otp }),
+        });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Failed to verify OTP");
         setSuccess(data.message);
         setStep(3);
       } else if (step === 3) {
-        const response = await fetch(
-          "http://localhost:5000/api/auth/complete-signup",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: formData.email,
-              password: formData.password,
-              confirmPassword: formData.confirmPassword,
-            }),
-          }
-        );
+        const response = await fetch("http://localhost:5000/api/auth/complete-signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword,
+          }),
+        });
         const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error || "Failed to set password");
+        if (!response.ok) throw new Error(data.error || "Failed to set password");
         setSuccess(data.message);
         setStep(4);
+        setSubStep(1);
       } else if (step === 4) {
-        // Prepare questionnaire data based on role
         let questionnaireData = {};
         if (formData.role === "Donor") {
           questionnaireData = {
@@ -225,22 +248,17 @@ const Signup = () => {
             contactNumber: formData.questionnaire.contactNumber,
           };
         }
-
-        const response = await fetch(
-          "http://localhost:5000/api/auth/submit-questionnaire",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: formData.email,
-              role: formData.role,
-              questionnaire: questionnaireData,
-            }),
-          }
-        );
+        const response = await fetch("http://localhost:5000/api/auth/submit-questionnaire", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            role: formData.role,
+            questionnaire: questionnaireData,
+          }),
+        });
         const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error || "Failed to submit questionnaire");
+        if (!response.ok) throw new Error(data.error || "Failed to submit questionnaire");
         setSuccess(data.message);
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.user.role);
@@ -259,20 +277,16 @@ const Signup = () => {
     setIsLoading(true);
     try {
       const walletAddress = "0x742d35Cc6565C42c42..."; // Mock address
-      const response = await fetch(
-        "http://localhost:5000/api/auth/connect-wallet",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({ email: formData.email, walletAddress }),
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/auth/connect-wallet", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ email: formData.email, walletAddress }),
+      });
       const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Failed to connect wallet");
+      if (!response.ok) throw new Error(data.error || "Failed to connect wallet");
       setFormData((prev) => ({ ...prev, walletAddress }));
       setSuccess(data.message);
     } catch (error) {
@@ -294,6 +308,383 @@ const Signup = () => {
       }}
     />
   );
+
+  const renderQuestionnaire = () => {
+    const totalSubSteps = 4; // All roles have 4 questions
+    const progress = (subStep / totalSubSteps) * 100;
+
+    if (formData.role === "Donor") {
+      switch (subStep) {
+        case 1:
+          return (
+            <motion.div key="bloodGroup" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">What's your blood group?</h3>
+                <p className="text-gray-600">Select your blood type</p>
+              </motion.div>
+              <motion.div className="relative">
+                <select
+                  name="questionnaire.bloodGroup"
+                  value={formData.questionnaire.bloodGroup}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.bloodGroup"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  aria-label="Blood Group"
+                  required
+                >
+                  <option value="">Select Blood Group</option>
+                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+                    <option key={bg} value={bg}>{bg}</option>
+                  ))}
+                </select>
+                <label className="absolute left-4 floating-label text-gray-400">Blood Group</label>
+                {errors["questionnaire.bloodGroup"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.bloodGroup"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        case 2:
+          return (
+            <motion.div key="donationCount" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">How many times have you donated?</h3>
+                <p className="text-gray-600">Enter the number of donations</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="number"
+                  name="questionnaire.donationCount"
+                  value={formData.questionnaire.donationCount}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.donationCount"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Donation Count"
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Number of Donations</label>
+                {errors["questionnaire.donationCount"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.donationCount"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        case 3:
+          return (
+            <motion.div key="lastDonationDate" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">When was your last donation?</h3>
+                <p className="text-gray-600">Select the date of your last donation</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="date"
+                  name="questionnaire.lastDonationDate"
+                  value={formData.questionnaire.lastDonationDate}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                  placeholder=" "
+                  aria-label="Last Donation Date"
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Last Donation Date</label>
+              </motion.div>
+            </motion.div>
+          );
+        case 4:
+          return (
+            <motion.div key="medicalConditions" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Any medical conditions?</h3>
+                <p className="text-gray-600">List any relevant medical conditions</p>
+              </motion.div>
+              <motion.div className="relative">
+                <textarea
+                  name="questionnaire.medicalConditions"
+                  value={formData.questionnaire.medicalConditions}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                  placeholder=" "
+                  aria-label="Medical Conditions"
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Medical Conditions</label>
+              </motion.div>
+            </motion.div>
+          );
+        default:
+          return null;
+      }
+    } else if (formData.role === "Hospital") {
+      switch (subStep) {
+        case 1:
+          return (
+            <motion.div key="hospitalName" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">What's your hospital's name?</h3>
+                <p className="text-gray-600">Enter the name of your hospital</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="text"
+                  name="questionnaire.hospitalName"
+                  value={formData.questionnaire.hospitalName}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.hospitalName"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Hospital Name"
+                  required
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Hospital Name</label>
+                {errors["questionnaire.hospitalName"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.hospitalName"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        case 2:
+          return (
+            <motion.div key="hospitalLocation" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Where is your hospital located?</h3>
+                <p className="text-gray-600">Enter the hospital's location</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="text"
+                  name="questionnaire.hospitalLocation"
+                  value={formData.questionnaire.hospitalLocation}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.hospitalLocation"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Location"
+                  required
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Location</label>
+                {errors["questionnaire.hospitalLocation"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.hospitalLocation"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        case 3:
+          return (
+            <motion.div key="bedCount" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">How many beds does your hospital have?</h3>
+                <p className="text-gray-600">Enter the number of beds</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="number"
+                  name="questionnaire.bedCount"
+                  value={formData.questionnaire.bedCount}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.bedCount"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Bed Count"
+                  required
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Bed Count</label>
+                {errors["questionnaire.bedCount"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.bedCount"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        case 4:
+          return (
+            <motion.div key="hospitalContactNumber" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">What's your hospital's contact number?</h3>
+                <p className="text-gray-600">Enter the contact number</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="text"
+                  name="questionnaire.hospitalContactNumber"
+                  value={formData.questionnaire.hospitalContactNumber}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.hospitalContactNumber"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Contact Number"
+                  required
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Contact Number</label>
+                {errors["questionnaire.hospitalContactNumber"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.hospitalContactNumber"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        default:
+          return null;
+      }
+    } else if (formData.role === "BloodBank") {
+      switch (subStep) {
+        case 1:
+          return (
+            <motion.div key="name" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">What's your blood bank's name?</h3>
+                <p className="text-gray-600">Enter the name of your blood bank</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="text"
+                  name="questionnaire.name"
+                  value={formData.questionnaire.name}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.name"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Blood Bank Name"
+                  required
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Blood Bank Name</label>
+                {errors["questionnaire.name"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.name"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        case 2:
+          return (
+            <motion.div key="location" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Where is your blood bank located?</h3>
+                <p className="text-gray-600">Enter the blood bank's location</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="text"
+                  name="questionnaire.location"
+                  value={formData.questionnaire.location}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.location"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Location"
+                  required
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Location</label>
+                {errors["questionnaire.location"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.location"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        case 3:
+          return (
+            <motion.div key="bloodStorageCapacity" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">What's your blood storage capacity?</h3>
+                <p className="text-gray-600">Enter the storage capacity in units</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="number"
+                  name="questionnaire.bloodStorageCapacity"
+                  value={formData.questionnaire.bloodStorageCapacity}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.bloodStorageCapacity"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Blood Storage Capacity"
+                  required
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Blood Storage Capacity (units)</label>
+                {errors["questionnaire.bloodStorageCapacity"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.bloodStorageCapacity"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        case 4:
+          return (
+            <motion.div key="contactNumber" variants={questionVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
+              <motion.div className="text-center">
+                <Heart className="mx-auto w-12 h-12 text-red-600 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">What's your blood bank's contact number?</h3>
+                <p className="text-gray-600">Enter the contact number</p>
+              </motion.div>
+              <motion.div className="relative">
+                <input
+                  type="text"
+                  name="questionnaire.contactNumber"
+                  value={formData.questionnaire.contactNumber}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    errors["questionnaire.contactNumber"] ? "border-red-500" : "border-red-300"
+                  }`}
+                  placeholder=" "
+                  aria-label="Contact Number"
+                  required
+                />
+                <label className="absolute left-4 floating-label text-gray-400">Contact Number</label>
+                {errors["questionnaire.contactNumber"] && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.contactNumber"]}
+                  </p>
+                )}
+              </motion.div>
+            </motion.div>
+          );
+        default:
+          return null;
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -345,9 +736,7 @@ const Signup = () => {
               padding: 0 4px;
             }
             .progress-bar {
-              background: linear-gradient(to right, #dc2626 ${
-                (step / 4) * 100
-              }%, #e5e7eb ${(step / 4) * 100}%);
+              background: linear-gradient(to right, #dc2626 ${(step < 4 ? step / 4 : subStep / 4) * 100}%, #e5e7eb ${(step < 4 ? step / 4 : subStep / 4) * 100}%);
             }
           `}
         </style>
@@ -387,9 +776,9 @@ const Signup = () => {
                   ? "Verify OTP"
                   : step === 3
                   ? "Set Password"
-                  : "Questionnaire"}
+                  : `Questionnaire (${subStep}/4)`}
               </span>
-              <span>{step}/4</span>
+              <span>{step < 4 ? `${step}/4` : `${subStep}/4`}</span>
             </div>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -550,15 +939,9 @@ const Signup = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                   {errors.password && (
                     <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
@@ -575,9 +958,7 @@ const Signup = () => {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors.confirmPassword
-                        ? "border-red-500"
-                        : "border-red-300"
+                      errors.confirmPassword ? "border-red-500" : "border-red-300"
                     }`}
                     placeholder=" "
                     aria-label="Confirm Password"
@@ -590,17 +971,9 @@ const Signup = () => {
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    aria-label={
-                      showConfirmPassword
-                        ? "Hide confirm password"
-                        : "Show confirm password"
-                    }
+                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                   {errors.confirmPassword && (
                     <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
@@ -618,434 +991,141 @@ const Signup = () => {
                   />
                   <label className="ml-2 text-sm text-gray-600">
                     I agree to the{" "}
-                    <a
-                      href="/terms"
-                      className="text-red-600 hover:text-red-500 font-medium"
-                    >
+                    <a href="/terms" className="text-red-600 hover:text-red-500 font-medium">
                       Terms of Service
                     </a>{" "}
                     and{" "}
-                    <a
-                      href="/privacy"
-                      className="text-red-600 hover:text-red-500 font-medium"
-                    >
+                    <a href="/privacy" className="text-red-600 hover:text-red-500 font-medium">
                       Privacy Policy
                     </a>
                   </label>
                 </div>
               </>
             )}
-            {step === 4 && formData.role === "Donor" && (
-              <div className="space-y-6">
-                <div className="relative">
-                  <select
-                    name="questionnaire.bloodGroup"
-                    value={formData.questionnaire.bloodGroup}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bloodGroup"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    aria-label="Blood Group"
-                    required
+            {step === 4 && (
+              <AnimatePresence mode="wait">
+                {errors.general && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in mb-6"
                   >
-                    <option value="">Select Blood Group</option>
-                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
-                      (bg) => (
-                        <option key={bg} value={bg}>
-                          {bg}
-                        </option>
-                      )
+                    <p className="text-sm text-red-600 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      {errors.general}
+                    </p>
+                  </motion.div>
+                )}
+                {success && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in mb-6"
+                  >
+                    <p className="text-sm text-green-600 flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      {success}
+                    </p>
+                  </motion.div>
+                )}
+                {renderQuestionnaire()}
+                <motion.div className="flex justify-between mt-6">
+                  {subStep > 1 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handlePrevQuestion}
+                      className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg font-semibold flex items-center gap-2 hover:bg-gray-50 transition-all"
+                    >
+                      <ArrowLeft className="w-5 h-5" /> Back
+                    </motion.button>
+                  )}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleNextQuestion}
+                    disabled={isLoading}
+                    className="flex-1 bg-gradient-to-r from-red-600 to-pink-500 text-white py-3 rounded-lg font-semibold text-lg hover:from-red-700 hover:to-pink-600 transform transition-all duration-300 animate-pulse-glow flex items-center justify-center space-x-2"
+                    aria-label={subStep === 4 ? "Submit Questionnaire" : "Next Question"}
+                  >
+                    {isLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <span>{subStep === 4 ? "Submit Questionnaire" : "Next"}</span>
+                        <ChevronRight className="w-5 h-5" />
+                      </>
                     )}
-                  </select>
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Blood Group
-                  </label>
-                  {errors["questionnaire.bloodGroup"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.bloodGroup"]}
-                    </p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="questionnaire.donationCount"
-                    value={formData.questionnaire.donationCount}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.donationCount"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Donation Count"
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Number of Donations
-                  </label>
-                  {errors["questionnaire.donationCount"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.donationCount"]}
-                    </p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="date"
-                    name="questionnaire.lastDonationDate"
-                    value={formData.questionnaire.lastDonationDate}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                    placeholder=" "
-                    aria-label="Last Donation Date"
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Last Donation Date
-                  </label>
-                </div>
-                <div className="relative">
-                  <textarea
-                    name="questionnaire.medicalConditions"
-                    value={formData.questionnaire.medicalConditions}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                    placeholder=" "
-                    aria-label="Medical Conditions"
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Medical Conditions
-                  </label>
-                </div>
-              </div>
-            )}
-            {step === 4 && formData.role === "Hospital" && (
-              <div className="space-y-6">
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="questionnaire.hospitalName"
-                    value={formData.questionnaire.hospitalName}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.hospitalName"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Hospital Name"
-                    required
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Hospital Name
-                  </label>
-                  {errors["questionnaire.hospitalName"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.hospitalName"]}
-                    </p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="questionnaire.hospitalLocation"
-                    value={formData.questionnaire.hospitalLocation}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.hospitalLocation"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Location"
-                    required
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Location
-                  </label>
-                  {errors["questionnaire.hospitalLocation"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.hospitalLocation"]}
-                    </p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="questionnaire.bedCount"
-                    value={formData.questionnaire.bedCount}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bedCount"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Bed Count"
-                    required
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Bed Count
-                  </label>
-                  {errors["questionnaire.bedCount"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.bedCount"]}
-                    </p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="questionnaire.hospitalContactNumber"
-                    value={formData.questionnaire.hospitalContactNumber}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.hospitalContactNumber"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Contact Number"
-                    required
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Contact Number
-                  </label>
-                  {errors["questionnaire.hospitalContactNumber"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.hospitalContactNumber"]}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-            {step === 4 && formData.role === "BloodBank" && (
-              <div className="space-y-6">
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="questionnaire.name"
-                    value={formData.questionnaire.name}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.name"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Blood Bank Name"
-                    required
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Blood Bank Name
-                  </label>
-                  {errors["questionnaire.name"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.name"]}
-                    </p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="questionnaire.location"
-                    value={formData.questionnaire.location}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.location"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Location"
-                    required
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Location
-                  </label>
-                  {errors["questionnaire.location"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.location"]}
-                    </p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="number"
-                    name="questionnaire.bloodStorageCapacity"
-                    value={formData.questionnaire.bloodStorageCapacity}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.bloodStorageCapacity"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Blood Storage Capacity"
-                    required
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Blood Storage Capacity (units)
-                  </label>
-                  {errors["questionnaire.bloodStorageCapacity"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.bloodStorageCapacity"]}
-                    </p>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="questionnaire.contactNumber"
-                    value={formData.questionnaire.contactNumber}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                      errors["questionnaire.contactNumber"]
-                        ? "border-red-500"
-                        : "border-red-300"
-                    }`}
-                    placeholder=" "
-                    aria-label="Contact Number"
-                    required
-                  />
-                  <label className="absolute left-4 floating-label text-gray-400">
-                    Contact Number
-                  </label>
-                  {errors["questionnaire.contactNumber"] && (
-                    <p className="mt-1 text-sm text-red-600 flex items-center animate-fade-in">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors["questionnaire.contactNumber"]}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-            {errors.general && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in">
-                <p className="text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  {errors.general}
-                </p>
-              </div>
-            )}
-            {success && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in">
-                <p className="text-sm text-green-600 flex items-center">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  {success}
-                </p>
-              </div>
+                  </motion.button>
+                </motion.div>
+                {subStep === 4 && (
+                  <>
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200" />
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={connectWallet}
+                        disabled={isLoading}
+                        className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 transition-all disabled:opacity-50"
+                        aria-label="Connect Wallet"
+                      >
+                        <Fingerprint className="w-5 h-5 mr-2" />
+                        Connect Wallet
+                      </button>
+                      <button
+                        type="button"
+                        className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 transition-all"
+                        aria-label="Sign up with Biometric"
+                      >
+                        <Smartphone className="w-5 h-5 mr-2" />
+                        Biometric
+                      </button>
+                    </div>
+                  </>
+                )}
+              </AnimatePresence>
             )}
             {step < 4 && (
               <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-red-600 to-pink-500 text-white py-3 rounded-lg font-semibold text-lg hover:from-red-700 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 animate-pulse-glow flex items-center justify-center space-x-2"
-                aria-label={
-                  step === 1
-                    ? "Send OTP"
-                    : step === 2
-                    ? "Verify OTP"
-                    : "Set Password"
-                }
+                aria-label={step === 1 ? "Send OTP" : step === 2 ? "Verify OTP" : "Set Password"}
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>
-                      {step === 1
-                        ? "Send OTP"
-                        : step === 2
-                        ? "Verify OTP"
-                        : "Set Password"}
-                    </span>
+                    <span>{step === 1 ? "Send OTP" : step === 2 ? "Verify OTP" : "Set Password"}</span>
                     <ChevronRight className="w-5 h-5" />
                   </>
                 )}
               </button>
             )}
-            {step === 4 && (
-              <>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-red-600 to-pink-500 text-white py-3 rounded-lg font-semibold text-lg hover:from-red-700 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 animate-pulse-glow flex items-center justify-center space-x-2"
-                  aria-label="Submit Questionnaire"
-                >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>Submit Questionnaire</span>
-                      <ChevronRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={connectWallet}
-                    disabled={isLoading}
-                    className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 transition-all disabled:opacity-50"
-                    aria-label="Connect Wallet"
-                  >
-                    <Fingerprint className="w-5 h-5 mr-2" />
-                    Connect Wallet
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-red-500 transition-all"
-                    aria-label="Sign up with Biometric"
-                  >
-                    <Smartphone className="w-5 h-5 mr-2" />
-                    Biometric
-                  </button>
-                </div>
-              </>
-            )}
           </form>
           <p className="text-center mt-6 text-sm text-gray-600">
             Already have an account?{" "}
-            <a
-              href="/login"
-              className="text-red-600 hover:text-red-500 font-medium"
-            >
+            <a href="/login" className="text-red-600 hover:text-red-500 font-medium">
               Sign in
             </a>
           </p>
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-600 font-medium">
-                Bank-level Security
-              </p>
+              <p className="text-xs text-gray-600 font-medium">Bank-level Security</p>
             </div>
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <Heart className="w-8 h-8 text-red-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-600 font-medium">
-                1000+ Lives Saved
-              </p>
+              <p className="text-xs text-gray-600 font-medium">1000+ Lives Saved</p>
             </div>
             <div className="bg-gradient-to-r from-red-100 to-pink-100 rounded-lg p-3 border border-white/20 hover:shadow-md transition-all">
               <CheckCircle className="w-8 h-8 text-blue-600 mx-auto mb-2" />
@@ -1059,3 +1139,4 @@ const Signup = () => {
 };
 
 export default Signup;
+```
