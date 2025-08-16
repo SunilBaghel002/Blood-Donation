@@ -150,6 +150,12 @@ const Signup = () => {
       if (formData.role === "Donor") {
         if (subStep === 1 && !formData.questionnaire.bloodGroup) {
           newErrors["questionnaire.bloodGroup"] = "Blood group is required";
+        } else if (subStep === 2 && !formData.questionnaire.donationCount) {
+          newErrors["questionnaire.donationCount"] = "Donation count is required";
+        } else if (subStep === 3 && !formData.questionnaire.lastDonationDate) {
+          newErrors["questionnaire.lastDonationDate"] = "Last donation date is required";
+        } else if (subStep === 4 && !formData.questionnaire.medicalConditions) {
+          newErrors["questionnaire.medicalConditions"] = "Medical conditions are required";
         }
       } else if (formData.role === "Hospital") {
         if (subStep === 1 && !formData.questionnaire.hospitalName) {
@@ -188,14 +194,9 @@ const Signup = () => {
 
   const handleNextQuestion = () => {
     if (!validateStep()) return;
-    if (formData.role === "Donor" && subStep < 4) {
+    if (subStep < 4) {
       setSubStep(subStep + 1);
-    } else if (
-      (formData.role === "Hospital" || formData.role === "BloodBank") &&
-      subStep < 4
-    ) {
-      setSubStep(subStep + 1);
-    } else {
+    } else if (subStep === 4) {
       handleSubmit({ preventDefault: () => {} });
     }
   };
@@ -210,6 +211,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (step < 4 && !validateStep()) return;
+    if (step === 4 && subStep < 4) return; // Prevent submission until all sub-steps are complete
     setIsLoading(true);
     setErrors({});
     try {
@@ -260,7 +262,7 @@ const Signup = () => {
         setSuccess(data.message);
         setStep(4);
         setSubStep(1);
-      } else if (step === 4) {
+      } else if (step === 4 && subStep === 4) {
         let questionnaireData = {};
         if (formData.role === "Donor") {
           questionnaireData = {
@@ -443,6 +445,7 @@ const Signup = () => {
                   }`}
                   placeholder=" "
                   aria-label="Donation Count"
+                  required
                 />
                 <label className="absolute left-4 floating-label text-gray-500">
                   Number of Donations
@@ -481,13 +484,22 @@ const Signup = () => {
                   name="questionnaire.lastDonationDate"
                   value={formData.questionnaire.lastDonationDate}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0"
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
+                    errors["questionnaire.lastDonationDate"] ? "border-red-500" : ""
+                  }`}
                   placeholder=" "
                   aria-label="Last Donation Date"
+                  required
                 />
                 <label className="absolute left-4 floating-label text-gray-500">
                   Last Donation Date
                 </label>
+                {errors["questionnaire.lastDonationDate"] && (
+                  <p className="mt-1 text-sm text-red-500 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.lastDonationDate"]}
+                  </p>
+                )}
               </motion.div>
             </motion.div>
           );
@@ -515,13 +527,22 @@ const Signup = () => {
                   name="questionnaire.medicalConditions"
                   value={formData.questionnaire.medicalConditions}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0"
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
+                    errors["questionnaire.medicalConditions"] ? "border-red-500" : ""
+                  }`}
                   placeholder=" "
                   aria-label="Medical Conditions"
+                  required
                 />
                 <label className="absolute left-4 floating-label text-gray-500">
                   Medical Conditions
                 </label>
+                {errors["questionnaire.medicalConditions"] && (
+                  <p className="mt-1 text-sm text-red-500 flex items-center animate-fade-in">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors["questionnaire.medicalConditions"]}
+                  </p>
+                )}
               </motion.div>
             </motion.div>
           );
@@ -964,6 +985,41 @@ const Signup = () => {
         </style>
       </div>
 
+      <div className="message-container">
+        <AnimatePresence>
+          {errors.general && (
+            <motion.div
+              key="error-message"
+              variants={messageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="p-3 bg-red-50 border border-red-200 rounded-lg animate-message mb-2"
+            >
+              <p className="text-sm text-red-500 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-2" />
+                {errors.general}
+              </p>
+            </motion.div>
+          )}
+          {success && (
+            <motion.div
+              key="success-message"
+              variants={messageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="p-3 bg-green-50 border border-green-200 rounded-lg animate-message"
+            >
+              <p className="text-sm text-green-600 flex items-center">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {success}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       <button
         className="absolute top-4 left-4 flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors animate-fade-in"
         onClick={() => (window.location.href = "/")}
@@ -1001,40 +1057,6 @@ const Signup = () => {
               </span>
               <span>{step < 4 ? `${step}/4` : `${subStep}/4`}</span>
             </div>
-          </div>
-          <div className="message-container">
-            <AnimatePresence>
-              {errors.general && (
-                <motion.div
-                  key="error-message"
-                  variants={messageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  className="p-3 bg-red-50 border border-red-200 rounded-lg animate-message mb-2"
-                >
-                  <p className="text-sm text-red-500 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    {errors.general}
-                  </p>
-                </motion.div>
-              )}
-              {success && (
-                <motion.div
-                  key="success-message"
-                  variants={messageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  className="p-3 bg-green-50 border border-green-200 rounded-lg animate-message"
-                >
-                  <p className="text-sm text-green-600 flex items-center">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    {success}
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {step === 1 && (
