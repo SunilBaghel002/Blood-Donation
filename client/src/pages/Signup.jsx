@@ -50,6 +50,17 @@ const Signup = () => {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
 
+  // Auto-dismiss messages after 5 seconds
+  useEffect(() => {
+    if (success || errors.general) {
+      const timer = setTimeout(() => {
+        setSuccess("");
+        setErrors((prev) => ({ ...prev, general: "" }));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, errors.general]);
+
   // Generate blood droplet particles
   useEffect(() => {
     const newParticles = Array.from({ length: 10 }, (_, i) => ({
@@ -73,6 +84,13 @@ const Signup = () => {
       transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
     },
     exit: { opacity: 0, x: -100, scale: 0.8, transition: { duration: 0.4 } },
+  };
+
+  // Animation variants for messages
+  const messageVariants = {
+    initial: { opacity: 0, y: -20, x: 20 },
+    animate: { opacity: 1, y: 0, x: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, y: -20, x: 20, transition: { duration: 0.3 } },
   };
 
   const handleInputChange = (e) => {
@@ -892,6 +910,10 @@ const Signup = () => {
               from { opacity: 0; transform: translateY(20px); }
               to { opacity: 1; transform: translateY(0); }
             }
+            @keyframes message-slide {
+              from { opacity: 0; transform: translateY(-20px) translateX(20px); }
+              to { opacity: 1; transform: translateY(0) translateX(0); }
+            }
             @keyframes progress {
               0% { width: 0%; }
               100% { width: ${(step < 4 ? step / 4 : subStep / 4) * 100}%; }
@@ -899,6 +921,7 @@ const Signup = () => {
             .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
             .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
             .animate-progress { animation: progress 0.5s ease-out forwards; }
+            .animate-message { animation: message-slide 0.3s ease-out forwards; }
             .parallax-bg {
               background-attachment: fixed;
               background-position: center;
@@ -929,6 +952,13 @@ const Signup = () => {
             .progress-bar {
               width: ${(step < 4 ? step / 4 : subStep / 4) * 100}%;
               background: linear-gradient(to right, #ef4444, #f472b6);
+            }
+            .message-container {
+              position: fixed;
+              top: 1rem;
+              right: 1rem;
+              z-index: 1000;
+              max-width: 300px;
             }
           `}
         </style>
@@ -971,6 +1001,40 @@ const Signup = () => {
               </span>
               <span>{step < 4 ? `${step}/4` : `${subStep}/4`}</span>
             </div>
+          </div>
+          <div className="message-container">
+            <AnimatePresence>
+              {errors.general && (
+                <motion.div
+                  key="error-message"
+                  variants={messageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="p-3 bg-red-50 border border-red-200 rounded-lg animate-message mb-2"
+                >
+                  <p className="text-sm text-red-500 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    {errors.general}
+                  </p>
+                </motion.div>
+              )}
+              {success && (
+                <motion.div
+                  key="success-message"
+                  variants={messageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="p-3 bg-green-50 border border-green-200 rounded-lg animate-message"
+                >
+                  <p className="text-sm text-green-600 flex items-center">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    {success}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             {step === 1 && (
@@ -1191,7 +1255,7 @@ const Signup = () => {
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-red-500 border-red-200 rounded focus:ring-red-400 mt-1 outline-0"
-                    aria-label="Agree to Terms and Privacy Policy"
+                    aria-label=" Agree to Terms and Privacy Policy"
                     required
                   />
                   <label className="ml-2 text-sm text-gray-500">
@@ -1214,33 +1278,7 @@ const Signup = () => {
               </>
             )}
             {step === 4 && (
-              <AnimatePresence mode="wait">
-                {errors.general && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-3 bg-red-50 border border-red-200 rounded-lg animate-fade-in mb-6"
-                  >
-                    <p className="text-sm text-red-500 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-2" />
-                      {errors.general}
-                    </p>
-                  </motion.div>
-                )}
-                {success && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-3 bg-green-50 border border-green-200 rounded-lg animate-fade-in mb-6"
-                  >
-                    <p className="text-sm text-green-600 flex items-center">
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      {success}
-                    </p>
-                  </motion.div>
-                )}
+              <AnimatePresence>
                 {renderQuestionnaire()}
                 <motion.div className="flex justify-between mt-6 gap-3">
                   {subStep > 1 && (
