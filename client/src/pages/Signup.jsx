@@ -151,14 +151,11 @@ const Signup = () => {
         if (subStep === 1 && !formData.questionnaire.bloodGroup) {
           newErrors["questionnaire.bloodGroup"] = "Blood group is required";
         } else if (subStep === 2 && !formData.questionnaire.donationCount) {
-          newErrors["questionnaire.donationCount"] =
-            "Donation count is required";
+          newErrors["questionnaire.donationCount"] = "Donation count is required";
         } else if (subStep === 3 && !formData.questionnaire.lastDonationDate) {
-          newErrors["questionnaire.lastDonationDate"] =
-            "Last donation date is required";
+          newErrors["questionnaire.lastDonationDate"] = "Last donation date is required";
         } else if (subStep === 4 && !formData.questionnaire.medicalConditions) {
-          newErrors["questionnaire.medicalConditions"] =
-            "Medical conditions are required";
+          newErrors["questionnaire.medicalConditions"] = "Medical conditions are required";
         }
       } else if (formData.role === "Hospital") {
         if (subStep === 1 && !formData.questionnaire.hospitalName) {
@@ -488,9 +485,7 @@ const Signup = () => {
                   value={formData.questionnaire.lastDonationDate}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.lastDonationDate"]
-                      ? "border-red-500"
-                      : ""
+                    errors["questionnaire.lastDonationDate"] ? "border-red-500" : ""
                   }`}
                   placeholder=" "
                   aria-label="Last Donation Date"
@@ -533,9 +528,7 @@ const Signup = () => {
                   value={formData.questionnaire.medicalConditions}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.medicalConditions"]
-                      ? "border-red-500"
-                      : ""
+                    errors["questionnaire.medicalConditions"] ? "border-red-500" : ""
                   }`}
                   placeholder=" "
                   aria-label="Medical Conditions"
@@ -667,9 +660,7 @@ const Signup = () => {
                   name="questionnaire.bedCount"
                   value={formData.questionnaire.bedCount}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.bedCount"] ? "border-red-500" : ""
-                  }`}
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors["questionnaire.bedCount"] ? "border-red-500" : ""}`}
                   placeholder=" "
                   aria-label="Bed Count"
                   required
@@ -709,11 +700,7 @@ const Signup = () => {
                   name="questionnaire.hospitalContactNumber"
                   value={formData.questionnaire.hospitalContactNumber}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.hospitalContactNumber"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors["questionnaire.hospitalContactNumber"] ? "border-red-500" : ""}`}
                   placeholder=" "
                   aria-label="Contact Number"
                   required
@@ -760,9 +747,7 @@ const Signup = () => {
                   name="questionnaire.name"
                   value={formData.questionnaire.name}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.name"] ? "border-red-500" : ""
-                  }`}
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors["questionnaire.name"] ? "border-red-500" : ""}`}
                   placeholder=" "
                   aria-label="Blood Bank Name"
                   required
@@ -802,9 +787,7 @@ const Signup = () => {
                   name="questionnaire.location"
                   value={formData.questionnaire.location}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.location"] ? "border-red-500" : ""
-                  }`}
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors["questionnaire.location"] ? "border-red-500" : ""}`}
                   placeholder=" "
                   aria-label="Location"
                   required
@@ -846,11 +829,7 @@ const Signup = () => {
                   name="questionnaire.bloodStorageCapacity"
                   value={formData.questionnaire.bloodStorageCapacity}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.bloodStorageCapacity"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors["questionnaire.bloodStorageCapacity"] ? "border-red-500" : ""}`}
                   placeholder=" "
                   aria-label="Blood Storage Capacity"
                   required
@@ -890,11 +869,7 @@ const Signup = () => {
                   name="questionnaire.contactNumber"
                   value={formData.questionnaire.contactNumber}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors["questionnaire.contactNumber"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors["questionnaire.contactNumber"] ? "border-red-500" : ""}`}
                   placeholder=" "
                   aria-label="Contact Number"
                   required
@@ -1073,9 +1048,7 @@ const Signup = () => {
                     name="role"
                     value={formData.role}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                      errors.role ? "border-red-500" : ""
-                    }`}
+                    className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors.role ? "border-red-500" : ""}`}
                     aria-label="Role"
                     required
                   >
@@ -1102,9 +1075,7 @@ const Signup = () => {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className={`w-full pl-10 pr-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                          errors.firstName ? "border-red-500" : ""
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors.firstName ? "border-red-500" : ""}`}
                         placeholder=" "
                         aria-label="First Name"
                         required
@@ -1126,9 +1097,7 @@ const Signup = () => {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className={`w-full pl-10 pr-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                          errors.lastName ? "border-red-500" : ""
-                        }`}
+                        className={`w-full pl-10 pr-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors.lastName ? "border-red-500" : ""}`}
                         placeholder=" "
                         aria-label="Last Name"
                         required
@@ -1152,9 +1121,7 @@ const Signup = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                      errors.email ? "border-red-500" : ""
-                    }`}
+                    className={`w-full pl-10 pr-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors.email ? "border-red-500" : ""}`}
                     placeholder=" "
                     aria-label="Email"
                     required
@@ -1178,9 +1145,7 @@ const Signup = () => {
                   name="otp"
                   value={formData.otp}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                    errors.otp ? "border-red-500" : ""
-                  }`}
+                  className={`w-full px-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors.otp ? "border-red-500" : ""}`}
                   placeholder=" "
                   aria-label="OTP"
                   required
@@ -1209,9 +1174,7 @@ const Signup = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-12 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                      errors.password ? "border-red-500" : ""
-                    }`}
+                    className={`w-full pl-10 pr-12 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors.password ? "border-red-500" : ""}`}
                     placeholder=" "
                     aria-label="Password"
                     required
@@ -1247,9 +1210,7 @@ const Signup = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-12 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${
-                      errors.confirmPassword ? "border-red-500" : ""
-                    }`}
+                    className={`w-full pl-10 pr-12 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 transition-all outline-0 ${errors.confirmPassword ? "border-red-500" : ""}`}
                     placeholder=" "
                     aria-label="Confirm Password"
                     required
@@ -1309,73 +1270,75 @@ const Signup = () => {
             {step === 4 && (
               <AnimatePresence>
                 {renderQuestionnaire()}
-                <motion.div className="flex justify-between mt-6 gap-3">
-                  {subStep > 1 && (
+                <motion.div className="space-y-6 mt-6">
+                  <div className="flex justify-between gap-3">
+                    {subStep > 1 && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handlePrevQuestion}
+                        className="px-4 py-2 text-gray-600 border border-red-200 bg-red-50 rounded-lg font-medium flex items-center gap-2 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> Back
+                      </motion.button>
+                    )}
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={handlePrevQuestion}
-                      className="px-4 py-2 text-gray-600 border border-red-200 bg-red-50 rounded-lg font-medium flex items-center gap-2 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all"
+                      onClick={handleNextQuestion}
+                      disabled={isLoading}
+                      className="flex-1 bg-gradient-to-r from-red-500 to-pink-400 text-white py-2 rounded-lg font-medium text-base hover:from-red-600 hover:to-pink-500 hover:shadow-md hover:shadow-red-500/50 transition-all animate-pulse-glow flex items-center justify-center space-x-2"
+                      aria-label={
+                        subStep === 4 ? "Submit Questionnaire" : "Next Question"
+                      }
                     >
-                      <ArrowLeft className="w-4 h-4" /> Back
+                      {isLoading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <span>
+                            {subStep === 4 ? "Submit Questionnaire" : "Next"}
+                          </span>
+                          <ChevronRight className="w-4 h-4" />
+                        </>
+                      )}
                     </motion.button>
+                  </div>
+                  {subStep === 4 && (
+                    <>
+                      <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-red-100" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-2 bg-transparent text-gray-500">
+                            Or continue with
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={connectWallet}
+                          disabled={isLoading}
+                          className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all disabled:opacity-50"
+                          aria-label="Connect Wallet"
+                        >
+                          <Fingerprint className="w-4 h-4 mr-2" />
+                          Connect Wallet
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all"
+                          aria-label="Sign up with Biometric"
+                        >
+                          <Smartphone className="w-4 h-4 mr-2" />
+                          Biometric
+                        </button>
+                      </div>
+                    </>
                   )}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleNextQuestion}
-                    disabled={isLoading}
-                    className="flex-1 bg-gradient-to-r from-red-500 to-pink-400 text-white py-2 rounded-lg font-medium text-base hover:from-red-600 hover:to-pink-500 hover:shadow-md hover:shadow-red-500/50 transition-all animate-pulse-glow flex items-center justify-center space-x-2"
-                    aria-label={
-                      subStep === 4 ? "Submit Questionnaire" : "Next Question"
-                    }
-                  >
-                    {isLoading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <span>
-                          {subStep === 4 ? "Submit Questionnaire" : "Next"}
-                        </span>
-                        <ChevronRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </motion.button>
                 </motion.div>
-                {subStep === 4 && (
-                  <>
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-red-100" />
-                      </div>
-                      <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-transparent text-gray-500">
-                          Or continue with
-                        </span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={connectWallet}
-                        disabled={isLoading}
-                        className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all disabled:opacity-50"
-                        aria-label="Connect Wallet"
-                      >
-                        <Fingerprint className="w-4 h-4 mr-2" />
-                        Connect Wallet
-                      </button>
-                      <button
-                        type="button"
-                        className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all"
-                        aria-label="Sign up with Biometric"
-                      >
-                        <Smartphone className="w-4 h-4 mr-2" />
-                        Biometric
-                      </button>
-                    </div>
-                  </>
-                )}
               </AnimatePresence>
             )}
             {step < 4 && (
