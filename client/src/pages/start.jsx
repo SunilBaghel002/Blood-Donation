@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
   Shield,
@@ -14,10 +15,10 @@ import {
   FileText,
   Lock,
   Globe,
-  Eye,
   Gift,
   BookOpen,
   AlertCircle,
+  Calendar,
 } from "lucide-react";
 
 const BloodManagementSystem = () => {
@@ -30,14 +31,38 @@ const BloodManagementSystem = () => {
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  // Mock data replaced with API calls
+  // Data states
   const [bloodInventory, setBloodInventory] = useState([]);
   const [donors, setDonors] = useState([]);
   const [requests, setRequests] = useState([]);
   const [donationHistory, setDonationHistory] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [rewards, setRewards] = useState({ points: 0, badges: [] });
+  const [bloodBanks, setBloodBanks] = useState([]);
+  const [scheduleData, setScheduleData] = useState({
+    bloodBankId: "",
+    date: "",
+    time: "",
+  });
+  const [donationRecord, setDonationRecord] = useState({
+    donorId: "",
+    bloodType: "",
+    units: 1,
+  });
+  const [bloodRequest, setBloodRequest] = useState({
+    bloodBankId: "",
+    bloodType: "",
+    quantity: 1,
+  });
+
+  // Animation variants for messages
+  const messageVariants = {
+    initial: { opacity: 0, y: -20, x: 20 },
+    animate: { opacity: 1, y: 0, x: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, y: -20, x: 20, transition: { duration: 0.3 } },
+  };
 
   // Educational content
   const educationalContent = {
@@ -60,6 +85,31 @@ const BloodManagementSystem = () => {
       "Every 2 seconds, someone needs blood in the U.S.",
     ],
   };
+
+  // Generate blood droplet particles
+  const [particles, setParticles] = useState([]);
+  useEffect(() => {
+    const newParticles = Array.from({ length: 10 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 3,
+      duration: 4 + Math.random() * 3,
+      size: 8 + Math.random() * 4,
+    }));
+    setParticles(newParticles);
+  }, []);
+
+  // Auto-dismiss messages after 5 seconds
+  useEffect(() => {
+    if (success || error) {
+      const timer = setTimeout(() => {
+        setSuccess("");
+        setError("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, error]);
 
   // Fetch user data and role-specific data on mount
   useEffect(() => {
@@ -87,6 +137,9 @@ const BloodManagementSystem = () => {
         } else if (data.user.role === "Donor") {
           await fetchDonorData(token);
         }
+
+        // Fetch registered blood banks
+        await fetchBloodBanks(token);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -97,7 +150,25 @@ const BloodManagementSystem = () => {
     fetchUserData();
   }, []);
 
-  // Fetch blood bank data (donors, inventory, requests)
+  // Fetch registered blood banks
+  const fetchBloodBanks = async (token) => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/bloodbank/registered",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to fetch blood banks");
+      setBloodBanks(data.bloodBanks || []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Fetch blood bank data
   const fetchBloodBankData = async (token) => {
     try {
       const [donorsRes, inventoryRes, requestsRes] = await Promise.all([
@@ -128,7 +199,7 @@ const BloodManagementSystem = () => {
     }
   };
 
-  // Fetch hospital data (requests, inventory, transactions)
+  // Fetch hospital data
   const fetchHospitalData = async (token) => {
     try {
       const [requestsRes, inventoryRes, transactionsRes] = await Promise.all([
@@ -159,7 +230,7 @@ const BloodManagementSystem = () => {
     }
   };
 
-  // Fetch donor data (donation history, rewards)
+  // Fetch donor data
   const fetchDonorData = async (token) => {
     try {
       const [historyRes, rewardsRes] = await Promise.all([
@@ -185,7 +256,7 @@ const BloodManagementSystem = () => {
     }
   };
 
-  // Connect wallet (mock)
+  // Connect wallet
   const connectWallet = async () => {
     setIsLoading(true);
     try {
@@ -207,6 +278,7 @@ const BloodManagementSystem = () => {
       if (!response.ok)
         throw new Error(data.error || "Failed to connect wallet");
       setConnectedWallet(true);
+      setSuccess("Wallet connected successfully");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -214,8 +286,75 @@ const BloodManagementSystem = () => {
     }
   };
 
-  // Handle blood request (hospital)
-  const handleBloodRequest = async (bloodType, quantity) => {
+  // Schedule donation (donor)
+  const handleScheduleDonation = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/donor/schedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(scheduleData),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to schedule donation");
+      setSuccess("Donation scheduled successfully");
+      setScheduleData({ bloodBankId: "", date: "", time: "" });
+      setDonationHistory([
+        ...donationHistory,
+        { ...scheduleData, status: "Scheduled" },
+      ]);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Record donation (blood bank)
+  const handleRecordDonation = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/bloodbank/record-donation",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(donationRecord),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to record donation");
+      setSuccess("Donation recorded successfully");
+      setDonationRecord({ donorId: "", bloodType: "", units: 1 });
+      // Issue reward automatically
+      await issueReward(donationRecord.donorId, donationRecord.units * 10);
+      setBloodInventory((prev) =>
+        prev.map((item) =>
+          item.type === donationRecord.bloodType
+            ? { ...item, units: item.units + donationRecord.units }
+            : item
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Request blood from specific blood bank (hospital)
+  const handleBloodRequest = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -226,13 +365,15 @@ const BloodManagementSystem = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify({ bloodType, quantity }),
+          body: JSON.stringify(bloodRequest),
         }
       );
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.error || "Failed to request blood");
+      setSuccess("Blood request submitted successfully");
       setRequests([...requests, data.request]);
+      setBloodRequest({ bloodBankId: "", bloodType: "", quantity: 1 });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -240,9 +381,8 @@ const BloodManagementSystem = () => {
     }
   };
 
-  // Handle reward issuance (hospital or blood bank)
+  // Issue reward
   const issueReward = async (recipientId, points) => {
-    setIsLoading(true);
     try {
       const response = await fetch("http://localhost:5000/api/rewards/issue", {
         method: "POST",
@@ -250,50 +390,82 @@ const BloodManagementSystem = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ recipientId, points }),
+        body: JSON.stringify({
+          recipientId,
+          points,
+          badge: points >= 50 ? "Gold Donor" : "Silver Donor",
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to issue reward");
-      setRewards({ ...rewards, points: rewards.points + points });
+      setSuccess(`Reward of ${points} points issued`);
+      setRewards((prev) => ({
+        points: prev.points + points,
+        badges: [...prev.badges, data.badge].filter(Boolean),
+      }));
     } catch (err) {
       setError(err.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const getDemandColor = (demand) => {
     switch (demand) {
       case "Critical":
-        return "text-red-600 bg-red-50";
+        return "text-red-500 bg-red-50";
       case "High":
-        return "text-orange-600 bg-orange-50";
+        return "text-orange-500 bg-orange-50";
       case "Medium":
-        return "text-yellow-600 bg-yellow-50";
+        return "text-yellow-500 bg-yellow-50";
       case "Low":
-        return "text-green-600 bg-green-50";
+        return "text-green-500 bg-green-50";
       default:
-        return "text-gray-600 bg-gray-50";
+        return "text-gray-500 bg-gray-50";
     }
   };
 
+  const BloodDroplet = ({ particle }) => (
+    <svg
+      className="absolute"
+      style={{
+        left: `${particle.x}%`,
+        top: `${particle.y}%`,
+        width: `${particle.size}px`,
+        height: `${particle.size}px`,
+        animation: `float ${particle.duration}s ease-in-out infinite ${particle.delay}s, pulse-size 2s ease-in-out infinite`,
+      }}
+      viewBox="0 0 24 24"
+      fill="none"
+    >
+      <path
+        d="M12 3C12 3 8 8 8 12C8 16 12 21 12 21C12 21 16 16 16 12C16 8 12 3 12 3Z"
+        fill="#f87171"
+        fillOpacity="0.5"
+      />
+    </svg>
+  );
+
   const renderHeader = () => (
-    <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white p-6">
-      <div className="flex justify-between items-center mb-4">
+    <motion.header
+      initial={{ y: -50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="bg-gradient-to-r from-red-500 to-pink-400 text-white p-4 sticky top-0 z-10 shadow-md"
+    >
+      <div className="flex justify-between items-center max-w-7xl mx-auto">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-white/20 rounded-lg">
-            <Heart className="w-8 h-8" />
+            <Heart className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">BloodChain</h1>
-            <p className="text-red-100">Blockchain Blood Management</p>
+            <h1 className="text-xl font-semibold">BloodChain</h1>
+            <p className="text-red-100 text-sm">Blockchain Blood Management</p>
           </div>
         </div>
         <div className="flex items-center space-x-4">
           <span className="text-sm font-medium">{userType}</span>
           <div className="relative">
             <div className="p-2 bg-white/20 rounded-lg cursor-pointer">
-              <Activity className="w-6 h-6" />
+              <Activity className="w-5 h-5" />
             </div>
             {notifications > 0 && (
               <div className="absolute -top-2 -right-2 bg-yellow-400 text-red-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
@@ -301,13 +473,15 @@ const BloodManagementSystem = () => {
               </div>
             )}
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={connectWallet}
             disabled={isLoading}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${
               connectedWallet
                 ? "bg-green-500 text-white"
-                : "bg-white text-red-600 hover:bg-gray-50"
+                : "bg-white text-red-500 hover:bg-red-50"
             }`}
           >
             {isLoading
@@ -315,100 +489,107 @@ const BloodManagementSystem = () => {
               : connectedWallet
               ? "✓ Connected"
               : "Connect Wallet"}
-          </button>
+          </motion.button>
         </div>
       </div>
-      <div className="flex space-x-1 bg-white/10 rounded-lg p-1">
+      <div className="flex space-x-1 bg-white/10 rounded-lg p-1 mt-4 max-w-7xl mx-auto">
         {["dashboard", "inventory", "transactions", "profile", "education"].map(
           (tab) => (
-            <button
+            <motion.button
               key={tab}
+              whileHover={{ scale: 1.05 }}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-md font-medium capitalize transition-all ${
+              className={`px-3 py-2 rounded-md font-medium text-sm capitalize transition-all ${
                 activeTab === tab
-                  ? "bg-white text-red-600"
+                  ? "bg-white text-red-500"
                   : "text-white hover:bg-white/20"
               }`}
             >
               {tab}
-            </button>
+            </motion.button>
           )
         )}
       </div>
-    </div>
+    </motion.header>
   );
 
   const renderBloodBankDashboard = () => (
     <div className="p-6 space-y-6">
-      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Total Donors</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {donors.length}
-              </p>
+        {[
+          {
+            label: "Total Donors",
+            value: donors.length,
+            icon: Users,
+            color: "border-red-500",
+          },
+          {
+            label: "Blood Units",
+            value: bloodInventory.reduce((sum, item) => sum + item.units, 0),
+            icon: Droplets,
+            color: "border-blue-500",
+          },
+          {
+            label: "Pending Requests",
+            value: requests.filter((r) => r.status === "Pending").length,
+            icon: FileText,
+            color: "border-green-500",
+          },
+          {
+            label: "Rewards Issued",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-purple-500",
+          },
+        ].map((metric, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 border-l-4 ${metric.color}`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-sm">{metric.label}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
+              </div>
+              <metric.icon className="w-8 h-8 text-gray-500" />
             </div>
-            <Users className="w-10 h-10 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Blood Units</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {bloodInventory.reduce((sum, item) => sum + item.units, 0)}
-              </p>
-            </div>
-            <Droplets className="w-10 h-10 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Pending Requests</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {requests.filter((r) => r.status === "Pending").length}
-              </p>
-            </div>
-            <FileText className="w-10 h-10 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Rewards Issued</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {rewards.points}
-              </p>
-            </div>
-            <Gift className="w-10 h-10 text-purple-500" />
-          </div>
-        </div>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Donor Management */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Users className="w-5 h-5 mr-2 text-blue-600" />
+          <Users className="w-5 h-5 mr-2 text-blue-500" />
           Donor Management
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4">Name</th>
-                <th className="text-left py-3 px-4">Blood Type</th>
-                <th className="text-left py-3 px-4">Last Donation</th>
-                <th className="text-left py-3 px-4">Action</th>
+              <tr className="border-b border-red-100">
+                <th className="text-left py-3 px-4 text-gray-600">Name</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Blood Type
+                </th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Last Donation
+                </th>
+                <th className="text-left py-3 px-4 text-gray-600">Action</th>
               </tr>
             </thead>
             <tbody>
               {donors.map((donor, index) => (
                 <tr
                   key={index}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b border-red-50 hover:bg-red-50/50"
                 >
                   <td className="py-3 px-4">
                     {donor.firstName} {donor.lastName}
@@ -420,117 +601,69 @@ const BloodManagementSystem = () => {
                     {donor.donorInfo?.lastDonationDate || "N/A"}
                   </td>
                   <td className="py-3 px-4">
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => issueReward(donor._id, 10)}
-                      className="text-blue-600 hover:text-blue-800 flex items-center"
+                      className="text-blue-500 hover:text-blue-600 flex items-center text-sm"
                     >
                       Issue Reward <Gift className="w-4 h-4 ml-1" />
-                    </button>
+                    </motion.button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Blood Supply Requests */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <FileText className="w-5 h-5 mr-2 text-green-600" />
-          Blood Supply Requests
+          <FileText className="w-5 h-5 mr-2 text-green-500" />
+          Record Donation
         </h3>
-        <div className="space-y-3">
-          {requests.map((request, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div>
-                <p className="font-medium">Hospital: {request.hospitalName}</p>
-                <p className="text-sm text-gray-600">
-                  Blood Type: {request.bloodType} • Quantity: {request.quantity}
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="px-3 py-1 bg-green-500 text-white rounded-lg">
-                  Approve
-                </button>
-                <button className="px-3 py-1 bg-red-500 text-white rounded-lg">
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderHospitalDashboard = () => (
-    <div className="p-6 space-y-6">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Blood Requests</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {requests.length}
-              </p>
-            </div>
-            <FileText className="w-10 h-10 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Blood Units Received</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {bloodInventory.reduce((sum, item) => sum + item.units, 0)}
-              </p>
-            </div>
-            <Droplets className="w-10 h-10 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Rewards Issued</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {rewards.points}
-              </p>
-            </div>
-            <Gift className="w-10 h-10 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Blockchain TXs</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {transactions.length}
-              </p>
-            </div>
-            <Database className="w-10 h-10 text-purple-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Request Blood */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <FileText className="w-5 h-5 mr-2 text-blue-600" />
-          Request Blood
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Blood Type
-            </label>
+        <form
+          onSubmit={handleRecordDonation}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+          <div className="relative">
             <select
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              onChange={(e) => handleBloodRequest(e.target.value, 1)}
+              value={donationRecord.donorId}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  donorId: e.target.value,
+                })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              required
+            >
+              <option value="">Select Donor</option>
+              {donors.map((donor) => (
+                <option key={donor._id} value={donor._id}>
+                  {donor.firstName} {donor.lastName}
+                </option>
+              ))}
+            </select>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Donor
+            </label>
+          </div>
+          <div className="relative">
+            <select
+              value={donationRecord.bloodType}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  bloodType: e.target.value,
+                })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              required
             >
               <option value="">Select Blood Type</option>
               {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
@@ -541,114 +674,345 @@ const BloodManagementSystem = () => {
                 )
               )}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Quantity (units)
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Blood Type
             </label>
+          </div>
+          <div className="relative">
             <input
               type="number"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              value={donationRecord.units}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  units: parseInt(e.target.value),
+                })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
               min="1"
+              required
             />
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Units
+            </label>
           </div>
-          <button
-            onClick={() => handleBloodRequest("O+", 1)} // Example; replace with form values
-            className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            disabled={isLoading}
+            className="col-span-3 bg-gradient-to-r from-red-500 to-pink-400 text-white py-2 rounded-lg font-medium flex items-center justify-center space-x-2"
           >
-            Submit Request
-          </button>
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <span>Record Donation</span>
+                <CheckCircle className="w-4 h-4" />
+              </>
+            )}
+          </motion.button>
+        </form>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <FileText className="w-5 h-5 mr-2 text-green-500" />
+          Blood Supply Requests
+        </h3>
+        <div className="space-y-3">
+          {requests.map((request, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg"
+            >
+              <div>
+                <p className="font-medium text-gray-800">
+                  Hospital: {request.hospitalName}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Blood Type: {request.bloodType} • Quantity: {request.quantity}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm"
+                >
+                  Approve
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm"
+                >
+                  Reject
+                </motion.button>
+              </div>
+            </div>
+          ))}
         </div>
+      </motion.div>
+    </div>
+  );
+
+  const renderHospitalDashboard = () => (
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {[
+          {
+            label: "Blood Requests",
+            value: requests.length,
+            icon: FileText,
+            color: "border-red-500",
+          },
+          {
+            label: "Blood Units Received",
+            value: bloodInventory.reduce((sum, item) => sum + item.units, 0),
+            icon: Droplets,
+            color: "border-blue-500",
+          },
+          {
+            label: "Rewards Issued",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-green-500",
+          },
+          {
+            label: "Blockchain TXs",
+            value: transactions.length,
+            icon: Database,
+            color: "border-purple-500",
+          },
+        ].map((metric, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 border-l-4 ${metric.color}`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-sm">{metric.label}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
+              </div>
+              <metric.icon className="w-8 h-8 text-gray-500" />
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Blood Usage */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Droplets className="w-5 h-5 mr-2 text-red-600" />
+          <FileText className="w-5 h-5 mr-2 text-blue-500" />
+          Request Blood
+        </h3>
+        <form
+          onSubmit={handleBloodRequest}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+          <div className="relative">
+            <select
+              value={bloodRequest.bloodBankId}
+              onChange={(e) =>
+                setBloodRequest({
+                  ...bloodRequest,
+                  bloodBankId: e.target.value,
+                })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              required
+            >
+              <option value="">Select Blood Bank</option>
+              {bloodBanks.map((bank) => (
+                <option key={bank._id} value={bank._id}>
+                  {bank.name}
+                </option>
+              ))}
+            </select>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Blood Bank
+            </label>
+          </div>
+          <div className="relative">
+            <select
+              value={bloodRequest.bloodType}
+              onChange={(e) =>
+                setBloodRequest({ ...bloodRequest, bloodType: e.target.value })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              required
+            >
+              <option value="">Select Blood Type</option>
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                (type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                )
+              )}
+            </select>
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Blood Type
+            </label>
+          </div>
+          <div className="relative">
+            <input
+              type="number"
+              value={bloodRequest.quantity}
+              onChange={(e) =>
+                setBloodRequest({
+                  ...bloodRequest,
+                  quantity: parseInt(e.target.value),
+                })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              min="1"
+              required
+            />
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Quantity (units)
+            </label>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            disabled={isLoading}
+            className="col-span-3 bg-gradient-to-r from-red-500 to-pink-400 text-white py-2 rounded-lg font-medium flex items-center justify-center space-x-2"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <span>Submit Request</span>
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
+          </motion.button>
+        </form>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <Droplets className="w-5 h-5 mr-2 text-red-500" />
           Blood Usage
         </h3>
         <div className="space-y-3">
           {transactions.map((tx, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg"
             >
               <div>
-                <p className="font-medium">Blood Type: {tx.bloodType}</p>
-                <p className="text-sm text-gray-600">Used: {tx.timestamp}</p>
+                <p className="font-medium text-gray-800">
+                  Blood Type: {tx.bloodType}
+                </p>
+                <p className="text-sm text-gray-500">Used: {tx.timestamp}</p>
               </div>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => issueReward(tx.donorId, 5)}
-                className="text-blue-600 hover:text-blue-800 flex items-center"
+                className="text-blue-500 hover:text-blue-600 flex items-center text-sm"
               >
                 Issue Reward <Gift className="w-4 h-4 ml-1" />
-              </button>
+              </motion.button>
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 
   const renderDonorDashboard = () => (
     <div className="p-6 space-y-6">
-      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Total Donations</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {donationHistory.length}
-              </p>
+        {[
+          {
+            label: "Total Donations",
+            value: donationHistory.length,
+            icon: Heart,
+            color: "border-red-500",
+          },
+          {
+            label: "Reward Points",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-green-500",
+          },
+          {
+            label: "Badges Earned",
+            value: rewards.badges.length,
+            icon: Shield,
+            color: "border-blue-500",
+          },
+        ].map((metric, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 border-l-4 ${metric.color}`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-sm">{metric.label}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
+              </div>
+              <metric.icon className="w-8 h-8 text-gray-500" />
             </div>
-            <Heart className="w-10 h-10 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Reward Points</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {rewards.points}
-              </p>
-            </div>
-            <Gift className="w-10 h-10 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Badges Earned</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {rewards.badges.length}
-              </p>
-            </div>
-            <Shield className="w-10 h-10 text-blue-500" />
-          </div>
-        </div>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Donation History */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Heart className="w-5 h-5 mr-2 text-red-600" />
+          <Heart className="w-5 h-5 mr-2 text-red-500" />
           My Donation History
         </h3>
         <div className="space-y-4">
           {donationHistory.map((donation, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
+            <div
+              key={index}
+              className="border border-red-100 rounded-lg p-4 bg-red-50/50"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="font-medium text-gray-800">{donation.date}</p>
-                  <p className="text-sm text-gray-600 flex items-center">
+                  <p className="text-sm text-gray-500 flex items-center">
                     <MapPin className="w-4 h-4 mr-1" />
-                    {donation.location}
+                    {donation.location ||
+                      bloodBanks.find((b) => b._id === donation.bloodBankId)
+                        ?.name ||
+                      "N/A"}
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center mb-1">
-                    <Droplets className="w-4 h-4 text-red-600 mr-1" />
+                    <Droplets className="w-4 h-4 text-red-500 mr-1" />
                     <span className="font-medium">{donation.bloodType}</span>
                   </div>
                   <span
@@ -657,7 +1021,9 @@ const BloodManagementSystem = () => {
                         ? "bg-green-100 text-green-800"
                         : donation.status === "In Use"
                         ? "bg-yellow-100 text-yellow-800"
-                        : "bg-blue-100 text-blue-800"
+                        : donation.status === "Scheduled"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {donation.status}
@@ -665,101 +1031,173 @@ const BloodManagementSystem = () => {
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <p className="text-sm text-gray-600">
-                  <strong>Impact:</strong> {donation.recipient}
+                <p className="text-sm text-gray-500">
+                  <strong>Impact:</strong> {donation.recipient || "Pending"}
                 </p>
-                <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="text-blue-500 hover:text-blue-600 text-sm flex items-center"
+                >
                   <Database className="w-4 h-4 mr-1" />
                   View on Blockchain
-                </button>
+                </motion.button>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Schedule Donation */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Heart className="w-5 h-5 mr-2 text-red-600" />
+          <Calendar className="w-5 h-5 mr-2 text-red-500" />
           Schedule Donation
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Blood Bank
-            </label>
-            <select className="w-full border border-gray-300 rounded-lg px-3 py-2">
-              <option>City Blood Bank</option>
-              <option>University Hospital Blood Center</option>
-              <option>Community Health Center</option>
+        <form
+          onSubmit={handleScheduleDonation}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+          <div className="relative">
+            <select
+              value={scheduleData.bloodBankId}
+              onChange={(e) =>
+                setScheduleData({
+                  ...scheduleData,
+                  bloodBankId: e.target.value,
+                })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              required
+            >
+              <option value="">Select Blood Bank</option>
+              {bloodBanks.map((bank) => (
+                <option key={bank._id} value={bank._id}>
+                  {bank.name}
+                </option>
+              ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Preferred Date
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Blood Bank
             </label>
+          </div>
+          <div className="relative">
             <input
               type="date"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              value={scheduleData.date}
+              onChange={(e) =>
+                setScheduleData({ ...scheduleData, date: e.target.value })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              required
             />
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Date
+            </label>
           </div>
-          <button className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-            Schedule Donation
-          </button>
-        </div>
-      </div>
+          <div className="relative">
+            <input
+              type="time"
+              value={scheduleData.time}
+              onChange={(e) =>
+                setScheduleData({ ...scheduleData, time: e.target.value })
+              }
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              required
+            />
+            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
+              Time
+            </label>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            disabled={isLoading}
+            className="col-span-3 bg-gradient-to-r from-red-500 to-pink-400 text-white py-2 rounded-lg font-medium flex items-center justify-center space-x-2"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <span>Schedule Donation</span>
+                <Calendar className="w-4 h-4" />
+              </>
+            )}
+          </motion.button>
+        </form>
+      </motion.div>
     </div>
   );
 
   const renderEducationTab = () => (
     <div className="p-6 space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <BookOpen className="w-5 h-5 mr-2 text-blue-600" />
+          <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
           {educationalContent.title}
         </h3>
         <div className="space-y-4">
           {educationalContent.articles.map((article, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
+            <div
+              key={index}
+              className="border border-red-100 rounded-lg p-4 bg-red-50/50"
+            >
               <h4 className="font-medium text-gray-800">{article.title}</h4>
-              <p className="text-sm text-gray-600 mt-2">{article.content}</p>
+              <p className="text-sm text-gray-500 mt-2">{article.content}</p>
             </div>
           ))}
         </div>
         <div className="mt-6">
           <h4 className="font-medium text-gray-800 mb-2">Key Facts</h4>
-          <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+          <ul className="list-disc pl-5 text-sm text-gray-500 space-y-1">
             {educationalContent.facts.map((fact, index) => (
               <li key={index}>{fact}</li>
             ))}
           </ul>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 
   const renderInventory = () => (
     <div className="p-6 space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Droplets className="w-5 h-5 mr-2 text-red-600" />
+          <Droplets className="w-5 h-5 mr-2 text-red-500" />
           Blood Inventory Status
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {bloodInventory.map((blood, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="border border-red-100 rounded-lg p-4 bg-red-50/50"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h4 className="text-xl font-bold text-gray-800">
+                  <h4 className="text-xl font-semibold text-gray-800">
                     {blood.type}
                   </h4>
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-2xl font-semibold text-red-500">
                     {blood.units} units
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <Droplets className="w-6 h-6 text-red-600" />
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <Droplets className="w-5 h-5 text-red-500" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -770,27 +1208,31 @@ const BloodManagementSystem = () => {
                 >
                   {blood.demand} Demand
                 </div>
-                <p className="text-sm text-gray-600 flex items-center">
+                <p className="text-sm text-gray-500 flex items-center">
                   <Clock className="w-4 h-4 mr-1" />
                   Expires in {blood.expiry}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 
   const renderTransactions = () => (
     <div className="p-6 space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold flex items-center">
-            <Database className="w-5 h-5 mr-2 text-blue-600" />
+            <Database className="w-5 h-5 mr-2 text-blue-500" />
             Blockchain Transactions
           </h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span>Live on Ethereum</span>
           </div>
@@ -798,46 +1240,38 @@ const BloodManagementSystem = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-700">
+              <tr className="border-b border-red-100">
+                <th className="text-left py-3 px-4 text-gray-600">
                   Transaction Hash
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">
-                  Type
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">
+                <th className="text-left py-3 px-4 text-gray-600">Type</th>
+                <th className="text-left py-3 px-4 text-gray-600">
                   Blood Type
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">
-                  Timestamp
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">
-                  Status
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">
-                  Action
-                </th>
+                <th className="text-left py-3 px-4 text-gray-600">Timestamp</th>
+                <th className="text-left py-3 px-4 text-gray-600">Status</th>
+                <th className="text-left py-3 px-4 text-gray-600">Action</th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((tx, index) => (
                 <tr
                   key={index}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b border-red-50 hover:bg-red-50/50"
                 >
                   <td className="py-3 px-4">
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                    <code className="text-sm bg-red-100 px-2 py-1 rounded">
                       {tx.id}
                     </code>
                   </td>
                   <td className="py-3 px-4">{tx.type}</td>
                   <td className="py-3 px-4">
                     <span className="inline-flex items-center">
-                      <Droplets className="w-4 h-4 text-red-600 mr-1" />
+                      <Droplets className="w-4 h-4 text-red-500 mr-1" />
                       {tx.bloodType}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-600">{tx.timestamp}</td>
+                  <td className="py-3 px-4 text-gray-500">{tx.timestamp}</td>
                   <td className="py-3 px-4">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -852,42 +1286,50 @@ const BloodManagementSystem = () => {
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <button className="text-blue-600 hover:text-blue-800 flex items-center">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="text-blue-500 hover:text-blue-600 flex items-center text-sm"
+                    >
                       View <ChevronRight className="w-4 h-4 ml-1" />
-                    </button>
+                    </motion.button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 
   const renderProfile = () => (
     <div className="p-6 space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Users className="w-5 h-5 mr-2 text-blue-600" />
+          <Users className="w-5 h-5 mr-2 text-blue-500" />
           Profile
         </h3>
-        <div className="space-y-4">
-          <p>
+        <div className="space-y-3">
+          <p className="text-gray-500">
             <strong>Name:</strong> {userData?.firstName} {userData?.lastName}
           </p>
-          <p>
+          <p className="text-gray-500">
             <strong>Email:</strong> {userData?.email}
           </p>
-          <p>
+          <p className="text-gray-500">
             <strong>Role:</strong> {userData?.role}
           </p>
           {userData?.role === "Donor" && (
             <>
-              <p>
+              <p className="text-gray-500">
                 <strong>Blood Group:</strong> {userData?.donorInfo?.bloodGroup}
               </p>
-              <p>
+              <p className="text-gray-500">
                 <strong>Donation Count:</strong>{" "}
                 {userData?.donorInfo?.donationCount}
               </p>
@@ -895,71 +1337,81 @@ const BloodManagementSystem = () => {
           )}
           {userData?.role === "Hospital" && (
             <>
-              <p>
+              <p className="text-gray-500">
                 <strong>Hospital Name:</strong> {userData?.hospitalInfo?.name}
               </p>
-              <p>
+              <p className="text-gray-500">
                 <strong>Location:</strong> {userData?.hospitalInfo?.location}
               </p>
             </>
           )}
           {userData?.role === "BloodBank" && (
             <>
-              <p>
+              <p className="text-gray-500">
                 <strong>Blood Bank Name:</strong>{" "}
                 {userData?.bloodBankInfo?.name}
               </p>
-              <p>
+              <p className="text-gray-500">
                 <strong>Location:</strong> {userData?.bloodBankInfo?.location}
               </p>
             </>
           )}
         </div>
-      </div>
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+      >
         <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Lock className="w-5 h-5 mr-2 text-green-600" />
+          <Lock className="w-5 h-5 mr-2 text-green-500" />
           Privacy & Security
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <span className="text-sm font-medium">
-                Personal Data Encrypted
-              </span>
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <span className="text-sm font-medium">IPFS Document Storage</span>
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <span className="text-sm font-medium">Blockchain Verified</span>
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            </div>
+            {[
+              "Personal Data Encrypted",
+              "IPFS Document Storage",
+              "Blockchain Verified",
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg"
+              >
+                <span className="text-sm font-medium text-gray-500">
+                  {item}
+                </span>
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              </div>
+            ))}
           </div>
-          <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="bg-blue-50/50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-800 mb-2">Data Protection</h4>
-            <p className="text-sm text-blue-700">
+            <p className="text-sm text-blue-600">
               Your personal information is encrypted and stored off-chain in
               MongoDB, while only verification hashes and metadata are stored on
               the Ethereum blockchain.
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 
   const renderContent = () => {
     if (isLoading) {
-      return <div className="p-6 text-center">Loading...</div>;
+      return (
+        <div className="p-6 text-center text-gray-500">
+          <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          Loading...
+        </div>
+      );
     }
     if (error) {
       return (
         <div className="p-6">
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600 flex items-center">
+            <p className="text-sm text-red-500 flex items-center">
               <AlertCircle className="w-4 h-4 mr-2" />
               {error}
             </p>
@@ -988,24 +1440,102 @@ const BloodManagementSystem = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <style jsx>{`
-        @keyframes pulse-glow {
-          0%,
-          100% {
-            box-shadow: 0 0 15px rgba(185, 28, 28, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 30px rgba(185, 28, 28, 0.7),
-              0 0 50px rgba(185, 28, 28, 0.5);
-          }
-        }
-        .animate-pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-      `}</style>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 font-inter">
+      <div className="absolute inset-0">
+        <style>
+          {`
+            @keyframes float {
+              0%, 100% { transform: translateY(0px) scale(1); opacity: 0.3; }
+              50% { transform: translateY(-60px) scale(1.1); opacity: 0.6; }
+            }
+            @keyframes pulse-size {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.2); }
+            }
+            @keyframes pulse-glow {
+              0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+              50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+            }
+            @keyframes fade-in {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes message-slide {
+              from { opacity: 0; transform: translateY(-20px) translateX(20px); }
+              to { opacity: 1; transform: translateY(0) translateX(0); }
+            }
+            .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
+            .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+            .animate-message { animation: message-slide 0.3s ease-out forwards; }
+            .parallax-bg {
+              background-attachment: fixed;
+              background-position: center;
+              background-repeat: no-repeat;
+              background-size: cover;
+              background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M50 10C50 10 40 20 40 30C40 40 50 50 50 50C50 50 60 40 60 30C60 20 50 10 50 10Z' fill='%23f87171' fill-opacity='0.05'/%3E%3C/svg%3E");
+            }
+            @media (max-width: 768px) { .parallax-bg { background-attachment: scroll; } }
+            .floating-label {
+              top: 50%;
+              transform: translateY(-50%);
+              transition: all 0.3s ease;
+              pointer-events: none;
+            }
+            input:focus ~ .floating-label,
+            input:not(:placeholder-shown) ~ .floating-label,
+            select:focus ~ .floating-label,
+            select:not([value=""]) ~ .floating-label {
+              top: -8px;
+              transform: translateY(0);
+              font-size: 0.75rem;
+              color: #f87171;
+              background: linear-gradient(to bottom, #ffffff, #fef2f2);
+              padding: 0 4px;
+            }
+          `}
+        </style>
+        {particles.map((particle) => (
+          <BloodDroplet key={particle.id} particle={particle} />
+        ))}
+      </div>
+
+      <div className="fixed top-4 right-4 z-50 max-w-xs">
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              key="error-message"
+              variants={messageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="p-3 bg-red-50 border border-red-200 rounded-lg animate-message mb-2"
+            >
+              <p className="text-sm text-red-500 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-2" />
+                {error}
+              </p>
+            </motion.div>
+          )}
+          {success && (
+            <motion.div
+              key="success-message"
+              variants={messageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="p-3 bg-green-50 border border-green-200 rounded-lg animate-message"
+            >
+              <p className="text-sm text-green-600 flex items-center">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {success}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {renderHeader()}
-      {renderContent()}
+      <div className="max-w-7xl mx-auto">{renderContent()}</div>
     </div>
   );
 };
