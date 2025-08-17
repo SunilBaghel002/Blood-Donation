@@ -1,4 +1,3 @@
-```javascript
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -7,6 +6,7 @@ import {
   Users,
   Building2,
   Activity,
+  Gift,
   ChevronRight,
   CheckCircle,
   Clock,
@@ -222,7 +222,9 @@ const BloodManagementSystem = () => {
         })) || []
       );
     } catch (err) {
-      setError(err.message || "Unable to fetch blood bank data. Please try again.");
+      setError(
+        err.message || "Unable to fetch blood bank data. Please try again."
+      );
     }
   };
 
@@ -244,7 +246,9 @@ const BloodManagementSystem = () => {
       if (!requestsRes.ok)
         throw new Error(requestsData.error || "Failed to fetch requests");
       if (!transactionsRes.ok)
-        throw new Error(transactionsData.error || "Failed to fetch transactions");
+        throw new Error(
+          transactionsData.error || "Failed to fetch transactions"
+        );
 
       setRequests(
         requestsData.requests.map((req) => ({
@@ -270,7 +274,9 @@ const BloodManagementSystem = () => {
       // Note: Hospital inventory endpoint not available, so bloodInventory remains empty
       setBloodInventory([]);
     } catch (err) {
-      setError(err.message || "Unable to fetch hospital data. Please try again.");
+      setError(
+        err.message || "Unable to fetch hospital data. Please try again."
+      );
     }
   };
 
@@ -290,7 +296,9 @@ const BloodManagementSystem = () => {
       const rewardsData = await rewardsRes.json();
 
       if (!historyRes.ok)
-        throw new Error(historyData.error || "Failed to fetch donation history");
+        throw new Error(
+          historyData.error || "Failed to fetch donation history"
+        );
       if (!rewardsRes.ok)
         throw new Error(rewardsData.error || "Failed to fetch rewards");
 
@@ -844,8 +852,8 @@ const BloodManagementSystem = () => {
                   Hospital: {request.hospitalName}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Blood Type: {request.bloodType} • Quantity: {request.quantity} •
-                  Status: {request.status}
+                  Blood Type: {request.bloodType} • Quantity: {request.quantity}{" "}
+                  • Status: {request.status}
                 </p>
               </div>
               {request.status === "Pending" && (
@@ -1033,8 +1041,8 @@ const BloodManagementSystem = () => {
                   Blood Bank: {request.bloodBankName}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Blood Type: {request.bloodType} • Quantity: {request.quantity} •
-                  Status: {request.status}
+                  Blood Type: {request.bloodType} • Quantity: {request.quantity}{" "}
+                  • Status: {request.status}
                 </p>
               </div>
             </div>
@@ -1427,8 +1435,8 @@ const BloodManagementSystem = () => {
               </p>
               <p className="text-gray-500">
                 <strong>Rewards:</strong> {userData?.donorInfo?.rewards.points}{" "}
-                points, Badges: {userData?.donorInfo?.rewards.badges.join(", ") ||
-                  "None"}
+                points, Badges:{" "}
+                {userData?.donorInfo?.rewards.badges.join(", ") || "None"}
               </p>
             </>
           )}
@@ -1629,4 +1637,3 @@ const BloodManagementSystem = () => {
 };
 
 export default BloodManagementSystem;
-```
