@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import BloodChainLanding from './pages/landing';
-import BloodManagementSystem from './pages/start';
+import BloodManagementSystem from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 
