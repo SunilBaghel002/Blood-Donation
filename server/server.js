@@ -832,6 +832,65 @@ app.post("/api/rewards/issue", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+// Approve/Reject Request
+app.post("/api/bloodbank/request-action", authMiddleware, async (req, res) => {
+  const { requestId, action } = req.body;
+  if (!requestId || !["Approved", "Rejected"].includes(action)) {
+    return res
+      .status(400)
+      .json({ error: "Request ID and valid action are required" });
+  }
+  try {
+    const user = await User.findById(req.userId);
+    if (user.role !== "BloodBank") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    const request = await Request.findById(requestId);
+    if (!request || request.bloodBankId.toString() !== req.userId) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+    if (request.status !== "Pending") {
+      return res.status(400).json({ error: "Request already processed" });
+    }
+    request.status = action;
+    if (action === "Approved") {
+      const inventory = await BloodInventory.findOne({
+        bloodBankId: req.userId,
+        bloodType: request.bloodType,
+      });
+      if (!inventory || inventory.units < request.quantity) {
+        return res.status(400).json({ error: "Insufficient inventory" });
+      }
+      inventory.units -= request.quantity;
+      inventory.demand =
+        inventory.units < 10
+          ? "Critical"
+          : inventory.units < 20
+          ? "High"
+          : inventory.units < 50
+          ? "Medium"
+          : "Low";
+      await inventory.save();
+      const transaction = new Transaction({
+        type: "Transfer",
+        hospitalId: request.hospitalId,
+        bloodBankId: req.userId,
+        bloodType: request.bloodType,
+        quantity: request.quantity,
+        status: "In Transit",
+        txHash: `0x${crypto.randomBytes(32).toString("hex")}`,
+      });
+      await transaction.save();
+    }
+    await request.save();
+    res
+      .status(200)
+      .json({ message: `Request ${action.toLowerCase()} successfully` });
+  } catch (error) {
+    console.error("Request action error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // Serve Frontend
 // app.get('*', (req, res) => {
