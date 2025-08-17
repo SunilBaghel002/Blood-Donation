@@ -748,7 +748,14 @@ const BloodManagementSystem = () => {
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
           <div className="relative">
+            <label
+              htmlFor="donorId"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Donor
+            </label>
             <select
+              id="donorId"
               value={donationRecord.donorId}
               onChange={(e) =>
                 setDonationRecord({
@@ -756,7 +763,7 @@ const BloodManagementSystem = () => {
                   donorId: e.target.value,
                 })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Donor</option>
@@ -766,12 +773,16 @@ const BloodManagementSystem = () => {
                 </option>
               ))}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Donor
-            </label>
           </div>
           <div className="relative">
+            <label
+              htmlFor="bloodType"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Blood Type
+            </label>
             <select
+              id="bloodType"
               value={donationRecord.bloodType}
               onChange={(e) =>
                 setDonationRecord({
@@ -779,7 +790,7 @@ const BloodManagementSystem = () => {
                   bloodType: e.target.value,
                 })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Blood Type</option>
@@ -791,12 +802,16 @@ const BloodManagementSystem = () => {
                 )
               )}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Blood Type
-            </label>
           </div>
           <div className="relative">
+            <label
+              htmlFor="units"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Units
+            </label>
             <input
+              id="units"
               type="number"
               value={donationRecord.units}
               onChange={(e) =>
@@ -805,13 +820,10 @@ const BloodManagementSystem = () => {
                   units: parseInt(e.target.value) || 1,
                 })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               min="1"
               required
             />
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Units
-            </label>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -940,7 +952,14 @@ const BloodManagementSystem = () => {
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
           <div className="relative">
+            <label
+              htmlFor="bloodBankId"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Blood Bank
+            </label>
             <select
+              id="bloodBankId"
               value={bloodRequest.bloodBankId}
               onChange={(e) =>
                 setBloodRequest({
@@ -948,7 +967,7 @@ const BloodManagementSystem = () => {
                   bloodBankId: e.target.value,
                 })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Blood Bank</option>
@@ -958,17 +977,21 @@ const BloodManagementSystem = () => {
                 </option>
               ))}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Blood Bank
-            </label>
           </div>
           <div className="relative">
+            <label
+              htmlFor="requestBloodType"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Blood Type
+            </label>
             <select
+              id="requestBloodType"
               value={bloodRequest.bloodType}
               onChange={(e) =>
                 setBloodRequest({ ...bloodRequest, bloodType: e.target.value })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Blood Type</option>
@@ -980,12 +1003,16 @@ const BloodManagementSystem = () => {
                 )
               )}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Blood Type
-            </label>
           </div>
           <div className="relative">
+            <label
+              htmlFor="quantity"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Quantity (units)
+            </label>
             <input
+              id="quantity"
               type="number"
               value={bloodRequest.quantity}
               onChange={(e) =>
@@ -994,13 +1021,10 @@ const BloodManagementSystem = () => {
                   quantity: parseInt(e.target.value) || 1,
                 })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               min="1"
               required
             />
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Quantity (units)
-            </label>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -1168,7 +1192,14 @@ const BloodManagementSystem = () => {
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
           <div className="relative">
+            <label
+              htmlFor="scheduleBloodBankId"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Blood Bank
+            </label>
             <select
+              id="scheduleBloodBankId"
               value={scheduleData.bloodBankId}
               onChange={(e) =>
                 setScheduleData({
@@ -1176,7 +1207,7 @@ const BloodManagementSystem = () => {
                   bloodBankId: e.target.value,
                 })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Blood Bank</option>
@@ -1186,37 +1217,42 @@ const BloodManagementSystem = () => {
                 </option>
               ))}
             </select>
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Blood Bank
-            </label>
           </div>
           <div className="relative">
+            <label
+              htmlFor="scheduleDate"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Date
+            </label>
             <input
+              id="scheduleDate"
               type="date"
               value={scheduleData.date}
               onChange={(e) =>
                 setScheduleData({ ...scheduleData, date: e.target.value })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             />
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Date
-            </label>
           </div>
           <div className="relative">
+            <label
+              htmlFor="scheduleTime"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
+              Time
+            </label>
             <input
+              id="scheduleTime"
               type="time"
               value={scheduleData.time}
               onChange={(e) =>
                 setScheduleData({ ...scheduleData, time: e.target.value })
               }
-              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 outline-0"
+              className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             />
-            <label className="absolute left-3 top-2 text-gray-500 transition-all duration-300">
-              Time
-            </label>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -1571,22 +1607,29 @@ const BloodManagementSystem = () => {
               background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M50 10C50 10 40 20 40 30C40 40 50 50 50 50C50 50 60 40 60 30C60 20 50 10 50 10Z' fill='%23f87171' fill-opacity='0.05'/%3E%3C/svg%3E");
             }
             @media (max-width: 768px) { .parallax-bg { background-attachment: scroll; } }
+            .floating-label-container {
+              position: relative;
+              margin-bottom: 1.5rem;
+            }
             .floating-label {
-              top: 50%;
-              transform: translateY(-50%);
-              transition: all 0.3s ease;
+              position: absolute;
+              top: -0.5rem;
+              left: 0.75rem;
+              font-size: 0.75rem;
+              color: #4b5563;
+              background: #fff;
+              padding: 0 0.25rem;
+              transition: all 0.2s ease;
               pointer-events: none;
             }
-            input:focus ~ .floating-label,
-            input:not(:placeholder-shown) ~ .floating-label,
-            select:focus ~ .floating-label,
-            select:not([value=""]) ~ .floating-label {
-              top: -8px;
-              transform: translateY(0);
-              font-size: 0.75rem;
+            input:focus,
+            select:focus {
+              border-color: #f87171;
+              box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.2);
+            }
+            input:not(:placeholder-shown) + .floating-label,
+            select:not([value=""]) + .floating-label {
               color: #f87171;
-              background: linear-gradient(to bottom, #ffffff, #fef2f2);
-              padding: 0 4px;
             }
           `}
         </style>
