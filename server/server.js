@@ -22,7 +22,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-// app.use(express.static(path.join(__dirname, 'client', 'dist')));
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -147,7 +146,7 @@ const transactionSchema = new mongoose.Schema({
   quantity: { type: Number, required: true },
   status: {
     type: String,
-    enum: ["Confirmed", "In Transit", "Used"],
+    enum: ["Scheduled", "Confirmed", "In Transit", "Used"],
     default: "Confirmed",
   },
   timestamp: { type: Date, default: Date.now },
@@ -829,6 +828,7 @@ app.post("/api/rewards/issue", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 // Approve/Reject Request
 app.post("/api/bloodbank/request-action", authMiddleware, async (req, res) => {
   const { requestId, action } = req.body;
@@ -888,11 +888,6 @@ app.post("/api/bloodbank/request-action", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
-// Serve Frontend
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
-// });
 
 // Start Server
 const PORT = process.env.PORT || 5000;
