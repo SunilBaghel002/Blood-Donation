@@ -542,6 +542,168 @@ app.get("/api/bloodbank/requests", authMiddleware, async (req, res) => {
   }
 });
 
+// Blood Bank Routes
+app.get("/api/bloodbank/donors", authMiddleware, async (req, res) => {
+  // ... (existing code)
+});
+
+app.get("/api/bloodbank/inventory", authMiddleware, async (req, res) => {
+  // ... (existing code)
+});
+
+app.get("/api/bloodbank/requests", authMiddleware, async (req, res) => {
+  // ... (existing code)
+});
+
+app.get("/api/bloodbank/registered", authMiddleware, async (req, res) => {
+  try {
+    const bloodBanks = await User.find({
+      role: "BloodBank",
+      bloodBankInfo: { $ne: null },
+    }).select("bloodBankInfo.name bloodBankInfo.location bloodBankInfo.contactNumber");
+    res.status(200).json({ bloodBanks });
+  } catch (error) {
+    console.error("Get registered blood banks error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/api/bloodbank/record-donation", authMiddleware, async (req, res) => {
+  const { donorId, bloodType, units } = req.body;
+  if (!donorId || !bloodType || !units) {
+    return res.status(400).json({ error: "Donor ID, blood type, and units are required" });
+  }
+  if (!["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(bloodType)) {
+    return res.status(400).json({ error: "Invalid blood type" });
+  }
+  if (!Number.isInteger(units) || units < 1) {
+    return res.status(400).json({ error: "Units must be a positive integer" });
+  }
+  try {
+    const bloodBank = await User.findById(req.userId);
+    if (bloodBank.role !== "BloodBank") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    const donor = await User.findById(donorId);
+    if (!donor || donor.role !== "Donor") {
+      return res.status(400).json({ error: "Invalid donor" });
+    }
+    donor.donorInfo.donationCount += 1;
+    donor.donorInfo.lastDonationDate = new Date();
+    donor.donorInfo.rewards.points += units * 10;
+    if (donor.donorInfo.rewards.points >= 50 && !donor.donorInfo.rewards.badges.includes("Gold Donor")) {
+      donor.donorInfo.rewards.badges.push("Gold Donor");
+    } else if (donor.donorInfo.rewards.points >= 10 && !donor.donorInfo.rewards.badges.includes("Silver Donor")) {
+      donor.donorInfo.rewards.badges.push("Silver Donor");
+    }
+    await donor.save();
+    let inventory = await BloodInventory.findOne({
+      bloodBankId: req.userId,
+      bloodType,
+    });
+    if (inventory) {
+      inventory.units += units;
+      inventory.expiryDate = new Date(Date.now() + 42 * 24 * 60 * 60 * 1000);
+      inventory.demand = inventory.units < 10 ? "Critical" : inventory.units < 20 ? "High" : inventory.units < 50 ? "Medium" : "Low";
+    } else {
+      inventory = new BloodInventory({
+        bloodBankId: req.userId,
+        bloodType,
+        units,
+        expiryDate: new Date(Date.now() + 42 * 24 * 60 * 60 * 1000),
+        demand: units < 10 ? "Critical" : units < 20 ? "High" : units < 50 ? "Medium" : "Low",
+      });
+    }
+    await inventory.save();
+    const transaction = new Transaction({
+      type: "Donation",
+      donorId,
+      bloodBankId: req.userId,
+      bloodType,
+      quantity: units,
+      status: "Confirmed",
+      txHash: `0x${crypto.randomBytes(32).toString("hex")}`,
+    });
+    await transaction.save();
+    res.status(200).json({ message: "Donation recorded successfully", transaction });
+  } catch (error) {
+    console.error("Record donation error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Hospital Routes
+app.post("/api/hospital/request-blood", authMiddleware, async (req, res) => {
+  const { bloodBankId, bloodType, quantity } = req.body;
+  if (!bloodBankId || !bloodType || !quantity) {
+    return res.status(400).json({ error: "Blood bank ID, blood type, and quantity are required" });
+  }
+  if (!["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(bloodType)) {
+    return res.status(400).json({ error: "Invalid blood type" });
+  }
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    return res.status(400).json({ error: "Quantity must be a positive integer" });
+  }
+  try {
+    const user = await User.findById(req.userId);
+    if (user.role !== "Hospital") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    const bloodBank = await User.findById(bloodBankId);
+    if (!bloodBank || bloodBank.role !== "BloodBank") {
+      return res.status(400).json({ error: "Invalid blood bank" });
+    }
+    const request = new Request({
+      hospitalId: req.userId,
+      bloodBankId,
+      bloodType,
+      quantity,
+      status: "Pending",
+    });
+    await request.save();
+    res.status(200).json({ request });
+  } catch (error) {
+    console.error("Request blood error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Donor Routes
+app.post("/api/donor/schedule", authMiddleware, async (req, res) => {
+  const { bloodBankId, date, time } = req.body;
+  if (!bloodBankId || !date || !time) {
+    return res.status(400).json({ error: "Blood bank ID, date, and time are required" });
+  }
+  try {
+    const user = await User.findById(req.userId);
+    if (user.role !== "Donor") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    const bloodBank = await User.findById(bloodBankId);
+    if (!bloodBank || bloodBank.role !== "BloodBank") {
+      return res.status(400).json({ error: "Invalid blood bank" });
+    }
+    const scheduleDate = new Date(`${date}T${time}`);
+    if (isNaN(scheduleDate.getTime()) || scheduleDate < Date.now()) {
+      return res.status(400).json({ error: "Invalid or past date/time" });
+    }
+    const transaction = new Transaction({
+      type: "Donation",
+      donorId: req.userId,
+      bloodBankId,
+      bloodType: user.donorInfo.bloodGroup,
+      quantity: 1,
+      status: "Scheduled",
+      timestamp: scheduleDate,
+    });
+    await transaction.save();
+    res.status(200).json({ message: "Donation scheduled successfully", transaction });
+  } catch (error) {
+    console.error("Schedule donation error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Hospital Routes
 app.get("/api/hospital/requests", authMiddleware, async (req, res) => {
   try {
