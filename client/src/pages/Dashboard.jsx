@@ -22,13 +22,30 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const BloodManagementSystem = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [userType, setUserType] = useState(localStorage.getItem("role") || "Donor");
+  const [userType, setUserType] = useState(
+    localStorage.getItem("role") || "Donor"
+  );
   const [connectedWallet, setConnectedWallet] = useState(false);
   const [notifications, setNotifications] = useState(0);
   const [userData, setUserData] = useState(null);
@@ -77,19 +94,23 @@ const BloodManagementSystem = () => {
     articles: [
       {
         title: "The Importance of Blood Donation",
-        content: "Blood donation is a critical act that can save up to three lives per donation. It is essential for surgeries, trauma care, cancer treatment, and managing chronic illnesses. Donated blood is used in emergencies, such as car accidents, and for patients with conditions like sickle cell anemia or leukemia, ensuring a steady supply is vital for healthcare systems worldwide.",
+        content:
+          "Blood donation is a critical act that can save up to three lives per donation. It is essential for surgeries, trauma care, cancer treatment, and managing chronic illnesses. Donated blood is used in emergencies, such as car accidents, and for patients with conditions like sickle cell anemia or leukemia, ensuring a steady supply is vital for healthcare systems worldwide.",
       },
       {
         title: "Who Can Donate?",
-        content: "Healthy adults aged 17-65, weighing at least 110 lbs (50 kg), and meeting specific medical criteria can donate blood every 56 days. Donors must have no recent tattoos, piercings, or certain medical conditions like anemia or infectious diseases. Always consult with a healthcare professional to confirm eligibility.",
+        content:
+          "Healthy adults aged 17-65, weighing at least 110 lbs (50 kg), and meeting specific medical criteria can donate blood every 56 days. Donors must have no recent tattoos, piercings, or certain medical conditions like anemia or infectious diseases. Always consult with a healthcare professional to confirm eligibility.",
       },
       {
         title: "The Donation Process",
-        content: "The blood donation process is simple and safe, taking about 30-45 minutes. It includes registration, a health screening, the donation itself (about 8-10 minutes), and a brief recovery period with refreshments. Your blood is then tested, processed, and distributed to hospitals as needed.",
+        content:
+          "The blood donation process is simple and safe, taking about 30-45 minutes. It includes registration, a health screening, the donation itself (about 8-10 minutes), and a brief recovery period with refreshments. Your blood is then tested, processed, and distributed to hospitals as needed.",
       },
       {
         title: "Benefits of Donating",
-        content: "Donating blood not only saves lives but also benefits the donor. It can help detect health issues early through the screening process, reduce iron levels in the body, and foster a sense of community contribution. Regular donors may also receive rewards like NFTs on BloodChain.",
+        content:
+          "Donating blood not only saves lives but also benefits the donor. It can help detect health issues early through the screening process, reduce iron levels in the body, and foster a sense of community contribution. Regular donors may also receive rewards like NFTs on BloodChain.",
       },
     ],
     facts: [
@@ -173,7 +194,12 @@ const BloodManagementSystem = () => {
       },
       {
         question: "How often can you donate whole blood?",
-        options: ["Every 30 days", "Every 56 days", "Every 90 days", "Every year"],
+        options: [
+          "Every 30 days",
+          "Every 56 days",
+          "Every 90 days",
+          "Every year",
+        ],
         correctAnswer: "Every 56 days",
       },
     ],
@@ -216,7 +242,8 @@ const BloodManagementSystem = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Failed to fetch user data");
+        if (!response.ok)
+          throw new Error(data.error || "Failed to fetch user data");
 
         setUserData(data.user);
         setUserType(data.user.role);
@@ -244,11 +271,15 @@ const BloodManagementSystem = () => {
   // Fetch registered blood banks
   const fetchBloodBanks = async (token) => {
     try {
-      const response = await fetch("http://localhost:5000/api/bloodbank/registered", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/bloodbank/registered",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to fetch blood banks");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to fetch blood banks");
       setBloodBanks(
         data.bloodBanks.map((bank) => ({
           _id: bank._id,
@@ -266,18 +297,27 @@ const BloodManagementSystem = () => {
   const fetchBloodBankData = async (token) => {
     try {
       const [donorsRes, inventoryRes, requestsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/bloodbank/donors", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/bloodbank/inventory", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/bloodbank/requests", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/bloodbank/donors", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/bloodbank/inventory", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/bloodbank/requests", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const donorsData = await donorsRes.json();
       const inventoryData = await inventoryRes.json();
       const requestsData = await requestsRes.json();
 
-      if (!donorsRes.ok) throw new Error(donorsData.error || "Failed to fetch donors");
-      if (!inventoryRes.ok) throw new Error(inventoryData.error || "Failed to fetch inventory");
-      if (!requestsRes.ok) throw new Error(requestsData.error || "Failed to fetch requests");
+      if (!donorsRes.ok)
+        throw new Error(donorsData.error || "Failed to fetch donors");
+      if (!inventoryRes.ok)
+        throw new Error(inventoryData.error || "Failed to fetch inventory");
+      if (!requestsRes.ok)
+        throw new Error(requestsData.error || "Failed to fetch requests");
 
       setDonors(donorsData.donors || []);
       setBloodInventory(
@@ -300,7 +340,9 @@ const BloodManagementSystem = () => {
         })) || []
       );
     } catch (err) {
-      setError(err.message || "Unable to fetch blood bank data. Please try again.");
+      setError(
+        err.message || "Unable to fetch blood bank data. Please try again."
+      );
     }
   };
 
@@ -308,15 +350,23 @@ const BloodManagementSystem = () => {
   const fetchHospitalData = async (token) => {
     try {
       const [requestsRes, transactionsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/hospital/requests", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/hospital/transactions", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/hospital/requests", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/hospital/transactions", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const requestsData = await requestsRes.json();
       const transactionsData = await transactionsRes.json();
 
-      if (!requestsRes.ok) throw new Error(requestsData.error || "Failed to fetch requests");
-      if (!transactionsRes.ok) throw new Error(transactionsData.error || "Failed to fetch transactions");
+      if (!requestsRes.ok)
+        throw new Error(requestsData.error || "Failed to fetch requests");
+      if (!transactionsRes.ok)
+        throw new Error(
+          transactionsData.error || "Failed to fetch transactions"
+        );
 
       setRequests(
         requestsData.requests.map((req) => ({
@@ -341,7 +391,9 @@ const BloodManagementSystem = () => {
       );
       setBloodInventory([]);
     } catch (err) {
-      setError(err.message || "Unable to fetch hospital data. Please try again.");
+      setError(
+        err.message || "Unable to fetch hospital data. Please try again."
+      );
     }
   };
 
@@ -349,15 +401,23 @@ const BloodManagementSystem = () => {
   const fetchDonorData = async (token) => {
     try {
       const [historyRes, rewardsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/donor/history", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("http://localhost:5000/api/donor/rewards", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("http://localhost:5000/api/donor/history", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/donor/rewards", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       const historyData = await historyRes.json();
       const rewardsData = await rewardsRes.json();
 
-      if (!historyRes.ok) throw new Error(historyData.error || "Failed to fetch donation history");
-      if (!rewardsRes.ok) throw new Error(rewardsData.error || "Failed to fetch rewards");
+      if (!historyRes.ok)
+        throw new Error(
+          historyData.error || "Failed to fetch donation history"
+        );
+      if (!rewardsRes.ok)
+        throw new Error(rewardsData.error || "Failed to fetch rewards");
 
       setDonationHistory(
         historyData.history.map((tx) => ({
@@ -367,7 +427,8 @@ const BloodManagementSystem = () => {
           bloodType: tx.bloodType,
           status: tx.status,
           quantity: tx.quantity,
-          location: bloodBanks.find((b) => b._id === tx.bloodBankId)?.name || "Unknown",
+          location:
+            bloodBanks.find((b) => b._id === tx.bloodBankId)?.name || "Unknown",
           recipient: tx.hospitalId?.hospitalInfo?.name || "Pending",
         })) || []
       );
@@ -381,19 +442,23 @@ const BloodManagementSystem = () => {
   const connectWallet = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/connect-wallet", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          email: userData?.email,
-          walletAddress: "0x742d35Cc6565C42c42...",
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/auth/connect-wallet",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            email: userData?.email,
+            walletAddress: "0x742d35Cc6565C42c42...",
+          }),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to connect wallet");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to connect wallet");
       setConnectedWallet(true);
       setSuccess("Wallet connected successfully");
     } catch (err) {
@@ -417,7 +482,8 @@ const BloodManagementSystem = () => {
         body: JSON.stringify(scheduleData),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to schedule donation");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to schedule donation");
       setSuccess("Donation scheduled successfully");
       setDonationHistory([
         ...donationHistory,
@@ -428,7 +494,9 @@ const BloodManagementSystem = () => {
           bloodType: data.transaction.bloodType,
           status: data.transaction.status,
           quantity: data.transaction.quantity,
-          location: bloodBanks.find((b) => b._id === data.transaction.bloodBankId)?.name || "Unknown",
+          location:
+            bloodBanks.find((b) => b._id === data.transaction.bloodBankId)
+              ?.name || "Unknown",
           recipient: "Pending",
         },
       ]);
@@ -445,20 +513,26 @@ const BloodManagementSystem = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/bloodbank/record-donation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(donationRecord),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/bloodbank/record-donation",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(donationRecord),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to record donation");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to record donation");
       setSuccess("Donation recorded successfully");
       setDonationRecord({ donorId: "", bloodType: "", units: 1 });
       setBloodInventory((prev) => {
-        const existing = prev.find((item) => item.bloodType === donationRecord.bloodType);
+        const existing = prev.find(
+          (item) => item.bloodType === donationRecord.bloodType
+        );
         if (existing) {
           return prev.map((item) =>
             item.bloodType === donationRecord.bloodType
@@ -482,7 +556,9 @@ const BloodManagementSystem = () => {
           {
             bloodType: donationRecord.bloodType,
             units: donationRecord.units,
-            expiryDate: new Date(Date.now() + 42 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+            expiryDate: new Date(
+              Date.now() + 42 * 24 * 60 * 60 * 1000
+            ).toLocaleDateString(),
             demand:
               donationRecord.units < 10
                 ? "Critical"
@@ -506,22 +582,28 @@ const BloodManagementSystem = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/hospital/request-blood", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(bloodRequest),
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/hospital/request-blood",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(bloodRequest),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to request blood");
+      if (!response.ok)
+        throw new Error(data.error || "Failed to request blood");
       setSuccess("Blood request submitted successfully");
       setRequests([
         ...requests,
         {
           _id: data.request._id,
-          bloodBankName: bloodBanks.find((b) => b._id === data.request.bloodBankId)?.name || "Unknown",
+          bloodBankName:
+            bloodBanks.find((b) => b._id === data.request.bloodBankId)?.name ||
+            "Unknown",
           bloodType: data.request.bloodType,
           quantity: data.request.quantity,
           status: data.request.status,
@@ -540,19 +622,25 @@ const BloodManagementSystem = () => {
   const handleRequestAction = async (requestId, action) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/bloodbank/request-action`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ requestId, action }),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/bloodbank/request-action`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ requestId, action }),
+        }
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || `Failed to ${action} request`);
+      if (!response.ok)
+        throw new Error(data.error || `Failed to ${action} request`);
       setSuccess(`Request ${action} successfully`);
       setRequests((prev) =>
-        prev.map((req) => (req._id === requestId ? { ...req, status: action } : req))
+        prev.map((req) =>
+          req._id === requestId ? { ...req, status: action } : req
+        )
       );
     } catch (err) {
       setError(err.message || `Unable to ${action} request. Please try again.`);
@@ -643,26 +731,36 @@ const BloodManagementSystem = () => {
             onClick={connectWallet}
             disabled={isLoading}
             className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${
-              connectedWallet ? "bg-green-500 text-white" : "bg-white text-red-500 hover:bg-red-50"
+              connectedWallet
+                ? "bg-green-500 text-white"
+                : "bg-white text-red-500 hover:bg-red-50"
             }`}
           >
-            {isLoading ? "Connecting..." : connectedWallet ? "✓ Connected" : "Connect Wallet"}
+            {isLoading
+              ? "Connecting..."
+              : connectedWallet
+              ? "✓ Connected"
+              : "Connect Wallet"}
           </motion.button>
         </div>
       </div>
       <div className="flex space-x-1 bg-white/10 rounded-lg p-1 mt-4 max-w-7xl mx-auto">
-        {["dashboard", "inventory", "transactions", "profile", "education"].map((tab) => (
-          <motion.button
-            key={tab}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => setActiveTab(tab)}
-            className={`px-3 py-2 rounded-md font-medium text-sm capitalize transition-all ${
-              activeTab === tab ? "bg-white text-red-500" : "text-white hover:bg-white/20"
-            }`}
-          >
-            {tab}
-          </motion.button>
-        ))}
+        {["dashboard", "inventory", "transactions", "profile", "education"].map(
+          (tab) => (
+            <motion.button
+              key={tab}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 py-2 rounded-md font-medium text-sm capitalize transition-all ${
+                activeTab === tab
+                  ? "bg-white text-red-500"
+                  : "text-white hover:bg-white/20"
+              }`}
+            >
+              {tab}
+            </motion.button>
+          )
+        )}
       </div>
     </motion.header>
   );
@@ -671,7 +769,12 @@ const BloodManagementSystem = () => {
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: "Total Donors", value: donors.length, icon: Users, color: "border-red-500" },
+          {
+            label: "Total Donors",
+            value: donors.length,
+            icon: Users,
+            color: "border-red-500",
+          },
           {
             label: "Blood Units",
             value: bloodInventory.reduce((sum, item) => sum + item.units, 0),
@@ -684,7 +787,12 @@ const BloodManagementSystem = () => {
             icon: FileText,
             color: "border-green-500",
           },
-          { label: "Rewards Issued", value: rewards.points, icon: Gift, color: "border-purple-500" },
+          {
+            label: "Rewards Issued",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-purple-500",
+          },
         ].map((metric, index) => (
           <motion.div
             key={index}
@@ -696,7 +804,9 @@ const BloodManagementSystem = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{metric.label}</p>
-                <p className="text-2xl font-semibold text-gray-800">{metric.value}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
               </div>
               <metric.icon className="w-8 h-8 text-gray-500" />
             </div>
@@ -718,18 +828,31 @@ const BloodManagementSystem = () => {
             <thead>
               <tr className="border-b border-red-100">
                 <th className="text-left py-3 px-4 text-gray-600">Name</th>
-                <th className="text-left py-3 px-4 text-gray-600">Blood Type</th>
-                <th className="text-left py-3 px-4 text-gray-600">Last Donation</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Blood Type
+                </th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Last Donation
+                </th>
               </tr>
             </thead>
             <tbody>
               {donors.map((donor, index) => (
-                <tr key={index} className="border-b border-red-50 hover:bg-red-50/50">
-                  <td className="py-3 px-4">{donor.firstName} {donor.lastName}</td>
-                  <td className="py-3 px-4">{donor.donorInfo?.bloodGroup || "N/A"}</td>
+                <tr
+                  key={index}
+                  className="border-b border-red-50 hover:bg-red-50/50"
+                >
+                  <td className="py-3 px-4">
+                    {donor.firstName} {donor.lastName}
+                  </td>
+                  <td className="py-3 px-4">
+                    {donor.donorInfo?.bloodGroup || "N/A"}
+                  </td>
                   <td className="py-3 px-4">
                     {donor.donorInfo?.lastDonationDate
-                      ? new Date(donor.donorInfo.lastDonationDate).toLocaleDateString()
+                      ? new Date(
+                          donor.donorInfo.lastDonationDate
+                        ).toLocaleDateString()
                       : "N/A"}
                   </td>
                 </tr>
@@ -748,15 +871,26 @@ const BloodManagementSystem = () => {
           <FileText className="w-5 h-5 mr-2 text-green-500" />
           Record Donation
         </h3>
-        <form onSubmit={handleRecordDonation} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form
+          onSubmit={handleRecordDonation}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
           <div className="relative">
-            <label htmlFor="donorId" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="donorId"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Donor
             </label>
             <select
               id="donorId"
               value={donationRecord.donorId}
-              onChange={(e) => setDonationRecord({ ...donationRecord, donorId: e.target.value })}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  donorId: e.target.value,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
@@ -769,31 +903,51 @@ const BloodManagementSystem = () => {
             </select>
           </div>
           <div className="relative">
-            <label htmlFor="bloodType" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="bloodType"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Blood Type
             </label>
             <select
               id="bloodType"
               value={donationRecord.bloodType}
-              onChange={(e) => setDonationRecord({ ...donationRecord, bloodType: e.target.value })}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  bloodType: e.target.value,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Blood Type</option>
-              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                (type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                )
+              )}
             </select>
           </div>
           <div className="relative">
-            <label htmlFor="units" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="units"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Units
             </label>
             <input
               id="units"
               type="number"
               value={donationRecord.units}
-              onChange={(e) => setDonationRecord({ ...donationRecord, units: parseInt(e.target.value) || 1 })}
+              onChange={(e) =>
+                setDonationRecord({
+                  ...donationRecord,
+                  units: parseInt(e.target.value) || 1,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               min="1"
               required
@@ -829,11 +983,17 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-3">
           {requests.map((request) => (
-            <div key={request._id} className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg">
+            <div
+              key={request._id}
+              className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg"
+            >
               <div>
-                <p className="font-medium text-gray-800">Hospital: {request.hospitalName}</p>
+                <p className="font-medium text-gray-800">
+                  Hospital: {request.hospitalName}
+                </p>
                 <p className="text-sm text-gray-500">
-                  Blood Type: {request.bloodType} • Quantity: {request.quantity} • Status: {request.status}
+                  Blood Type: {request.bloodType} • Quantity: {request.quantity}{" "}
+                  • Status: {request.status}
                 </p>
               </div>
               {request.status === "Pending" && (
@@ -867,9 +1027,24 @@ const BloodManagementSystem = () => {
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: "Blood Requests", value: requests.length, icon: FileText, color: "border-red-500" },
-          { label: "Blockchain TXs", value: transactions.length, icon: Database, color: "border-purple-500" },
-          { label: "Rewards Issued", value: rewards.points, icon: Gift, color: "border-green-500" },
+          {
+            label: "Blood Requests",
+            value: requests.length,
+            icon: FileText,
+            color: "border-red-500",
+          },
+          {
+            label: "Blockchain TXs",
+            value: transactions.length,
+            icon: Database,
+            color: "border-purple-500",
+          },
+          {
+            label: "Rewards Issued",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-green-500",
+          },
         ].map((metric, index) => (
           <motion.div
             key={index}
@@ -881,7 +1056,9 @@ const BloodManagementSystem = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{metric.label}</p>
-                <p className="text-2xl font-semibold text-gray-800">{metric.value}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
               </div>
               <metric.icon className="w-8 h-8 text-gray-500" />
             </div>
@@ -898,50 +1075,80 @@ const BloodManagementSystem = () => {
           <FileText className="w-5 h-5 mr-2 text-blue-500" />
           Request Blood
         </h3>
-        <form onSubmit={handleBloodRequest} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form
+          onSubmit={handleBloodRequest}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
           <div className="relative">
-            <label htmlFor="bloodBankId" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="bloodBankId"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Blood Bank
             </label>
             <select
               id="bloodBankId"
               value={bloodRequest.bloodBankId}
-              onChange={(e) => setBloodRequest({ ...bloodRequest, bloodBankId: e.target.value })}
+              onChange={(e) =>
+                setBloodRequest({
+                  ...bloodRequest,
+                  bloodBankId: e.target.value,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Blood Bank</option>
               {bloodBanks.map((bank) => (
-                <option key={bank._id} value={bank._id}>{bank.name}</option>
+                <option key={bank._id} value={bank._id}>
+                  {bank.name}
+                </option>
               ))}
             </select>
           </div>
           <div className="relative">
-            <label htmlFor="requestBloodType" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="requestBloodType"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Blood Type
             </label>
             <select
               id="requestBloodType"
               value={bloodRequest.bloodType}
-              onChange={(e) => setBloodRequest({ ...bloodRequest, bloodType: e.target.value })}
+              onChange={(e) =>
+                setBloodRequest({ ...bloodRequest, bloodType: e.target.value })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Blood Type</option>
-              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                (type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                )
+              )}
             </select>
           </div>
           <div className="relative">
-            <label htmlFor="quantity" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="quantity"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Quantity (units)
             </label>
             <input
               id="quantity"
               type="number"
               value={bloodRequest.quantity}
-              onChange={(e) => setBloodRequest({ ...bloodRequest, quantity: parseInt(e.target.value) || 1 })}
+              onChange={(e) =>
+                setBloodRequest({
+                  ...bloodRequest,
+                  quantity: parseInt(e.target.value) || 1,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               min="1"
               required
@@ -977,11 +1184,17 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-3">
           {requests.map((request) => (
-            <div key={request._id} className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg">
+            <div
+              key={request._id}
+              className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg"
+            >
               <div>
-                <p className="font-medium text-gray-800">Blood Bank: {request.bloodBankName}</p>
+                <p className="font-medium text-gray-800">
+                  Blood Bank: {request.bloodBankName}
+                </p>
                 <p className="text-sm text-gray-500">
-                  Blood Type: {request.bloodType} • Quantity: {request.quantity} • Status: {request.status}
+                  Blood Type: {request.bloodType} • Quantity: {request.quantity}{" "}
+                  • Status: {request.status}
                 </p>
               </div>
             </div>
@@ -995,9 +1208,24 @@ const BloodManagementSystem = () => {
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: "Total Donations", value: donationHistory.length, icon: Heart, color: "border-red-500" },
-          { label: "Reward Points", value: rewards.points, icon: Gift, color: "border-green-500" },
-          { label: "Badges Earned", value: rewards.badges.length, icon: Shield, color: "border-blue-500" },
+          {
+            label: "Total Donations",
+            value: donationHistory.length,
+            icon: Heart,
+            color: "border-red-500",
+          },
+          {
+            label: "Reward Points",
+            value: rewards.points,
+            icon: Gift,
+            color: "border-green-500",
+          },
+          {
+            label: "Badges Earned",
+            value: rewards.badges.length,
+            icon: Shield,
+            color: "border-blue-500",
+          },
         ].map((metric, index) => (
           <motion.div
             key={index}
@@ -1009,7 +1237,9 @@ const BloodManagementSystem = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">{metric.label}</p>
-                <p className="text-2xl font-semibold text-gray-800">{metric.value}</p>
+                <p className="text-2xl font-semibold text-gray-800">
+                  {metric.value}
+                </p>
               </div>
               <metric.icon className="w-8 h-8 text-gray-500" />
             </div>
@@ -1028,7 +1258,10 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="space-y-4">
           {donationHistory.map((donation) => (
-            <div key={donation._id} className="border border-red-100 rounded-lg p-4 bg-red-50/50">
+            <div
+              key={donation._id}
+              className="border border-red-100 rounded-lg p-4 bg-red-50/50"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="font-medium text-gray-800">{donation.date}</p>
@@ -1082,46 +1315,69 @@ const BloodManagementSystem = () => {
           <Calendar className="w-5 h-5 mr-2 text-red-500" />
           Schedule Donation
         </h3>
-        <form onSubmit={handleScheduleDonation} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form
+          onSubmit={handleScheduleDonation}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
           <div className="relative">
-            <label htmlFor="scheduleBloodBankId" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="scheduleBloodBankId"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Blood Bank
             </label>
             <select
               id="scheduleBloodBankId"
               value={scheduleData.bloodBankId}
-              onChange={(e) => setScheduleData({ ...scheduleData, bloodBankId: e.target.value })}
+              onChange={(e) =>
+                setScheduleData({
+                  ...scheduleData,
+                  bloodBankId: e.target.value,
+                })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             >
               <option value="">Select Blood Bank</option>
               {bloodBanks.map((bank) => (
-                <option key={bank._id} value={bank._id}>{bank.name}</option>
+                <option key={bank._id} value={bank._id}>
+                  {bank.name}
+                </option>
               ))}
             </select>
           </div>
           <div className="relative">
-            <label htmlFor="scheduleDate" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="scheduleDate"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Date
             </label>
             <input
               id="scheduleDate"
               type="date"
               value={scheduleData.date}
-              onChange={(e) => setScheduleData({ ...scheduleData, date: e.target.value })}
+              onChange={(e) =>
+                setScheduleData({ ...scheduleData, date: e.target.value })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             />
           </div>
           <div className="relative">
-            <label htmlFor="scheduleTime" className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300">
+            <label
+              htmlFor="scheduleTime"
+              className="absolute -top-2 left-3 text-sm text-gray-500 bg-white px-1 transition-all duration-300"
+            >
               Time
             </label>
             <input
               id="scheduleTime"
               type="time"
               value={scheduleData.time}
-              onChange={(e) => setScheduleData({ ...scheduleData, time: e.target.value })}
+              onChange={(e) =>
+                setScheduleData({ ...scheduleData, time: e.target.value })
+              }
               className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
               required
             />
@@ -1167,7 +1423,9 @@ const BloodManagementSystem = () => {
           transition={{ delay: 0.2 }}
           className="bg-red-50 rounded-lg p-6 mb-6"
         >
-          <h4 className="text-md font-medium text-gray-800 mb-4">Global Blood Donation by Type</h4>
+          <h4 className="text-md font-medium text-gray-800 mb-4">
+            Global Blood Donation by Type
+          </h4>
           <div className="h-64">
             <Bar
               data={educationalContent.bloodTypeData}
@@ -1176,10 +1434,17 @@ const BloodManagementSystem = () => {
                 maintainAspectRatio: false,
                 plugins: {
                   legend: { display: true, position: "top" },
-                  tooltip: { backgroundColor: "#f87171", titleColor: "#fff", bodyColor: "#fff" },
+                  tooltip: {
+                    backgroundColor: "#f87171",
+                    titleColor: "#fff",
+                    bodyColor: "#fff",
+                  },
                 },
                 scales: {
-                  y: { beginAtZero: true, title: { display: true, text: "Percentage (%)" } },
+                  y: {
+                    beginAtZero: true,
+                    title: { display: true, text: "Percentage (%)" },
+                  },
                   x: { title: { display: true, text: "Blood Type" } },
                 },
               }}
@@ -1204,7 +1469,9 @@ const BloodManagementSystem = () => {
             >
               <button
                 className="w-full text-left p-4 flex justify-between items-center"
-                onClick={() => setExpandedArticle(expandedArticle === index ? null : index)}
+                onClick={() =>
+                  setExpandedArticle(expandedArticle === index ? null : index)
+                }
                 aria-expanded={expandedArticle === index}
                 aria-controls={`article-${index}`}
               >
@@ -1240,23 +1507,38 @@ const BloodManagementSystem = () => {
           transition={{ delay: 0.6 }}
           className="mt-6 bg-white rounded-lg shadow-md p-6"
         >
-          <h4 className="text-md font-medium text-gray-800 mb-4">Blood Type Compatibility</h4>
+          <h4 className="text-md font-medium text-gray-800 mb-4">
+            Blood Type Compatibility
+          </h4>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-red-100">
-                  <th className="text-left py-3 px-4 text-gray-600">Blood Type</th>
-                  <th className="text-left py-3 px-4 text-gray-600">Can Donate To</th>
-                  <th className="text-left py-3 px-4 text-gray-600">Can Receive From</th>
-                  <th className="text-left py-3 px-4 text-gray-600">Donation Frequency</th>
+                  <th className="text-left py-3 px-4 text-gray-600">
+                    Blood Type
+                  </th>
+                  <th className="text-left py-3 px-4 text-gray-600">
+                    Can Donate To
+                  </th>
+                  <th className="text-left py-3 px-4 text-gray-600">
+                    Can Receive From
+                  </th>
+                  <th className="text-left py-3 px-4 text-gray-600">
+                    Donation Frequency
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {educationalContent.compatibilityTable.map((row, index) => (
-                  <tr key={index} className="border-b border-red-50 hover:bg-red-50/50">
+                  <tr
+                    key={index}
+                    className="border-b border-red-50 hover:bg-red-50/50"
+                  >
                     <td className="py-3 px-4 font-medium">{row.bloodType}</td>
                     <td className="py-3 px-4">{row.canDonateTo.join(", ")}</td>
-                    <td className="py-3 px-4">{row.canReceiveFrom.join(", ")}</td>
+                    <td className="py-3 px-4">
+                      {row.canReceiveFrom.join(", ")}
+                    </td>
                     <td className="py-3 px-4">{row.frequency}</td>
                   </tr>
                 ))}
@@ -1272,12 +1554,26 @@ const BloodManagementSystem = () => {
           transition={{ delay: 0.8 }}
           className="mt-6 bg-red-50 rounded-lg p-6"
         >
-          <h4 className="text-md font-medium text-gray-800 mb-4">Donation Process</h4>
+          <h4 className="text-md font-medium text-gray-800 mb-4">
+            Donation Process
+          </h4>
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             {[
-              { step: "Register", icon: Users, description: "Sign up and verify eligibility" },
-              { step: "Screen", icon: CheckCircle, description: "Health check and questionnaire" },
-              { step: "Donate", icon: Droplets, description: "Give blood in 8-10 minutes" },
+              {
+                step: "Register",
+                icon: Users,
+                description: "Sign up and verify eligibility",
+              },
+              {
+                step: "Screen",
+                icon: CheckCircle,
+                description: "Health check and questionnaire",
+              },
+              {
+                step: "Donate",
+                icon: Droplets,
+                description: "Give blood in 8-10 minutes",
+              },
               { step: "Recover", icon: Heart, description: "Rest and refresh" },
             ].map((step, index) => (
               <motion.div
@@ -1301,20 +1597,30 @@ const BloodManagementSystem = () => {
           transition={{ delay: 1.0 }}
           className="mt-6 bg-white rounded-lg shadow-md p-6"
         >
-          <h4 className="text-md font-medium text-gray-800 mb-4">Test Your Knowledge</h4>
+          <h4 className="text-md font-medium text-gray-800 mb-4">
+            Test Your Knowledge
+          </h4>
           <form onSubmit={handleQuizSubmit} className="space-y-4">
             {educationalContent.quiz.map((q, index) => (
-              <div key={index} className="border border-red-100 rounded-lg p-4 bg-red-50/50">
+              <div
+                key={index}
+                className="border border-red-100 rounded-lg p-4 bg-red-50/50"
+              >
                 <p className="font-medium text-gray-800 mb-2">{q.question}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {q.options.map((option, optIndex) => (
-                    <label key={optIndex} className="flex items-center space-x-2">
+                    <label
+                      key={optIndex}
+                      className="flex items-center space-x-2"
+                    >
                       <input
                         type="radio"
                         name={`quiz-${index}`}
                         value={option}
                         checked={quizAnswers[index] === option}
-                        onChange={() => setQuizAnswers({ ...quizAnswers, [index]: option })}
+                        onChange={() =>
+                          setQuizAnswers({ ...quizAnswers, [index]: option })
+                        }
                         className="text-red-500 focus:ring-red-400"
                         disabled={quizSubmitted}
                       />
@@ -1394,15 +1700,23 @@ const BloodManagementSystem = () => {
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h4 className="text-xl font-semibold text-gray-800">{blood.bloodType}</h4>
-                  <p className="text-2xl font-semibold text-red-500">{blood.units} units</p>
+                  <h4 className="text-xl font-semibold text-gray-800">
+                    {blood.bloodType}
+                  </h4>
+                  <p className="text-2xl font-semibold text-red-500">
+                    {blood.units} units
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                   <Droplets className="w-5 h-5 text-red-500" />
                 </div>
               </div>
               <div className="space-y-2">
-                <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getDemandColor(blood.demand)}`}>
+                <div
+                  className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getDemandColor(
+                    blood.demand
+                  )}`}
+                >
                   {blood.demand} Demand
                 </div>
                 <p className="text-sm text-gray-500 flex items-center">
@@ -1438,9 +1752,13 @@ const BloodManagementSystem = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-red-100">
-                <th className="text-left py-3 px-4 text-gray-600">Transaction Hash</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Transaction Hash
+                </th>
                 <th className="text-left py-3 px-4 text-gray-600">Type</th>
-                <th className="text-left py-3 px-4 text-gray-600">Blood Type</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Blood Type
+                </th>
                 <th className="text-left py-3 px-4 text-gray-600">Quantity</th>
                 <th className="text-left py-3 px-4 text-gray-600">Timestamp</th>
                 <th className="text-left py-3 px-4 text-gray-600">Status</th>
@@ -1448,9 +1766,14 @@ const BloodManagementSystem = () => {
             </thead>
             <tbody>
               {transactions.map((tx) => (
-                <tr key={tx._id} className="border-b border-red-50 hover:bg-red-50/50">
+                <tr
+                  key={tx._id}
+                  className="border-b border-red-50 hover:bg-red-50/50"
+                >
                   <td className="py-3 px-4">
-                    <code className="text-sm bg-red-100 px-2 py-1 rounded">{tx.txHash.substring(0, 10)}...</code>
+                    <code className="text-sm bg-red-100 px-2 py-1 rounded">
+                      {tx.txHash.substring(0, 10)}...
+                    </code>
                   </td>
                   <td className="py-3 px-4">{tx.type}</td>
                   <td className="py-3 px-4">
@@ -1513,10 +1836,12 @@ const BloodManagementSystem = () => {
                 <strong>Blood Group:</strong> {userData?.donorInfo?.bloodGroup}
               </p>
               <p className="text-gray-500">
-                <strong>Donation Count:</strong> {userData?.donorInfo?.donationCount}
+                <strong>Donation Count:</strong>{" "}
+                {userData?.donorInfo?.donationCount}
               </p>
               <p className="text-gray-500">
-                <strong>Rewards:</strong> {userData?.donorInfo?.rewards.points} points, Badges:{" "}
+                <strong>Rewards:</strong> {userData?.donorInfo?.rewards.points}{" "}
+                points, Badges:{" "}
                 {userData?.donorInfo?.rewards.badges.join(", ") || "None"}
               </p>
             </>
@@ -1524,10 +1849,12 @@ const BloodManagementSystem = () => {
           {userType !== "Donor" && (
             <>
               <p className="text-gray-500">
-                <strong>Location:</strong> {userData?.[userType.toLowerCase() + "Info"]?.location}
+                <strong>Location:</strong>{" "}
+                {userData?.[userType.toLowerCase() + "Info"]?.location}
               </p>
               <p className="text-gray-500">
-                <strong>Contact:</strong> {userData?.[userType.toLowerCase() + "Info"]?.contactNumber}
+                <strong>Contact:</strong>{" "}
+                {userData?.[userType.toLowerCase() + "Info"]?.contactNumber}
               </p>
             </>
           )}
@@ -1544,9 +1871,18 @@ const BloodManagementSystem = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            {["Personal Data Encrypted", "IPFS Document Storage", "Blockchain Verified"].map((item, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg">
-                <span className="text-sm font-medium text-gray-500">{item}</span>
+            {[
+              "Personal Data Encrypted",
+              "IPFS Document Storage",
+              "Blockchain Verified",
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg"
+              >
+                <span className="text-sm font-medium text-gray-500">
+                  {item}
+                </span>
                 <CheckCircle className="w-5 h-5 text-green-500" />
               </div>
             ))}
@@ -1554,7 +1890,9 @@ const BloodManagementSystem = () => {
           <div className="bg-blue-50/50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-800 mb-2">Data Protection</h4>
             <p className="text-sm text-blue-600">
-              Your personal information is encrypted and stored off-chain in MongoDB, while only verification hashes and metadata are stored on the Ethereum blockchain.
+              Your personal information is encrypted and stored off-chain in
+              MongoDB, while only verification hashes and metadata are stored on
+              the Ethereum blockchain.
             </p>
           </div>
         </div>
@@ -1585,7 +1923,11 @@ const BloodManagementSystem = () => {
     }
     switch (activeTab) {
       case "dashboard":
-        return userType === "BloodBank" ? renderBloodBankDashboard() : userType === "Hospital" ? renderHospitalDashboard() : renderDonorDashboard();
+        return userType === "BloodBank"
+          ? renderBloodBankDashboard()
+          : userType === "Hospital"
+          ? renderHospitalDashboard()
+          : renderDonorDashboard();
       case "inventory":
         return renderInventory();
       case "transactions":
@@ -1675,4 +2017,29 @@ const BloodManagementSystem = () => {
             className="fixed top-4 right-4 p-3 bg-green-50 border border-green-200 rounded-lg shadow-md z-50"
           >
             <p className="text-sm text-green-600 flex items-center">
-              <
+              <CheckCircle className="w-4 h-4 mr-2" />
+              {success}
+            </p>
+          </motion.div>
+        )}
+        {error && (
+          <motion.div
+            variants={messageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed top-4 right-4 p-3 bg-red-50 border border-red-200 rounded-lg shadow-md z-50"
+          >
+            <p className="text-sm text-red-600 flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2" />
+              {error}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <main className="relative max-w-7xl mx-auto">{renderContent()}</main>
+    </div>
+  );
+};
+
+export default BloodManagementSystem;
