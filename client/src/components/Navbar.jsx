@@ -2,7 +2,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Heart, Activity, CheckCircle } from "lucide-react";
 
-const Navbar = ({ activeTab, setActiveTab, userType, notifications, connectWallet, connectedWallet, isLoading }) => {
+const Navbar = ({
+  activeTab,
+  setActiveTab,
+  userType,
+  notifications,
+  connectWallet,
+  connectedWallet,
+  isLoading,
+}) => {
   return (
     <motion.header
       initial={{ y: -50, opacity: 0 }}
