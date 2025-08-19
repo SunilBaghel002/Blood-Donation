@@ -31,6 +31,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import Navbar from "../components/Navbar";
 
 ChartJS.register(
   CategoryScale,
@@ -56,7 +57,6 @@ const BloodManagementSystem = () => {
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [quizScore, setQuizScore] = useState(null);
-
   // Data states
   const [bloodInventory, setBloodInventory] = useState([]);
   const [donors, setDonors] = useState([]);
@@ -80,14 +80,12 @@ const BloodManagementSystem = () => {
     bloodType: "",
     quantity: 1,
   });
-
   // Animation variants for messages
   const messageVariants = {
     initial: { opacity: 0, y: -20, x: 20 },
     animate: { opacity: 1, y: 0, x: 0, transition: { duration: 0.3 } },
     exit: { opacity: 0, y: -20, x: 20, transition: { duration: 0.3 } },
   };
-
   // Educational content
   const educationalContent = {
     title: "Learn About Blood Donation",
@@ -204,7 +202,6 @@ const BloodManagementSystem = () => {
       },
     ],
   };
-
   // Generate blood droplet particles
   const [particles, setParticles] = useState([]);
   useEffect(() => {
@@ -218,7 +215,6 @@ const BloodManagementSystem = () => {
     }));
     setParticles(newParticles);
   }, []);
-
   // Auto-dismiss messages after 5 seconds
   useEffect(() => {
     if (success || error) {
@@ -229,7 +225,6 @@ const BloodManagementSystem = () => {
       return () => clearTimeout(timer);
     }
   }, [success, error]);
-
   // Fetch user data and role-specific data on mount
   useEffect(() => {
     const fetchUserData = async () => {
@@ -237,18 +232,15 @@ const BloodManagementSystem = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("Please log in to access the dashboard");
-
         const response = await fetch("http://localhost:5000/api/auth/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
         if (!response.ok)
           throw new Error(data.error || "Failed to fetch user data");
-
         setUserData(data.user);
         setUserType(data.user.role);
         localStorage.setItem("role", data.user.role);
-
         if (data.user.role === "BloodBank") {
           await fetchBloodBankData(token);
         } else if (data.user.role === "Hospital") {
@@ -256,7 +248,6 @@ const BloodManagementSystem = () => {
         } else if (data.user.role === "Donor") {
           await fetchDonorData(token);
         }
-
         await fetchBloodBanks(token);
       } catch (err) {
         setError(err.message || "Unable to fetch user data. Please try again.");
@@ -264,10 +255,8 @@ const BloodManagementSystem = () => {
         setIsLoading(false);
       }
     };
-
     fetchUserData();
   }, []);
-
   // Fetch registered blood banks
   const fetchBloodBanks = async (token) => {
     try {
@@ -292,7 +281,6 @@ const BloodManagementSystem = () => {
       setError(err.message || "Unable to fetch blood banks. Please try again.");
     }
   };
-
   // Fetch blood bank data
   const fetchBloodBankData = async (token) => {
     try {
@@ -307,18 +295,15 @@ const BloodManagementSystem = () => {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
-
       const donorsData = await donorsRes.json();
       const inventoryData = await inventoryRes.json();
       const requestsData = await requestsRes.json();
-
       if (!donorsRes.ok)
         throw new Error(donorsData.error || "Failed to fetch donors");
       if (!inventoryRes.ok)
         throw new Error(inventoryData.error || "Failed to fetch inventory");
       if (!requestsRes.ok)
         throw new Error(requestsData.error || "Failed to fetch requests");
-
       setDonors(donorsData.donors || []);
       setBloodInventory(
         inventoryData.inventory.map((item) => ({
@@ -345,7 +330,6 @@ const BloodManagementSystem = () => {
       );
     }
   };
-
   // Fetch hospital data
   const fetchHospitalData = async (token) => {
     try {
@@ -357,17 +341,14 @@ const BloodManagementSystem = () => {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
-
       const requestsData = await requestsRes.json();
       const transactionsData = await transactionsRes.json();
-
       if (!requestsRes.ok)
         throw new Error(requestsData.error || "Failed to fetch requests");
       if (!transactionsRes.ok)
         throw new Error(
           transactionsData.error || "Failed to fetch transactions"
         );
-
       setRequests(
         requestsData.requests.map((req) => ({
           _id: req._id,
@@ -396,7 +377,6 @@ const BloodManagementSystem = () => {
       );
     }
   };
-
   // Fetch donor data
   const fetchDonorData = async (token) => {
     try {
@@ -408,17 +388,14 @@ const BloodManagementSystem = () => {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
-
       const historyData = await historyRes.json();
       const rewardsData = await rewardsRes.json();
-
       if (!historyRes.ok)
         throw new Error(
           historyData.error || "Failed to fetch donation history"
         );
       if (!rewardsRes.ok)
         throw new Error(rewardsData.error || "Failed to fetch rewards");
-
       setDonationHistory(
         historyData.history.map((tx) => ({
           _id: tx._id,
@@ -437,7 +414,6 @@ const BloodManagementSystem = () => {
       setError(err.message || "Unable to fetch donor data. Please try again.");
     }
   };
-
   // Connect wallet
   const connectWallet = async () => {
     setIsLoading(true);
@@ -467,7 +443,6 @@ const BloodManagementSystem = () => {
       setIsLoading(false);
     }
   };
-
   // Schedule donation (donor)
   const handleScheduleDonation = async (e) => {
     e.preventDefault();
@@ -507,7 +482,6 @@ const BloodManagementSystem = () => {
       setIsLoading(false);
     }
   };
-
   // Record donation (blood bank)
   const handleRecordDonation = async (e) => {
     e.preventDefault();
@@ -576,7 +550,6 @@ const BloodManagementSystem = () => {
       setIsLoading(false);
     }
   };
-
   // Request blood from specific blood bank (hospital)
   const handleBloodRequest = async (e) => {
     e.preventDefault();
@@ -617,7 +590,6 @@ const BloodManagementSystem = () => {
       setIsLoading(false);
     }
   };
-
   // Approve/Reject request (blood bank)
   const handleRequestAction = async (requestId, action) => {
     setIsLoading(true);
@@ -648,7 +620,6 @@ const BloodManagementSystem = () => {
       setIsLoading(false);
     }
   };
-
   // Handle quiz submission
   const handleQuizSubmit = (e) => {
     e.preventDefault();
@@ -659,7 +630,6 @@ const BloodManagementSystem = () => {
     setQuizScore(score);
     setQuizSubmitted(true);
   };
-
   const getDemandColor = (demand) => {
     switch (demand) {
       case "Critical":
@@ -674,7 +644,6 @@ const BloodManagementSystem = () => {
         return "text-gray-500 bg-gray-50";
     }
   };
-
   const BloodDroplet = ({ particle }) => (
     <svg
       className="absolute"
@@ -695,76 +664,6 @@ const BloodManagementSystem = () => {
       />
     </svg>
   );
-
-  const renderHeader = () => (
-    <motion.header
-      initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="bg-gradient-to-r from-red-500 to-pink-400 text-white p-4 sticky top-0 z-10 shadow-md"
-    >
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-white/20 rounded-lg">
-            <Heart className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold">BloodChain</h1>
-            <p className="text-red-100 text-sm">Blockchain Blood Management</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-sm font-medium">{userType}</span>
-          <div className="relative">
-            <div className="p-2 bg-white/20 rounded-lg cursor-pointer">
-              <Activity className="w-5 h-5" />
-            </div>
-            {notifications > 0 && (
-              <div className="absolute -top-2 -right-2 bg-yellow-400 text-red-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                {notifications}
-              </div>
-            )}
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={connectWallet}
-            disabled={isLoading}
-            className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${
-              connectedWallet
-                ? "bg-green-500 text-white"
-                : "bg-white text-red-500 hover:bg-red-50"
-            }`}
-          >
-            {isLoading
-              ? "Connecting..."
-              : connectedWallet
-              ? "✓ Connected"
-              : "Connect Wallet"}
-          </motion.button>
-        </div>
-      </div>
-      <div className="flex space-x-1 bg-white/10 rounded-lg p-1 mt-4 max-w-7xl mx-auto">
-        {["dashboard", "inventory", "transactions", "profile", "education"].map(
-          (tab) => (
-            <motion.button
-              key={tab}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3 py-2 rounded-md font-medium text-sm capitalize transition-all ${
-                activeTab === tab
-                  ? "bg-white text-red-500"
-                  : "text-white hover:bg-white/20"
-              }`}
-            >
-              {tab}
-            </motion.button>
-          )
-        )}
-      </div>
-    </motion.header>
-  );
-
   const renderBloodBankDashboard = () => (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -813,7 +712,6 @@ const BloodManagementSystem = () => {
           </motion.div>
         ))}
       </div>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -861,7 +759,6 @@ const BloodManagementSystem = () => {
           </table>
         </div>
       </motion.div>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -971,7 +868,6 @@ const BloodManagementSystem = () => {
           </motion.button>
         </form>
       </motion.div>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1022,7 +918,6 @@ const BloodManagementSystem = () => {
       </motion.div>
     </div>
   );
-
   const renderHospitalDashboard = () => (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1065,7 +960,6 @@ const BloodManagementSystem = () => {
           </motion.div>
         ))}
       </div>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1172,7 +1066,6 @@ const BloodManagementSystem = () => {
           </motion.button>
         </form>
       </motion.div>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1203,7 +1096,6 @@ const BloodManagementSystem = () => {
       </motion.div>
     </div>
   );
-
   const renderDonorDashboard = () => (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1246,7 +1138,6 @@ const BloodManagementSystem = () => {
           </motion.div>
         ))}
       </div>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1305,7 +1196,6 @@ const BloodManagementSystem = () => {
           ))}
         </div>
       </motion.div>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1402,7 +1292,6 @@ const BloodManagementSystem = () => {
       </motion.div>
     </div>
   );
-
   const renderEducationTab = () => (
     <div className="p-6 space-y-6">
       <motion.div
@@ -1415,7 +1304,6 @@ const BloodManagementSystem = () => {
           <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
           {educationalContent.title}
         </h3>
-
         {/* Blood Donation Distribution Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1451,7 +1339,6 @@ const BloodManagementSystem = () => {
             />
           </div>
         </motion.div>
-
         {/* Articles with Accordion */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1499,7 +1386,6 @@ const BloodManagementSystem = () => {
             </motion.div>
           ))}
         </motion.div>
-
         {/* Blood Type Compatibility Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1546,7 +1432,6 @@ const BloodManagementSystem = () => {
             </table>
           </div>
         </motion.div>
-
         {/* Donation Process Infographic */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1589,7 +1474,6 @@ const BloodManagementSystem = () => {
             ))}
           </div>
         </motion.div>
-
         {/* Interactive Quiz */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1660,7 +1544,6 @@ const BloodManagementSystem = () => {
             )}
           </form>
         </motion.div>
-
         {/* Key Facts */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1678,7 +1561,6 @@ const BloodManagementSystem = () => {
       </motion.div>
     </div>
   );
-
   const renderInventory = () => (
     <div className="p-6 space-y-6">
       <motion.div
@@ -1730,7 +1612,6 @@ const BloodManagementSystem = () => {
       </motion.div>
     </div>
   );
-
   const renderTransactions = () => (
     <div className="p-6 space-y-6">
       <motion.div
@@ -1805,7 +1686,6 @@ const BloodManagementSystem = () => {
       </motion.div>
     </div>
   );
-
   const renderProfile = () => (
     <div className="p-6 space-y-6">
       <motion.div
@@ -1899,7 +1779,6 @@ const BloodManagementSystem = () => {
       </motion.div>
     </div>
   );
-
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -1940,7 +1819,6 @@ const BloodManagementSystem = () => {
         return renderDonorDashboard();
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 font-inter">
       <div className="absolute inset-0">
@@ -2006,7 +1884,15 @@ const BloodManagementSystem = () => {
           <BloodDroplet key={particle.id} particle={particle} />
         ))}
       </div>
-      {renderHeader()}
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        userType={userType}
+        notifications={notifications}
+        connectWallet={connectWallet}
+        connectedWallet={connectedWallet}
+        isLoading={isLoading}
+      />
       <AnimatePresence>
         {success && (
           <motion.div
