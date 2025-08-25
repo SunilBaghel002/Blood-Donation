@@ -44,6 +44,7 @@ const BloodChainLanding = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [activeFlowStep, setActiveFlowStep] = useState(null);
   const canvasRef = useRef(null);
 
   // Handle scroll for navbar and back-to-top
@@ -68,10 +69,9 @@ const BloodChainLanding = () => {
     const camera = new THREE.PerspectiveCamera(75, 1, 0.6, 2000);
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
 
-    // Responsive canvas size
     const updateCanvasSize = () => {
       const width =
-        window.innerWidth < 640 ? 200 : window.innerWidth < 1024 ? 300 : 900;
+        window.innerWidth < 640 ? 200 : window.innerWidth < 1024 ? 300 : 400;
       const height = width;
       renderer.setSize(width, height);
       camera.aspect = 1;
@@ -80,7 +80,6 @@ const BloodChainLanding = () => {
     updateCanvasSize();
     window.addEventListener("resize", updateCanvasSize);
 
-    // Teardrop shape
     const points = [];
     for (let i = 0; i < 20; i++) {
       const x = Math.sin((i * Math.PI) / 20) * (1 - i / 20) * 1.5;
@@ -96,7 +95,6 @@ const BloodChainLanding = () => {
     const bloodDrop = new THREE.Mesh(geometry, material);
     scene.add(bloodDrop);
 
-    // Lighting
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
@@ -106,13 +104,10 @@ const BloodChainLanding = () => {
     scene.add(hemisphereLight);
 
     camera.position.z = 5;
-
-    // Orbit Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableZoom = false;
     controls.enablePan = false;
 
-    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -150,23 +145,32 @@ const BloodChainLanding = () => {
   const howItWorksSteps = [
     {
       title: "Donor Registers",
-      description: "Secure registration with blockchain verification.",
+      description:
+        "Secure registration with blockchain-based identity verification.",
+      icon: User,
     },
     {
       title: "Blood Donation",
-      description: "Event logged immutably on Ethereum.",
+      description: "Donation events logged immutably on Ethereum blockchain.",
+      icon: Droplets,
     },
     {
       title: "Inventory Update",
-      description: "Blood banks track units in real-time.",
+      description:
+        "Blood banks update inventory in real-time with smart contracts.",
+      icon: Database,
     },
     {
       title: "Hospital Request",
-      description: "Verified transfers with smart contracts.",
+      description:
+        "Hospitals request blood with verified smart contract transfers.",
+      icon: Hospital,
     },
     {
       title: "Trace & Use",
-      description: "Full traceability from donor to recipient.",
+      description:
+        "Full traceability from donor to recipient with transparent records.",
+      icon: MapPin,
     },
   ];
 
@@ -175,36 +179,40 @@ const BloodChainLanding = () => {
       role: "Donors",
       icon: User,
       benefits: [
-        "Track your impact",
-        "Get alerts for needs",
-        "Earn rewards via NFTs",
+        "Track your donation impact in real-time",
+        "Receive urgent donation alerts based on location",
+        "Earn exclusive NFT rewards for milestones",
+        "Access donation history securely",
       ],
     },
     {
       role: "Hospitals",
       icon: Hospital,
       benefits: [
-        "Verify blood authenticity",
-        "Request units seamlessly",
-        "Access real-time inventory",
+        "Verify blood authenticity instantly",
+        "Seamless blood unit requests via smart contracts",
+        "Access real-time regional inventory data",
+        "Ensure compliance with regulatory standards",
       ],
     },
     {
       role: "Blood Banks",
       icon: Banknote,
       benefits: [
-        "Manage inventory transparently",
-        "Automate validations",
-        "Reduce waste with AI predictions",
+        "Transparent inventory management",
+        "Automated validation with smart contracts",
+        "AI-driven waste reduction predictions",
+        "Secure data sharing with hospitals",
       ],
     },
     {
       role: "Admins",
       icon: UserCheck,
       benefits: [
-        "Oversee permissions",
-        "Monitor system health",
-        "Ensure compliance",
+        "Oversee user permissions securely",
+        "Monitor system health with real-time analytics",
+        "Ensure regulatory compliance effortlessly",
+        "Manage decentralized network operations",
       ],
     },
   ];
@@ -214,40 +222,37 @@ const BloodChainLanding = () => {
       icon: Database,
       title: "Blockchain Transparency",
       description:
-        "Every donation and transfer immutably recorded on Ethereum blockchain",
+        "Immutable Ethereum records for every donation and transfer.",
       gradient: "from-red-600 to-pink-600",
     },
     {
       icon: Shield,
       title: "Data Security",
-      description:
-        "Personal information encrypted and stored off-chain with verification hashes",
+      description: "Encrypted off-chain storage with blockchain verification.",
       gradient: "from-red-600 to-pink-600",
     },
     {
       icon: Globe,
       title: "IPFS Storage",
-      description:
-        "Decentralized storage for consent forms and medical certificates",
+      description: "Decentralized storage for secure medical documents.",
       gradient: "from-red-600 to-pink-600",
     },
     {
       icon: Activity,
       title: "Real-time Tracking",
-      description: "Track your donation from collection to life-saving usage",
+      description: "Track donations from collection to usage seamlessly.",
       gradient: "from-red-600 to-pink-600",
     },
     {
       icon: Users,
       title: "Multi-stakeholder",
-      description:
-        "Connects donors, blood banks, and hospitals in one platform",
+      description: "Unified platform for donors, hospitals, and blood banks.",
       gradient: "from-red-600 to-pink-600",
     },
     {
       icon: Lock,
       title: "Smart Contracts",
-      description: "Automated workflows with Solidity smart contracts",
+      description: "Automated, secure workflows with Solidity contracts.",
       gradient: "from-red-600 to-pink-600",
     },
   ];
@@ -257,34 +262,74 @@ const BloodChainLanding = () => {
       name: "Dr. Sarah Johnson",
       role: "Blood Bank Director",
       content:
-        "BloodChain has revolutionized our inventory management. The transparency and traceability are unprecedented.",
+        "BloodChain's transparency has transformed our inventory management, reducing errors and building trust.",
       avatar: "👩‍⚕️",
     },
     {
       name: "Michael Chen",
       role: "Regular Donor",
       content:
-        "Finally, I can see exactly how my donations are being used to save lives. This technology is game-changing.",
+        "I love seeing how my donations save lives. The NFT rewards make it even more motivating!",
       avatar: "👨‍💼",
     },
     {
       name: "Dr. Maria Rodriguez",
       role: "Hospital Administrator",
       content:
-        "The verification process is seamless. We can instantly verify blood authenticity and source.",
+        "Instant blood authenticity verification and real-time inventory access have streamlined our operations.",
       avatar: "👩‍🔬",
     },
   ];
 
   const techStack = [
-    { name: "React", color: "text-blue-500", icon: SiReact },
-    { name: "Node.js", color: "text-green-500", icon: SiNodedotjs },
-    { name: "MongoDB", color: "text-green-600", icon: SiMongodb },
-    { name: "Express", color: "text-gray-600", icon: SiExpress },
-    { name: "Ethereum", color: "text-purple-500", icon: SiEthereum },
-    { name: "Solidity", color: "text-blue-600", icon: SiSolidity },
-    { name: "IPFS", color: "text-orange-500", icon: SiIpfs },
-    { name: "Web3", color: "text-yellow-500", icon: SiWeb3Dotjs },
+    {
+      name: "React",
+      color: "text-blue-500",
+      icon: SiReact,
+      description: "Dynamic and responsive user interfaces",
+    },
+    {
+      name: "Node.js",
+      color: "text-green-500",
+      icon: SiNodedotjs,
+      description: "Scalable backend for real-time updates",
+    },
+    {
+      name: "MongoDB",
+      color: "text-green-600",
+      icon: SiMongodb,
+      description: "Secure NoSQL database for user data",
+    },
+    {
+      name: "Express",
+      color: "text-gray-600",
+      icon: SiExpress,
+      description: "Robust API framework for seamless integration",
+    },
+    {
+      name: "Ethereum",
+      color: "text-purple-500",
+      icon: SiEthereum,
+      description: "Immutable blockchain for trust",
+    },
+    {
+      name: "Solidity",
+      color: "text-blue-600",
+      icon: SiSolidity,
+      description: "Smart contracts for automation",
+    },
+    {
+      name: "IPFS",
+      color: "text-orange-500",
+      icon: SiIpfs,
+      description: "Decentralized storage for documents",
+    },
+    {
+      name: "Web3",
+      color: "text-yellow-500",
+      icon: SiWeb3Dotjs,
+      description: "Blockchain interaction library",
+    },
   ];
 
   return (
@@ -310,11 +355,25 @@ const BloodChainLanding = () => {
             transform: translateY(0);
           }
         }
+        @keyframes flow-pulse {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
         .animate-fade-in {
           animation: fade-in 1s ease-out forwards;
         }
         .animate-pulse-glow {
           animation: pulse-glow 2s ease-in-out infinite;
+        }
+        .animate-flow-pulse {
+          animation: flow-pulse 2s ease-in-out infinite;
         }
         .parallax-bg {
           background-attachment: fixed;
@@ -322,9 +381,19 @@ const BloodChainLanding = () => {
           background-repeat: no-repeat;
           background-size: cover;
         }
+        .flow-connector {
+          position: absolute;
+          height: 2px;
+          background: linear-gradient(to right, #b91c1c, #ec4899);
+          top: 50%;
+          transform: translateY(-50%);
+        }
         @media (max-width: 768px) {
           .parallax-bg {
             background-attachment: scroll;
+          }
+          .flow-connector {
+            display: none;
           }
         }
       `}</style>
@@ -443,11 +512,10 @@ const BloodChainLanding = () => {
               ,{" "}
               <span className="font-semibold text-amber-300">traceability</span>
               , and{" "}
-              <span className="font-semibold text-amber-300">security</span> for
-              donors, hospitals, and blood banks.
+              <span className="font-semibold text-amber-300">security</span>.
             </p>
             <p className="text-base sm:text-lg mb-8">
-              Join 118M+ donors saving lives with blockchain transparency.
+              Join 118M+ donors saving lives with blockchain technology.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
               <a
@@ -467,7 +535,7 @@ const BloodChainLanding = () => {
           <div className="lg:w-1/2 flex justify-center">
             <canvas
               ref={canvasRef}
-              className="w-[600px] sm:w-[300px] lg:w-[400px] h-[600px] sm:h-[300px] lg:h-[400px]"
+              className="w-[200px] sm:w-[300px] lg:w-[400px] h-[200px] sm:h-[300px] lg:h-[400px]"
             />
           </div>
         </div>
@@ -481,8 +549,8 @@ const BloodChainLanding = () => {
               Our <span className="text-red-600">Global Impact</span>
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              BloodChain tackles critical shortages and inefficiencies in the
-              global blood supply chain.
+              BloodChain addresses global blood supply challenges with
+              blockchain efficiency.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
@@ -505,7 +573,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works Section with Interactive Flowchart */}
       <section id="how-it-works" className="py-12 sm:py-16 lg:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16 animate-fade-in">
@@ -513,22 +581,44 @@ const BloodChainLanding = () => {
               How <span className="text-red-600">BloodChain</span> Works
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              A seamless, decentralized process ensuring safety and efficiency.
+              A decentralized process ensuring safety, efficiency, and
+              transparency.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4 sm:gap-6">
+          <div className="relative flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8">
             {howItWorksSteps.map((step, index) => (
               <div
                 key={index}
-                className="text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in w-full sm:w-[calc(50%-1rem)] lg:w-[calc(20%-1rem)]"
-                style={{ animationDelay: `${index * 0.2}s` }}
+                className="relative w-full lg:w-[18%] text-center"
               >
-                <div className="text-xl sm:text-2xl font-bold mb-2 text-gray-900">
-                  {index + 1}. {step.title}
+                <div
+                  className={`p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in cursor-pointer ${
+                    activeFlowStep === index ? "animate-flow-pulse" : ""
+                  }`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
+                  onMouseEnter={() => setActiveFlowStep(index)}
+                  onMouseLeave={() => setActiveFlowStep(null)}
+                >
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center">
+                    <step.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  </div>
+                  <div className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                    {index + 1}. {step.title}
+                  </div>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    {step.description}
+                  </p>
                 </div>
-                <p className="text-sm sm:text-base text-gray-600">
-                  {step.description}
-                </p>
+                {index < howItWorksSteps.length - 1 && (
+                  <div
+                    className="flow-connector hidden lg:block"
+                    style={{
+                      width: "calc(100% - 18%)",
+                      left: "calc(18% + 10px)",
+                      marginLeft: "10px",
+                    }}
+                  ></div>
+                )}
               </div>
             ))}
           </div>
@@ -543,7 +633,7 @@ const BloodChainLanding = () => {
               Benefits for <span className="text-red-600">Every Role</span>
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Tailored features for donors, hospitals, blood banks, and admins.
+              Empowering stakeholders with tailored, secure features.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
@@ -557,9 +647,12 @@ const BloodChainLanding = () => {
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 text-center">
                   {role.role}
                 </h3>
-                <ul className="list-disc list-inside text-sm sm:text-base text-gray-600">
+                <ul className="list-disc list-inside text-sm sm:text-base text-gray-600 space-y-2">
                   {role.benefits.map((benefit, i) => (
-                    <li key={i}>{benefit}</li>
+                    <li key={i} className="flex items-start">
+                      <CheckCircle className="w-4 h-4 text-red-600 mr-2 mt-1" />
+                      {benefit}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -576,8 +669,7 @@ const BloodChainLanding = () => {
               Why <span className="text-red-600">BloodChain</span>?
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Cutting-edge blockchain technology ensuring trust, transparency,
-              and security in every blood donation.
+              Blockchain technology ensuring trust, transparency, and security.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
@@ -618,15 +710,14 @@ const BloodChainLanding = () => {
               Powered by <span className="text-red-600">Innovation</span>
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Built on secure, cutting-edge technologies for a reliable blood
-              management ecosystem.
+              Built with secure, cutting-edge technologies for reliability.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
             {techStack.map((tech, index) => (
               <div
                 key={index}
-                className="group text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in"
+                className="group text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in relative"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <tech.icon
@@ -634,6 +725,9 @@ const BloodChainLanding = () => {
                 />
                 <div className="font-semibold text-sm sm:text-base text-gray-900">
                   {tech.name}
+                </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-r from-red-600 to-pink-500 text-white text-xs sm:text-sm p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-xl">
+                  {tech.description}
                 </div>
               </div>
             ))}
@@ -649,7 +743,7 @@ const BloodChainLanding = () => {
                 </div>
                 <h4 className="font-bold text-lg mb-2">Blockchain Layer</h4>
                 <p className="text-gray-200 text-sm sm:text-base">
-                  Ethereum smart contracts for immutable record keeping
+                  Ethereum smart contracts for immutable records.
                 </p>
               </div>
               <div className="text-center">
@@ -658,7 +752,7 @@ const BloodChainLanding = () => {
                 </div>
                 <h4 className="font-bold text-lg mb-2">Storage Layer</h4>
                 <p className="text-gray-200 text-sm sm:text-base">
-                  IPFS for decentralized document storage
+                  IPFS for decentralized document storage.
                 </p>
               </div>
               <div className="text-center">
@@ -667,7 +761,7 @@ const BloodChainLanding = () => {
                 </div>
                 <h4 className="font-bold text-lg mb-2">Application Layer</h4>
                 <p className="text-gray-200 text-sm sm:text-base">
-                  MERN stack for secure user interfaces
+                  MERN stack for secure user interfaces.
                 </p>
               </div>
             </div>
