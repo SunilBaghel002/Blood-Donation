@@ -882,4 +882,3 @@ const BloodChainLanding = () => {
 };
 
 export default BloodChainLanding;
-
