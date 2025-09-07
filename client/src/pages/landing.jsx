@@ -87,7 +87,7 @@ const BloodChainLanding = () => {
 
     const updateCanvasSize = () => {
       const width =
-        window.innerWidth < 640 ? 200 : window.innerWidth < 1024 ? 300 : 400;
+        window.innerWidth < 640 ? 600 : window.innerWidth < 1024 ? 600 : 600;
       const height = width;
       renderer.setSize(width, height);
       camera.aspect = 1;
