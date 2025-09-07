@@ -145,11 +145,37 @@ const BloodChainLanding = () => {
       value: "118M+",
       label: "Global Blood Donations Annually (WHO)",
       icon: Droplets,
+      image:
+        "https://images.pexels.com/photos/7551812/pexels-photo-7551812.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
-    { value: "40%", label: "Donations from 16% of Population", icon: Globe },
-    { value: "Every 2s", label: "Someone Needs Blood", icon: Clock },
-    { value: "$1.4B", label: "Blockchain Healthcare Market", icon: TrendingUp },
-    { value: "34%", label: "CAGR for Blockchain in Healthcare", icon: Zap },
+    {
+      value: "40%",
+      label: "Donations from 16% of Population",
+      icon: Globe,
+      image:
+        "https://images.pexels.com/photos/6942461/pexels-photo-6942461.jpeg?auto=compress&cs=tinysrgb&w=400",
+    },
+    {
+      value: "Every 2s",
+      label: "Someone Needs Blood",
+      icon: Clock,
+      image:
+        "https://images.pexels.com/photos/7551805/pexels-photo-7551805.jpeg?auto=compress&cs=tinysrgb&w=400",
+    },
+    {
+      value: "$1.4B",
+      label: "Blockchain Healthcare Market",
+      icon: TrendingUp,
+      image:
+        "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=400",
+    },
+    {
+      value: "34%",
+      label: "CAGR for Blockchain in Healthcare",
+      icon: Zap,
+      image:
+        "https://images.pexels.com/photos/356040/pexels-photo-356040.jpeg?auto=compress&cs=tinysrgb&w=400",
+    },
   ];
 
   const howItWorksSteps = [
@@ -159,7 +185,7 @@ const BloodChainLanding = () => {
         "Securely register with blockchain-verified identity, ensuring trust and privacy.",
       icon: User,
       image:
-        "https://images.unsplash.com/photo-1580281658626-8a3a96c0a13b?auto=format&fit=crop&w=400",
+        "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       title: "Blood Donation",
@@ -167,7 +193,7 @@ const BloodChainLanding = () => {
         "Donate blood, with each event immutably logged on Ethereum for transparency.",
       icon: Droplets,
       image:
-        "https://images.unsplash.com/photo-1576091160399-1123a8340d3f?auto=format&fit=crop&w=400",
+        "https://images.pexels.com/photos/7551818/pexels-photo-7551818.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       title: "Inventory Update",
@@ -175,7 +201,7 @@ const BloodChainLanding = () => {
         "Blood banks update real-time inventory using smart contracts for accuracy.",
       icon: Database,
       image:
-        "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?auto=format&fit=crop&w=400",
+        "https://images.pexels.com/photos/4167542/pexels-photo-4167542.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       title: "Hospital Request",
@@ -183,7 +209,7 @@ const BloodChainLanding = () => {
         "Hospitals request blood via secure smart contracts, ensuring verified transfers.",
       icon: Hospital,
       image:
-        "https://images.unsplash.com/photo-1516321310765-79e7b165f0e0?auto=format&fit=crop&w=400",
+        "https://images.pexels.com/photos/1692693/pexels-photo-1692693.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       title: "Trace & Use",
@@ -191,7 +217,7 @@ const BloodChainLanding = () => {
         "Track blood from donor to recipient with full transparency and accountability.",
       icon: MapPin,
       image:
-        "https://images.unsplash.com/photo-1585435557343-3b0929fb6be1?auto=format&fit=crop&w=400",
+        "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
   ];
 
@@ -206,6 +232,8 @@ const BloodChainLanding = () => {
         "Secure access to donation history and health insights",
         "Contribute to global blood supply transparency",
       ],
+      image:
+        "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       role: "Hospitals",
@@ -217,6 +245,8 @@ const BloodChainLanding = () => {
         "Compliance with regulatory standards via immutable records",
         "Streamlined emergency response with trusted data",
       ],
+      image:
+        "https://images.pexels.com/photos/263402/pexels-photo-263402.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       role: "Blood Banks",
@@ -228,6 +258,8 @@ const BloodChainLanding = () => {
         "Secure data sharing with hospitals and regulators",
         "Optimized logistics with real-time tracking",
       ],
+      image:
+        "https://images.pexels.com/photos/4167541/pexels-photo-4167541.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       role: "Admins",
@@ -239,6 +271,8 @@ const BloodChainLanding = () => {
         "Manage decentralized network with ease",
         "Ensure data integrity across the platform",
       ],
+      image:
+        "https://images.pexels.com/photos/3184297/pexels-photo-3184297.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
   ];
 
@@ -250,7 +284,7 @@ const BloodChainLanding = () => {
         "Immutable Ethereum records for every donation and transfer, ensuring trust.",
       gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.unsplash.com/photo-1622977594634-4fe3820f2f9a?auto=format&fit=crop&w=800",
+        "https://images.pexels.com/photos/3183171/pexels-photo-3183171.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
     {
       icon: Shield,
@@ -259,7 +293,7 @@ const BloodChainLanding = () => {
         "Encrypted off-chain storage with blockchain-verified hashes for privacy.",
       gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?auto=format&fit=crop&w=800",
+        "https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
     {
       icon: Globe,
@@ -268,7 +302,7 @@ const BloodChainLanding = () => {
         "Decentralized, secure storage for medical records and consent forms.",
       gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.unsplash.com/photo-1585435557343-3b0929fb6be1?auto=format&fit=crop&w=800",
+        "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
     {
       icon: Activity,
@@ -277,7 +311,7 @@ const BloodChainLanding = () => {
         "Track donations from collection to usage with complete visibility.",
       gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.unsplash.com/photo-1580281658626-8a3a96c0a13b?auto=format&fit=crop&w=800",
+        "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
     {
       icon: Users,
@@ -286,7 +320,7 @@ const BloodChainLanding = () => {
         "Unified platform connecting donors, hospitals, and blood banks seamlessly.",
       gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.unsplash.com/photo-1576091160399-1123a8340d3f?auto=format&fit=crop&w=800",
+        "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
     {
       icon: Lock,
@@ -295,7 +329,7 @@ const BloodChainLanding = () => {
         "Automated, secure workflows powered by Solidity smart contracts.",
       gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.unsplash.com/photo-1516321310765-79e7b165f0e0?auto=format&fit=crop&w=800",
+        "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
   ];
 
@@ -306,7 +340,7 @@ const BloodChainLanding = () => {
       content:
         "BloodChain's transparency and automation have transformed our operations, ensuring every unit is traceable.",
       avatar:
-        "https://images.unsplash.com/photo-1559839734-2b71ea263f6d?auto=format&fit=crop&w=100",
+        "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=100",
     },
     {
       name: "Michael Chen",
@@ -314,7 +348,7 @@ const BloodChainLanding = () => {
       content:
         "Seeing my donations save lives in real-time is incredible. The NFT rewards are a great bonus!",
       avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100",
+        "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=100",
     },
     {
       name: "Dr. Maria Rodriguez",
@@ -322,7 +356,7 @@ const BloodChainLanding = () => {
       content:
         "BloodChain's instant verification and inventory access have streamlined our emergency responses.",
       avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100",
+        "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100",
     },
   ];
 
@@ -332,48 +366,64 @@ const BloodChainLanding = () => {
       color: "text-blue-500",
       icon: SiReact,
       description: "Dynamic, responsive UI for seamless user experience",
+      image:
+        "https://images.pexels.com/photos/11035471/pexels-photo-11035471.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Node.js",
       color: "text-green-500",
       icon: SiNodedotjs,
       description: "Scalable backend for real-time data processing",
+      image:
+        "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "MongoDB",
       color: "text-green-600",
       icon: SiMongodb,
       description: "Secure NoSQL database for efficient data storage",
+      image:
+        "https://images.pexels.com/photos/4167542/pexels-photo-4167542.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Express",
       color: "text-gray-600",
       icon: SiExpress,
       description: "Robust API framework for seamless integrations",
+      image:
+        "https://images.pexels.com/photos/1181359/pexels-photo-1181359.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Ethereum",
       color: "text-purple-500",
       icon: SiEthereum,
       description: "Immutable blockchain for transparent records",
+      image:
+        "https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Solidity",
       color: "text-blue-600",
       icon: SiSolidity,
       description: "Smart contracts for automated workflows",
+      image:
+        "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "IPFS",
       color: "text-orange-500",
       icon: SiIpfs,
       description: "Decentralized storage for secure medical records",
+      image:
+        "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Web3",
       color: "text-yellow-500",
       icon: SiWeb3Dotjs,
       description: "Enables blockchain interactions for trust",
+      image:
+        "https://images.pexels.com/photos/270360/pexels-photo-270360.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
   ];
 
@@ -465,6 +515,9 @@ const BloodChainLanding = () => {
           stroke-dasharray: 1000;
           stroke-dashoffset: 1000;
           animation: flow-path 2s linear forwards;
+        }
+        .flow-arrow {
+          animation: pulse-glow 2s ease-in-out infinite;
         }
         .parallax-bg {
           background-attachment: fixed;
@@ -576,7 +629,7 @@ const BloodChainLanding = () => {
       <section
         className="relative min-h-screen bg-gradient-to-br from-red-600 to-pink-500 flex items-center overflow-hidden parallax-bg"
         style={{
-          backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
+          backgroundImage: `url('https://images.pexels.com/photos/7551812/pexels-photo-7551812.jpeg?auto=compress&cs=tinysrgb&w=800')`,
         }}
       >
         <div className="absolute inset-0 bg-black/50"></div>
@@ -643,6 +696,11 @@ const BloodChainLanding = () => {
                 className="group text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in border border-gray-100"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
+                <img
+                  src={stat.image}
+                  alt={stat.label}
+                  className="w-full h-24 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                />
                 <stat.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
                 <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                   {stat.value}
@@ -677,7 +735,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* How It Works Section with Interactive Flowchart and Images */}
+      {/* How It Works Section with Enhanced Interactive Flowchart */}
       <section id="how-it-works" className="py-12 sm:py-16 lg:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16 animate-fade-in">
@@ -690,24 +748,37 @@ const BloodChainLanding = () => {
           </div>
           <div className="relative">
             <svg
-              className="absolute top-1/2 left-0 w-full h-12 hidden lg:block -mt-6"
+              className="absolute top-1/2 left-0 w-full h-24 hidden lg:block -mt-12"
               style={{ zIndex: 0 }}
             >
               <path
                 className="flow-path"
-                d="M 10 24 H 90 C 110 24 110 44 130 44 H 210 C 230 44 230 24 250 24 H 330 C 350 24 350 44 370 44 H 450 C 470 44 470 24 490 24 H 570 C 590 24 590 44 610 44 H 690 C 710 44 710 24 730 24 H 810"
+                d="M 20 36 H 180 C 200 36 200 60 220 60 H 380 C 400 60 400 36 420 36 H 580 C 600 36 600 60 620 60 H 780 C 800 60 800 36 820 36 H 980"
                 stroke="#b91c1c"
-                strokeWidth="4"
+                strokeWidth="6"
                 fill="none"
               />
               {howItWorksSteps.map((_, index) => (
-                <circle
-                  key={index}
-                  cx={10 + index * 160 + (index > 0 ? 10 : 0)}
-                  cy={24}
-                  r="6"
-                  fill="#b91c1c"
-                />
+                <g key={index}>
+                  <circle
+                    cx={20 + index * 200}
+                    cy={36}
+                    r="8"
+                    fill="#b91c1c"
+                    className={activeFlowStep === index ? "flow-arrow" : ""}
+                  />
+                  <path
+                    d={`M ${20 + index * 200 + 8} 36 L ${
+                      20 + index * 200 + 20
+                    } 36 L ${20 + index * 200 + 14} 30 M ${
+                      20 + index * 200 + 20
+                    } 36 L ${20 + index * 200 + 14} 42`}
+                    stroke="#b91c1c"
+                    strokeWidth="3"
+                    fill="none"
+                    className={activeFlowStep === index ? "flow-arrow" : ""}
+                  />
+                </g>
               ))}
             </svg>
             <div className="relative flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8">
@@ -723,20 +794,20 @@ const BloodChainLanding = () => {
                   onMouseEnter={() => setActiveFlowStep(index)}
                   onMouseLeave={() => setActiveFlowStep(null)}
                 >
+                  <img
+                    src={step.image}
+                    alt={`${step.title} illustration`}
+                    className="w-full h-32 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                  />
                   <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center">
                     <step.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
                   <div className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                     {index + 1}. {step.title}
                   </div>
-                  <p className="text-sm sm:text-base text-gray-600 mb-4">
+                  <p className="text-sm sm:text-base text-gray-600">
                     {step.description}
                   </p>
-                  <img
-                    src={step.image}
-                    alt={`${step.title} illustration`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
                 </div>
               ))}
             </div>
@@ -763,6 +834,11 @@ const BloodChainLanding = () => {
                 className="group p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in border border-gray-100"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
+                <img
+                  src={role.image}
+                  alt={`${role.role} illustration`}
+                  className="w-full h-32 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                />
                 <role.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 text-center">
                   {role.role}
@@ -781,7 +857,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Features Section with Photos */}
+      {/* Features Section */}
       <section id="features" className="py-12 sm:py-16 lg:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16 animate-fade-in">
@@ -846,6 +922,11 @@ const BloodChainLanding = () => {
                 className="group relative text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
+                <img
+                  src={tech.image}
+                  alt={tech.name}
+                  className="w-full h-24 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                />
                 <tech.icon
                   className={`${tech.color} text-3xl sm:text-4xl mb-2 group-hover:scale-110 transition-transform`}
                 />
@@ -864,6 +945,11 @@ const BloodChainLanding = () => {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               <div className="text-center">
+                <img
+                  src="https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400"
+                  alt="Blockchain Layer"
+                  className="w-full h-32 object-cover rounded-lg mb-4"
+                />
                 <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
                   <Database className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
@@ -873,6 +959,11 @@ const BloodChainLanding = () => {
                 </p>
               </div>
               <div className="text-center">
+                <img
+                  src="https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400"
+                  alt="Storage Layer"
+                  className="w-full h-32 object-cover rounded-lg mb-4"
+                />
                 <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
                   <Globe className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
@@ -882,6 +973,11 @@ const BloodChainLanding = () => {
                 </p>
               </div>
               <div className="text-center">
+                <img
+                  src="https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400"
+                  alt="Application Layer"
+                  className="w-full h-32 object-cover rounded-lg mb-4"
+                />
                 <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
                   <Shield className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
@@ -895,7 +991,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Testimonials with Photos */}
+      {/* Testimonials Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16 animate-fade-in">
