@@ -87,7 +87,7 @@ const BloodChainLanding = () => {
 
     const updateCanvasSize = () => {
       const width =
-        window.innerWidth < 640 ? 400 : window.innerWidth < 1024 ? 600 : 600;
+        window.innerWidth < 640 ? 200 : window.innerWidth < 1024 ? 300 : 400;
       const height = width;
       renderer.setSize(width, height);
       camera.aspect = 1;
@@ -158,30 +158,40 @@ const BloodChainLanding = () => {
       description:
         "Securely register with blockchain-verified identity, ensuring trust and privacy.",
       icon: User,
+      image:
+        "https://images.unsplash.com/photo-1580281658626-8a3a96c0a13b?auto=format&fit=crop&w=400",
     },
     {
       title: "Blood Donation",
       description:
         "Donate blood, with each event immutably logged on Ethereum for transparency.",
       icon: Droplets,
+      image:
+        "https://images.unsplash.com/photo-1576091160399-1123a8340d3f?auto=format&fit=crop&w=400",
     },
     {
       title: "Inventory Update",
       description:
         "Blood banks update real-time inventory using smart contracts for accuracy.",
       icon: Database,
+      image:
+        "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?auto=format&fit=crop&w=400",
     },
     {
       title: "Hospital Request",
       description:
         "Hospitals request blood via secure smart contracts, ensuring verified transfers.",
       icon: Hospital,
+      image:
+        "https://images.unsplash.com/photo-1516321310765-79e7b165f0e0?auto=format&fit=crop&w=400",
     },
     {
       title: "Trace & Use",
       description:
         "Track blood from donor to recipient with full transparency and accountability.",
       icon: MapPin,
+      image:
+        "https://images.unsplash.com/photo-1585435557343-3b0929fb6be1?auto=format&fit=crop&w=400",
     },
   ];
 
@@ -431,7 +441,7 @@ const BloodChainLanding = () => {
             transform: scale(1);
           }
           50% {
-            transform: scale(1.1);
+            transform: scale(1.05);
           }
           100% {
             transform: scale(1);
@@ -667,7 +677,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* How It Works Section with Interactive Flowchart */}
+      {/* How It Works Section with Interactive Flowchart and Images */}
       <section id="how-it-works" className="py-12 sm:py-16 lg:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16 animate-fade-in">
@@ -719,9 +729,14 @@ const BloodChainLanding = () => {
                   <div className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                     {index + 1}. {step.title}
                   </div>
-                  <p className="text-sm sm:text-base text-gray-600">
+                  <p className="text-sm sm:text-base text-gray-600 mb-4">
                     {step.description}
                   </p>
+                  <img
+                    src={step.image}
+                    alt={`${step.title} illustration`}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
                 </div>
               ))}
             </div>
