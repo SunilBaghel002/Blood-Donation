@@ -629,7 +629,7 @@ const BloodChainLanding = () => {
       <section
         className="relative min-h-screen bg-gradient-to-br from-red-600 to-pink-500 flex items-center overflow-hidden parallax-bg"
         style={{
-          backgroundImage: `url('https://images.pexels.com/photos/7551812/pexels-photo-7551812.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+          backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
         }}
       >
         <div className="absolute inset-0 bg-black/50"></div>
