@@ -1,67 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import React, { useState, useEffect } from "react";
 import {
   Heart,
-  Shield,
   Users,
-  Building2,
-  Activity,
-  ChevronRight,
-  CheckCircle,
-  Clock,
+  Shield,
+  Database,
   MapPin,
   Droplets,
-  Database,
-  Lock,
-  Globe,
+  Hospital,
+  User,
+  ChevronRight,
   Menu,
   X,
-  Play,
-  Zap,
-  TrendingUp,
-  User,
-  Hospital,
-  Banknote,
-  UserCheck,
   ArrowUp,
+  Star,
+  Building2
 } from "lucide-react";
-import {
-  SiReact,
-  SiNodedotjs,
-  SiMongodb,
-  SiExpress,
-  SiEthereum,
-  SiSolidity,
-  SiIpfs,
-  SiWeb3Dotjs,
-} from "react-icons/si";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 const BloodChainLanding = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [activeFlowStep, setActiveFlowStep] = useState(null);
-  const canvasRef = useRef(null);
 
   // Handle scroll for navbar and back-to-top
   useEffect(() => {
@@ -70,119 +28,11 @@ const BloodChainLanding = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Testimonial rotation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // 3D Interactive Blood Drop
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.6, 2000);
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-
-    const updateCanvasSize = () => {
-      const width =
-        window.innerWidth < 640 ? 600 : window.innerWidth < 1024 ? 600 : 600;
-      const height = width;
-      renderer.setSize(width, height);
-      camera.aspect = 1;
-      camera.updateProjectionMatrix();
-    };
-    updateCanvasSize();
-    window.addEventListener("resize", updateCanvasSize);
-
-    const points = [];
-    for (let i = 0; i < 20; i++) {
-      const x = Math.sin((i * Math.PI) / 20) * (1 - i / 20) * 1.5;
-      const y = (i - 10) * 0.2;
-      points.push(new THREE.Vector2(x, y));
-    }
-    const geometry = new THREE.LatheGeometry(points, 32);
-    const material = new THREE.MeshPhongMaterial({
-      color: 0xb91c1c,
-      shininess: 300,
-      side: THREE.DoubleSide,
-    });
-    const bloodDrop = new THREE.Mesh(geometry, material);
-    scene.add(bloodDrop);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
-    const ambientLight = new THREE.AmbientLight(0x404040, 2.5);
-    scene.add(ambientLight);
-    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-    scene.add(hemisphereLight);
-
-    camera.position.z = 5;
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableZoom = false;
-    controls.enablePan = false;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.5;
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      window.removeEventListener("resize", updateCanvasSize);
-      renderer.dispose();
-      controls.dispose();
-    };
-  }, []);
-
-  const impactStats = [
-    {
-      value: "118M+",
-      label: "Global Blood Donations Annually (WHO)",
-      icon: Droplets,
-      image:
-        "https://images.pexels.com/photos/7551812/pexels-photo-7551812.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      value: "40%",
-      label: "Donations from 16% of Population",
-      icon: Globe,
-      image:
-        "https://images.pexels.com/photos/6942461/pexels-photo-6942461.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      value: "Every 2s",
-      label: "Someone Needs Blood",
-      icon: Clock,
-      image:
-        "https://images.pexels.com/photos/7551805/pexels-photo-7551805.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      value: "$1.4B",
-      label: "Blockchain Healthcare Market",
-      icon: TrendingUp,
-      image:
-        "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      value: "34%",
-      label: "CAGR for Blockchain in Healthcare",
-      icon: Zap,
-      image:
-        "https://images.pexels.com/photos/356040/pexels-photo-356040.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-  ];
-
   const howItWorksSteps = [
     {
-      title: "Donor Registers",
+      title: "Donor Signs Up",
       description:
-        "Securely register with blockchain-verified identity, ensuring trust and privacy.",
+        "Donors register securely using blockchain to verify their identity.",
       icon: User,
       image:
         "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=400",
@@ -190,292 +40,65 @@ const BloodChainLanding = () => {
     {
       title: "Blood Donation",
       description:
-        "Donate blood, with each event immutably logged on Ethereum for transparency.",
+        "Every donation is recorded on the blockchain for transparency.",
       icon: Droplets,
       image:
         "https://images.pexels.com/photos/7551818/pexels-photo-7551818.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
-      title: "Inventory Update",
+      title: "Blood Bank Updates",
       description:
-        "Blood banks update real-time inventory using smart contracts for accuracy.",
+        "Blood banks log inventory using smart contracts for accuracy.",
       icon: Database,
       image:
         "https://images.pexels.com/photos/4167542/pexels-photo-4167542.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
-      title: "Hospital Request",
+      title: "Hospital Requests",
       description:
-        "Hospitals request blood via secure smart contracts, ensuring verified transfers.",
+        "Hospitals request blood securely, ensuring verified transfers.",
       icon: Hospital,
       image:
         "https://images.pexels.com/photos/1692693/pexels-photo-1692693.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
-      title: "Trace & Use",
-      description:
-        "Track blood from donor to recipient with full transparency and accountability.",
+      title: "Track & Deliver",
+      description: "Trace blood from donor to patient with full transparency.",
       icon: MapPin,
       image:
         "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
   ];
 
-  const roleBenefits = [
-    {
-      role: "Donors",
-      icon: User,
-      benefits: [
-        "Real-time tracking of donation impact via blockchain",
-        "Location-based urgent donation alerts",
-        "Earn unique NFT rewards for donation milestones",
-        "Secure access to donation history and health insights",
-        "Contribute to global blood supply transparency",
-      ],
-      image:
-        "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      role: "Hospitals",
-      icon: Hospital,
-      benefits: [
-        "Instant verification of blood authenticity and source",
-        "Seamless blood requests with smart contract automation",
-        "Real-time access to regional blood inventory",
-        "Compliance with regulatory standards via immutable records",
-        "Streamlined emergency response with trusted data",
-      ],
-      image:
-        "https://images.pexels.com/photos/263402/pexels-photo-263402.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      role: "Blood Banks",
-      icon: Banknote,
-      benefits: [
-        "Transparent inventory management with blockchain",
-        "Automated validation of blood units via smart contracts",
-        "AI-powered predictions to minimize blood wastage",
-        "Secure data sharing with hospitals and regulators",
-        "Optimized logistics with real-time tracking",
-      ],
-      image:
-        "https://images.pexels.com/photos/4167541/pexels-photo-4167541.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      role: "Admins",
-      icon: UserCheck,
-      benefits: [
-        "Secure oversight of user permissions and roles",
-        "Real-time system health monitoring with analytics",
-        "Automated compliance reporting with blockchain data",
-        "Manage decentralized network with ease",
-        "Ensure data integrity across the platform",
-      ],
-      image:
-        "https://images.pexels.com/photos/3184297/pexels-photo-3184297.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-  ];
-
   const features = [
     {
+      title: "Transparency",
+      description:
+        "Every step is recorded on Ethereum, making the process open and trustworthy.",
       icon: Database,
-      title: "Blockchain Transparency",
-      description:
-        "Immutable Ethereum records for every donation and transfer, ensuring trust.",
-      gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.pexels.com/photos/3183171/pexels-photo-3183171.jpeg?auto=compress&cs=tinysrgb&w=800",
+        "https://images.pexels.com/photos/3183171/pexels-photo-3183171.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
+      title: "Security",
+      description: "JWT, MetaMask, and encrypted IPFS storage keep data safe.",
       icon: Shield,
-      title: "Data Security",
-      description:
-        "Encrypted off-chain storage with blockchain-verified hashes for privacy.",
-      gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=800",
+        "https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
-      icon: Globe,
-      title: "IPFS Storage",
+      title: "Efficiency",
       description:
-        "Decentralized, secure storage for medical records and consent forms.",
-      gradient: "from-red-600 to-pink-600",
-      image:
-        "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=800",
-    },
-    {
-      icon: Activity,
-      title: "Real-time Tracking",
-      description:
-        "Track donations from collection to usage with complete visibility.",
-      gradient: "from-red-600 to-pink-600",
-      image:
-        "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=800",
-    },
-    {
+        "Smart contracts automate processes, reducing errors and delays.",
       icon: Users,
-      title: "Multi-stakeholder",
-      description:
-        "Unified platform connecting donors, hospitals, and blood banks seamlessly.",
-      gradient: "from-red-600 to-pink-600",
       image:
-        "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
-    },
-    {
-      icon: Lock,
-      title: "Smart Contracts",
-      description:
-        "Automated, secure workflows powered by Solidity smart contracts.",
-      gradient: "from-red-600 to-pink-600",
-      image:
-        "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=800",
+        "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
   ];
-
-  const testimonials = [
-    {
-      name: "Dr. Sarah Johnson",
-      role: "Blood Bank Director",
-      content:
-        "BloodChain's transparency and automation have transformed our operations, ensuring every unit is traceable.",
-      avatar:
-        "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=100",
-    },
-    {
-      name: "Michael Chen",
-      role: "Regular Donor",
-      content:
-        "Seeing my donations save lives in real-time is incredible. The NFT rewards are a great bonus!",
-      avatar:
-        "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=100",
-    },
-    {
-      name: "Dr. Maria Rodriguez",
-      role: "Hospital Administrator",
-      content:
-        "BloodChain's instant verification and inventory access have streamlined our emergency responses.",
-      avatar:
-        "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100",
-    },
-  ];
-
-  const techStack = [
-    {
-      name: "React",
-      color: "text-blue-500",
-      icon: SiReact,
-      description: "Dynamic, responsive UI for seamless user experience",
-      image:
-        "https://images.pexels.com/photos/11035471/pexels-photo-11035471.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      name: "Node.js",
-      color: "text-green-500",
-      icon: SiNodedotjs,
-      description: "Scalable backend for real-time data processing",
-      image:
-        "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      name: "MongoDB",
-      color: "text-green-600",
-      icon: SiMongodb,
-      description: "Secure NoSQL database for efficient data storage",
-      image:
-        "https://images.pexels.com/photos/4167542/pexels-photo-4167542.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      name: "Express",
-      color: "text-gray-600",
-      icon: SiExpress,
-      description: "Robust API framework for seamless integrations",
-      image:
-        "https://images.pexels.com/photos/1181359/pexels-photo-1181359.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      name: "Ethereum",
-      color: "text-purple-500",
-      icon: SiEthereum,
-      description: "Immutable blockchain for transparent records",
-      image:
-        "https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      name: "Solidity",
-      color: "text-blue-600",
-      icon: SiSolidity,
-      description: "Smart contracts for automated workflows",
-      image:
-        "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      name: "IPFS",
-      color: "text-orange-500",
-      icon: SiIpfs,
-      description: "Decentralized storage for secure medical records",
-      image:
-        "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-    {
-      name: "Web3",
-      color: "text-yellow-500",
-      icon: SiWeb3Dotjs,
-      description: "Enables blockchain interactions for trust",
-      image:
-        "https://images.pexels.com/photos/270360/pexels-photo-270360.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-  ];
-
-  const donationData = {
-    labels: ["2018", "2019", "2020", "2021", "2022", "2023", "2024"],
-    datasets: [
-      {
-        label: "Blood Donations (Millions)",
-        data: [110, 112, 108, 115, 117, 118, 120],
-        backgroundColor: "rgba(185, 28, 28, 0.8)",
-        borderColor: "rgba(185, 28, 28, 1)",
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: "top" },
-      title: {
-        display: true,
-        text: "Global Blood Donations (2018-2024)",
-        font: { size: 20 },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: { display: true, text: "Donations (Millions)" },
-      },
-      x: { title: { display: true, text: "Year" } },
-    },
-    animation: {
-      duration: 2000,
-      easing: "easeOutCubic",
-    },
-  };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
       <style jsx>{`
-        @keyframes pulse-glow {
-          0%,
-          100% {
-            box-shadow: 0 0 15px rgba(185, 28, 28, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 30px rgba(185, 28, 28, 0.7),
-              0 0 50px rgba(185, 28, 28, 0.5);
-          }
-        }
         @keyframes fade-in {
           from {
             opacity: 0;
@@ -505,9 +128,6 @@ const BloodChainLanding = () => {
         .animate-fade-in {
           animation: fade-in 1s ease-out forwards;
         }
-        .animate-pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
         .animate-flow-scale {
           animation: flow-scale 1.5s ease-in-out infinite;
         }
@@ -517,17 +137,15 @@ const BloodChainLanding = () => {
           animation: flow-path 2s linear forwards;
         }
         .flow-arrow {
-          animation: pulse-glow 2s ease-in-out infinite;
+          animation: pulse 2s ease-in-out infinite;
         }
-        .parallax-bg {
-          background-attachment: fixed;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
-        }
-        @media (max-width: 768px) {
-          .parallax-bg {
-            background-attachment: scroll;
+        @keyframes pulse {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.7;
           }
         }
       `}</style>
@@ -535,259 +153,196 @@ const BloodChainLanding = () => {
       {/* Navigation */}
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          scrollY > 50
-            ? "bg-white/95 backdrop-blur-md shadow-md"
-            : "bg-transparent"
+          scrollY > 50 ? "bg-white shadow-lg" : "bg-transparent"
         }`}
-        aria-label="Main navigation"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-pink-500 rounded-lg flex items-center justify-center">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <span
-                className={`text-2xl font-bold ${
-                  scrollY > 50 ? "text-gray-900" : "text-white"
-                }`}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+          <div className="flex items-center space-x-2">
+            <Heart className="w-8 h-8 text-red-600" />
+            <span className="text-2xl font-bold text-red-600">BloodChain</span>
+          </div>
+          <div className="hidden md:flex space-x-6">
+            {["About", "How It Works", "Features", "Contact"].map((item) => (
+              <a
+                key={item}
+                href={`#${item.toLowerCase().replace(" ", "-")}`}
+                className="text-lg font-medium text-gray-800 hover:text-red-600 transition-colors"
               >
-                BloodChain
-              </span>
-            </div>
-            <div className="hidden md:flex items-center space-x-6">
-              {[
-                "Features",
-                "Technology",
-                "How It Works",
-                "Donation Trends",
-                "Benefits",
-                "Contact",
-              ].map((item) => (
+                {item}
+              </a>
+            ))}
+            <a
+              href="/signup"
+              className="bg-red-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-red-700 transition-all"
+            >
+              Join Now
+            </a>
+          </div>
+          <button
+            className="md:hidden text-gray-800"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {isMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
+        </div>
+        {isMenuOpen && (
+          <div className="md:hidden bg-white shadow-lg">
+            <div className="flex flex-col space-y-4 py-4 px-6">
+              {["About", "How It Works", "Features", "Contact"].map((item) => (
                 <a
                   key={item}
                   href={`#${item.toLowerCase().replace(" ", "-")}`}
-                  className={`font-medium text-lg hover:text-red-500 transition-colors ${
-                    scrollY > 50 ? "text-gray-800" : "text-white"
-                  }`}
+                  className="text-gray-800 font-medium hover:text-red-600"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   {item}
                 </a>
               ))}
               <a
                 href="/signup"
-                className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 animate-pulse-glow"
+                className="bg-red-600 text-white px-6 py-2 rounded-full font-semibold text-center hover:bg-red-700"
               >
-                Sign Up
+                Join Now
               </a>
             </div>
-            <button
-              className="md:hidden text-white"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-            >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
           </div>
-          {isMenuOpen && (
-            <div className="md:hidden bg-white/95 backdrop-blur-md shadow-md">
-              <div className="flex flex-col space-y-4 py-4 px-6">
-                {[
-                  "Features",
-                  "Technology",
-                  "How It Works",
-                  "Donation Trends",
-                  "Benefits",
-                  "Contact",
-                ].map((item) => (
-                  <a
-                    key={item}
-                    href={`#${item.toLowerCase().replace(" ", "-")}`}
-                    className="text-gray-800 font-medium hover:text-red-500 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item}
-                  </a>
-                ))}
-                <a
-                  href="/signup"
-                  className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold text-center hover:from-red-700 hover:to-pink-600 transition-all"
-                >
-                  Sign Up
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </nav>
 
-      {/* Hero Section with Photo */}
+      {/* Hero Section */}
       <section
-        className="relative min-h-screen bg-gradient-to-br from-red-600 to-pink-500 flex items-center overflow-hidden parallax-bg"
+        id="about"
+        className="min-h-screen bg-gradient-to-br from-red-600 to-pink-500 flex items-center text-white"
         style={{
-          backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
+          backgroundImage: `url('https://images.pexels.com/photos/7551812/pexels-photo-7551812.jpeg?auto=compress&cs=tinysrgb&w=800')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-8">
-          <div className="text-center lg:text-left text-white lg:w-1/2 animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Empowering
-              <br />
-              <span className="bg-gradient-to-r from-yellow-400 to-amber-400 bg-clip-text text-transparent">
-                Life-Saving Trust
-              </span>
-            </h1>
-            <p className="text-lg sm:text-xl lg:text-2xl mb-8 max-w-2xl opacity-90">
-              Revolutionize blood management with blockchain-powered{" "}
-              <span className="font-semibold text-amber-300">transparency</span>
-              ,{" "}
-              <span className="font-semibold text-amber-300">traceability</span>
-              , and{" "}
-              <span className="font-semibold text-amber-300">security</span>.
-            </p>
-            <p className="text-base sm:text-lg mb-8">
-              Join 118M+ donors saving lives with blockchain technology.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
-              <a
-                href="/signup"
-                className="group bg-white text-red-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2 animate-pulse-glow"
-                aria-label="Join as a donor"
-              >
-                <span>Join as Donor</span>
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
-              <button className="group border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2">
-                <Play className="w-5 h-5" />
-                <span>Watch Demo</span>
-              </button>
-            </div>
-          </div>
-          <div className="lg:w-1/2 flex justify-center">
-            <canvas
-              ref={canvasRef}
-              className="w-[200px] sm:w-[300px] lg:w-[400px] h-[200px] sm:h-[300px] lg:h-[400px]"
-            />
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+            BloodChain: Saving Lives with Blockchain
+          </h1>
+          <p className="text-lg sm:text-xl lg:text-2xl mb-8 max-w-3xl mx-auto">
+            A secure, transparent platform to manage blood donations, connecting
+            donors, blood banks, and hospitals to ensure every drop counts.
+          </p>
+          <div className="flex justify-center gap-4">
+            <a
+              href="/signup"
+              className="bg-white text-red-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition-all flex items-center"
+            >
+              Become a Donor <ChevronRight className="w-5 h-5 ml-2" />
+            </a>
+            <a
+              href="#how-it-works"
+              className="border-2 border-white text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all"
+            >
+              Learn More
+            </a>
           </div>
         </div>
       </section>
 
-      {/* Impact Stats Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Our <span className="text-red-600">Global Impact</span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Transforming the global blood supply chain with blockchain
-              efficiency.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
-            {impactStats.map((stat, index) => (
+      {/* Problem Statement */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 animate-fade-in">
+            Why <span className="text-red-600">BloodChain</span>?
+          </h2>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-12 animate-fade-in">
+            Traditional blood donation systems face serious issues: fraud, black
+            marketing, duplicate records, and wasted blood. These problems can
+            delay life-saving care. BloodChain uses blockchain to make the
+            process transparent, secure, and efficient.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Fraud",
+                description: "Fake donations and records harm trust.",
+              },
+              {
+                title: "Wastage",
+                description: "Poor tracking leads to expired blood units.",
+              },
+              {
+                title: "Delays",
+                description: "Lack of transparency slows emergency responses.",
+              },
+            ].map((issue, index) => (
               <div
                 key={index}
-                className="group text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in border border-gray-100"
+                className="p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-all animate-fade-in"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
-                <img
-                  src={stat.image}
-                  alt={stat.label}
-                  className="w-full h-24 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
-                />
-                <stat.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-sm sm:text-base text-gray-600">
-                  {stat.label}
-                </div>
+                <Star className="w-10 h-10 text-red-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">{issue.title}</h3>
+                <p className="text-gray-600">{issue.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Donation Trends Section */}
-      <section
-        id="donation-trends"
-        className="py-12 sm:py-16 lg:py-20 bg-white"
-      >
+      {/* How It Works Section with Flowchart */}
+      <section id="how-it-works" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Blood Donation <span className="text-red-600">Trends</span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Global blood donation growth over the years (Source: WHO
-              estimates).
-            </p>
-          </div>
-          <div className="max-w-4xl mx-auto animate-fade-in">
-            <Bar data={donationData} options={chartOptions} />
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section with Enhanced Interactive Flowchart */}
-      <section id="how-it-works" className="py-12 sm:py-16 lg:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              How <span className="text-red-600">BloodChain</span> Works
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              A seamless, transparent process powered by blockchain technology.
-            </p>
-          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
+            How <span className="text-red-600">BloodChain</span> Works
+          </h2>
+          <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
+            A simple, transparent process powered by blockchain to connect
+            donors, blood banks, and hospitals.
+          </p>
           <div className="relative">
             <svg
-              className="absolute top-1/2 left-0 w-full h-24 hidden lg:block -mt-12"
+              className="absolute top-1/2 left-0 w-full h-16 hidden lg:block -mt-8"
               style={{ zIndex: 0 }}
             >
               <path
                 className="flow-path"
-                d="M 20 36 H 180 C 200 36 200 60 220 60 H 380 C 400 60 400 36 420 36 H 580 C 600 36 600 60 620 60 H 780 C 800 60 800 36 820 36 H 980"
+                d="M 20 32 H 180 C 200 32 200 48 220 48 H 380 C 400 48 400 32 420 32 H 580 C 600 32 600 48 620 48 H 780 C 800 48 800 32 820 32 H 980"
                 stroke="#b91c1c"
-                strokeWidth="6"
+                strokeWidth="5"
                 fill="none"
               />
               {howItWorksSteps.map((_, index) => (
                 <g key={index}>
                   <circle
                     cx={20 + index * 200}
-                    cy={36}
-                    r="8"
+                    cy={32}
+                    r="6"
                     fill="#b91c1c"
                     className={activeFlowStep === index ? "flow-arrow" : ""}
                   />
                   <path
-                    d={`M ${20 + index * 200 + 8} 36 L ${
-                      20 + index * 200 + 20
-                    } 36 L ${20 + index * 200 + 14} 30 M ${
-                      20 + index * 200 + 20
-                    } 36 L ${20 + index * 200 + 14} 42`}
+                    d={`M ${20 + index * 200 + 6} 32 L ${
+                      20 + index * 200 + 15
+                    } 32 L ${20 + index * 200 + 12} 28 M ${
+                      20 + index * 200 + 15
+                    } 32 L ${20 + index * 200 + 12} 36`}
                     stroke="#b91c1c"
-                    strokeWidth="3"
+                    strokeWidth="2"
                     fill="none"
                     className={activeFlowStep === index ? "flow-arrow" : ""}
                   />
                 </g>
               ))}
             </svg>
-            <div className="relative flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8">
+            <div className="relative grid grid-cols-1 lg:grid-cols-5 gap-6">
               {howItWorksSteps.map((step, index) => (
                 <div
                   key={index}
-                  className={`relative w-full lg:w-[18%] text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in cursor-pointer z-10 ${
+                  className={`p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition-all animate-fade-in ${
                     activeFlowStep === index
-                      ? "animate-flow-scale bg-gradient-to-r from-red-50 to-pink-50"
+                      ? "animate-flow-scale bg-red-50"
                       : ""
                   }`}
                   style={{ animationDelay: `${index * 0.2}s` }}
@@ -796,16 +351,16 @@ const BloodChainLanding = () => {
                 >
                   <img
                     src={step.image}
-                    alt={`${step.title} illustration`}
-                    className="w-full h-32 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                    alt={step.title}
+                    className="w-full h-32 object-cover rounded-lg mb-4"
                   />
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center">
-                    <step.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <step.icon className="w-6 h-6" />
                   </div>
-                  <div className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                    {index + 1}. {step.title}
-                  </div>
-                  <p className="text-sm sm:text-base text-gray-600">
+                  <h3 className="text-lg font-semibold text-center mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-gray-600 text-center text-sm">
                     {step.description}
                   </p>
                 </div>
@@ -815,89 +370,37 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Benefits by Role Section */}
-      <section id="benefits" className="py-12 sm:py-16 lg:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Benefits for <span className="text-red-600">Every Role</span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Tailored solutions for stakeholders in the blood donation
-              ecosystem.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-            {roleBenefits.map((role, index) => (
-              <div
-                key={index}
-                className="group p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in border border-gray-100"
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                <img
-                  src={role.image}
-                  alt={`${role.role} illustration`}
-                  className="w-full h-32 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
-                />
-                <role.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 text-center">
-                  {role.role}
-                </h3>
-                <ul className="list-none text-sm sm:text-base text-gray-600 space-y-3">
-                  {role.benefits.map((benefit, i) => (
-                    <li key={i} className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-red-600 mr-2 mt-1" />
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
-      <section id="features" className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+      <section id="features" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Why <span className="text-red-600">BloodChain</span>?
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Advanced blockchain solutions for trust and efficiency in blood
-              management.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
+            Key <span className="text-red-600">Features</span>
+          </h2>
+          <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
+            BloodChain uses cutting-edge technology to make blood donation safe
+            and efficient.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group relative bg-white rounded-xl p-6 sm:p-8 shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 overflow-hidden animate-fade-in"
+                className="p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-all animate-fade-in"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-10`}
-                  ></div>
-                </div>
                 <img
                   src={feature.image}
                   alt={feature.title}
-                  className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-40 object-cover rounded-lg mb-4"
                 />
-                <div
-                  className={`relative w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r ${feature.gradient} rounded-lg flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">
+                <h3 className="text-xl font-semibold text-center mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                <p className="text-gray-600 text-center text-sm">
                   {feature.description}
                 </p>
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </div>
             ))}
           </div>
@@ -905,171 +408,113 @@ const BloodChainLanding = () => {
       </section>
 
       {/* Technology Stack */}
-      <section id="technology" className="py-12 sm:py-16 lg:py-20 bg-white">
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Powered by <span className="text-red-600">Innovation</span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              A robust tech stack ensuring security and scalability.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
-            {techStack.map((tech, index) => (
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
+            Built with <span className="text-red-600">Top Technology</span>
+          </h2>
+          <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
+            BloodChain uses a modern tech stack to ensure reliability and
+            security.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[
+              {
+                name: "React.js",
+                description: "For a smooth, user-friendly interface.",
+              },
+              {
+                name: "Node.js",
+                description: "Handles fast, real-time data processing.",
+              },
+              {
+                name: "MongoDB",
+                description: "Stores data securely and efficiently.",
+              },
+              {
+                name: "Ethereum",
+                description: "Ensures transparent, tamper-proof records.",
+              },
+              {
+                name: "Solidity",
+                description: "Powers automated smart contracts.",
+              },
+              { name: "IPFS", description: "Stores medical records securely." },
+              {
+                name: "Web3.js",
+                description: "Connects the platform to blockchain.",
+              },
+              {
+                name: "Hardhat",
+                description: "Simplifies smart contract development.",
+              },
+            ].map((tech, index) => (
               <div
                 key={index}
-                className="group relative text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in"
+                className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-all animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <img
-                  src={tech.image}
-                  alt={tech.name}
-                  className="w-full h-24 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
-                />
-                <tech.icon
-                  className={`${tech.color} text-3xl sm:text-4xl mb-2 group-hover:scale-110 transition-transform`}
-                />
-                <div className="font-semibold text-sm sm:text-base text-gray-900">
+                <h3 className="text-lg font-semibold text-center mb-2">
                   {tech.name}
-                </div>
-                <div className="absolute inset-x-0 top-full mt-2 bg-gray-800 text-white text-xs sm:text-sm p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                </h3>
+                <p className="text-gray-600 text-sm text-center">
                   {tech.description}
-                </div>
+                </p>
               </div>
             ))}
-          </div>
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 sm:p-8 lg:p-12 text-white animate-fade-in">
-            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-8">
-              System Architecture
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-              <div className="text-center">
-                <img
-                  src="https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="Blockchain Layer"
-                  className="w-full h-32 object-cover rounded-lg mb-4"
-                />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
-                  <Database className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-                <h4 className="font-bold text-lg mb-2">Blockchain Layer</h4>
-                <p className="text-gray-200 text-sm sm:text-base">
-                  Ethereum smart contracts for immutable records.
-                </p>
-              </div>
-              <div className="text-center">
-                <img
-                  src="https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="Storage Layer"
-                  className="w-full h-32 object-cover rounded-lg mb-4"
-                />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
-                  <Globe className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-                <h4 className="font-bold text-lg mb-2">Storage Layer</h4>
-                <p className="text-gray-200 text-sm sm:text-base">
-                  IPFS for decentralized, secure document storage.
-                </p>
-              </div>
-              <div className="text-center">
-                <img
-                  src="https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="Application Layer"
-                  className="w-full h-32 object-cover rounded-lg mb-4"
-                />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
-                  <Shield className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-                <h4 className="font-bold text-lg mb-2">Application Layer</h4>
-                <p className="text-gray-200 text-sm sm:text-base">
-                  MERN stack for scalable, secure interfaces.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-              Trusted by{" "}
-              <span className="text-red-400">Healthcare Leaders</span>
-            </h2>
-          </div>
-          <div className="relative max-w-4xl mx-auto overflow-hidden animate-fade-in">
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${activeTestimonial * 100}%)` }}
-            >
-              {testimonials.map((test, index) => (
-                <div key={index} className="min-w-full flex justify-center">
-                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 sm:p-8 lg:p-12 text-center max-w-lg shadow-lg">
-                    <img
-                      src={test.avatar}
-                      alt={test.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto mb-6 object-cover"
-                    />
-                    <blockquote className="text-base sm:text-lg lg:text-xl mb-6 italic text-gray-200">
-                      "{test.content}"
-                    </blockquote>
-                    <div className="font-bold text-lg sm:text-xl text-white">
-                      {test.name}
-                    </div>
-                    <div className="text-red-400 text-sm sm:text-base">
-                      {test.role}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center mt-6 sm:mt-8 space-x-2">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveTestimonial(index)}
-                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
-                    index === activeTestimonial
-                      ? "bg-red-500 w-6 sm:w-8"
-                      : "bg-white/30"
-                  }`}
-                  aria-label={`View testimonial ${index + 1}`}
-                ></button>
-              ))}
-            </div>
-          </div>
+      {/* Future Vision */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 animate-fade-in">
+            The <span className="text-red-600">Future</span> of BloodChain
+          </h2>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-12 animate-fade-in">
+            Beyond blood, BloodChain can manage plasma, organs, and vaccines,
+            creating a global solution for healthcare challenges.
+          </p>
+          <img
+            src="https://images.pexels.com/photos/3825581/pexels-photo-3825581.jpeg?auto=compress&cs=tinysrgb&w=800"
+            alt="Future healthcare vision"
+            className="w-full max-w-3xl mx-auto h-64 object-cover rounded-lg mb-8"
+          />
+          <a
+            href="/whitepaper"
+            className="bg-red-600 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-red-700 transition-all flex items-center justify-center mx-auto"
+          >
+            Read Our Vision <ChevronRight className="w-5 h-5 ml-2" />
+          </a>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-red-600 to-pink-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-            Join the Life-Saving Revolution
+      <section
+        id="contact"
+        className="py-16 bg-gradient-to-r from-red-600 to-pink-500 text-white"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 animate-fade-in">
+            Join the Life-Saving Mission
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl mb-8 max-w-3xl mx-auto opacity-90">
-            Empower blood donation with secure, transparent blockchain
-            technology.
+          <p className="text-lg mb-8 max-w-3xl mx-auto animate-fade-in">
+            Be a part of BloodChain to make blood donation transparent, secure,
+            and efficient.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center gap-4">
             <a
               href="/signup"
-              className="bg-white text-red-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow"
-              aria-label="Become a donor"
+              className="bg-white text-red-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition-all flex items-center"
             >
-              <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Become a Donor</span>
+              Become a Donor <Heart className="w-5 h-5 ml-2" />
             </a>
             <a
               href="/contact"
-              className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2"
-              aria-label="Partner with us"
+              className="border-2 border-white text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all flex items-center"
             >
-              <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Partner with Us</span>
+              Partner with Us <Building2 className="w-5 h-5 ml-2" />
             </a>
           </div>
         </div>
@@ -1077,7 +522,7 @@ const BloodChainLanding = () => {
 
       {/* Back to Top Button */}
       <button
-        className={`fixed bottom-6 right-6 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 ${
+        className={`fixed bottom-6 right-6 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all ${
           scrollY > 300 ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -1089,29 +534,27 @@ const BloodChainLanding = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Heart className="w-8 h-8 text-red-600" />
-                <span className="text-xl sm:text-2xl font-bold">
-                  BloodChain
-                </span>
+                <span className="text-xl font-bold">BloodChain</span>
               </div>
-              <p className="text-gray-400 text-sm sm:text-base">
-                Revolutionizing blood management with blockchain technology.
+              <p className="text-gray-400 text-sm">
+                Revolutionizing blood donation with blockchain technology.
               </p>
             </div>
             <div>
-              <h4 className="font-bold text-lg mb-4">Platform</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
+              <h4 className="font-bold text-lg mb-4">Links</h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
-                  <a href="/donors" className="hover:text-white">
-                    For Donors
+                  <a href="/about" className="hover:text-white">
+                    About
                   </a>
                 </li>
                 <li>
-                  <a href="/blood-banks" className="hover:text-white">
-                    For Blood Banks
+                  <a href="/donors" className="hover:text-white">
+                    For Donors
                   </a>
                 </li>
                 <li>
@@ -1120,40 +563,15 @@ const BloodChainLanding = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="/api" className="hover:text-white">
-                    API Access
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4">Resources</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                <li>
-                  <a href="/docs" className="hover:text-white">
-                    Documentation
-                  </a>
-                </li>
-                <li>
-                  <a href="/whitepaper" className="hover:text-white">
-                    White Paper
-                  </a>
-                </li>
-                <li>
-                  <a href="/help" className="hover:text-white">
-                    Help Center
-                  </a>
-                </li>
-                <li>
-                  <a href="/community" className="hover:text-white">
-                    Community
+                  <a href="/blood-banks" className="hover:text-white">
+                    For Blood Banks
                   </a>
                 </li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold text-lg mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
+              <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <a
                     href="mailto:hello@bloodchain.org"
@@ -1163,35 +581,20 @@ const BloodChainLanding = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="tel:+15551234567" className="hover:text-white">
-                    +1 (555) 123-4567
+                  <a href="/support" className="hover:text-white">
+                    Support
                   </a>
                 </li>
                 <li>
-                  <a href="https://twitter.com" className="hover:text-white">
-                    Twitter
-                  </a>
-                </li>
-                <li>
-                  <a href="https://linkedin.com" className="hover:text-white">
-                    LinkedIn
+                  <a href="/whitepaper" className="hover:text-white">
+                    Whitepaper
                   </a>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-gray-400 text-sm sm:text-base">
-            <p>
-              &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for
-              humanity.{" "}
-              <a href="/privacy" className="hover:text-white">
-                Privacy Policy
-              </a>{" "}
-              |{" "}
-              <a href="/terms" className="hover:text-white">
-                Terms of Service
-              </a>
-            </p>
+          <div className="border-t border-gray-800 mt-8 pt-6 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 BloodChain. All rights reserved.</p>
           </div>
         </div>
       </footer>
