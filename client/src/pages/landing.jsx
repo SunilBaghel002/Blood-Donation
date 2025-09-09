@@ -14,6 +14,10 @@ import {
   ArrowUp,
   Star,
   Quote,
+  Mail,
+  Twitter,
+  Github,
+  Linkedin,
 } from "lucide-react";
 import {
   SiReact,
@@ -38,11 +42,11 @@ const BloodChainLanding = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Testimonial rotation
+  // Testimonial sliding animation
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(interval);
   }, []);
 
@@ -154,19 +158,36 @@ const BloodChainLanding = () => {
       name: "Dr. Sarah Lee",
       role: "Blood Bank Manager",
       content:
-        "BloodChain has revolutionized our inventory management. The transparency and automation save us time and ensure accuracy.",
+        "BloodChain has streamlined our operations, reducing errors and ensuring every unit is tracked accurately.",
+      icon: User,
     },
     {
       name: "Amit Patel",
       role: "Donor",
       content:
-        "I love seeing where my blood goes. The NFT rewards for my donations make it even more motivating!",
+        "Seeing where my blood goes is incredible. The NFT rewards make donating even more rewarding!",
+      icon: User,
     },
     {
       name: "Dr. Emily Wong",
       role: "Hospital Administrator",
       content:
-        "With BloodChain, we get verified blood units quickly, which is critical for emergencies. It's a game-changer.",
+        "BloodChain ensures we get verified blood units quickly, saving lives in emergencies.",
+      icon: Hospital,
+    },
+    {
+      name: "Priya Sharma",
+      role: "Donor",
+      content:
+        "The platform’s transparency gives me confidence that my donations are making a real impact.",
+      icon: User,
+    },
+    {
+      name: "Dr. Michael Chen",
+      role: "Medical Director",
+      content:
+        "BloodChain’s blockchain technology has transformed how we manage blood supply chains.",
+      icon: Hospital,
     },
   ];
 
@@ -234,6 +255,26 @@ const BloodChainLanding = () => {
             transform: translateY(0);
           }
         }
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes hover-lift {
+          0% {
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          100% {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+          }
+        }
         @keyframes flow-scale {
           0% {
             transform: scale(1);
@@ -253,8 +294,14 @@ const BloodChainLanding = () => {
         .animate-fade-in {
           animation: fade-in 1s ease-out forwards;
         }
+        .animate-slide-in {
+          animation: slide-in 0.5s ease-out forwards;
+        }
+        .hover-lift:hover {
+          animation: hover-lift 0.3s ease-out forwards;
+        }
         .animate-flow-scale {
-          animation: flow-scale 1.5s ease-in-out;
+          animation: flow-scale 1.5s ease-out;
         }
         .flow-path {
           stroke-dasharray: 1000;
@@ -273,9 +320,18 @@ const BloodChainLanding = () => {
             opacity: 0.7;
           }
         }
-        .testimonial-active {
-          transform: scale(1.05);
-          z-index: 10;
+        .hero-bg {
+          background: #b91c1c;
+          background-image: radial-gradient(
+              circle at 10% 20%,
+              rgba(255, 255, 255, 0.1) 0%,
+              transparent 20%
+            ),
+            radial-gradient(
+              circle at 90% 80%,
+              rgba(255, 255, 255, 0.1) 0%,
+              transparent 20%
+            );
         }
       `}</style>
 
@@ -298,11 +354,16 @@ const BloodChainLanding = () => {
               "Features",
               "Technology",
               "Testimonials",
+              "Future Scopes",
               "Contact",
             ].map((item) => (
               <a
                 key={item}
-                href={`#${item.toLowerCase().replace(" ", "-")}`}
+                href={
+                  item === "Future Scopes"
+                    ? "/future-scopes"
+                    : `#${item.toLowerCase().replace(" ", "-")}`
+                }
                 className="text-lg font-medium text-gray-800 hover:text-red-600 transition-colors"
               >
                 {item}
@@ -337,11 +398,16 @@ const BloodChainLanding = () => {
                 "Features",
                 "Technology",
                 "Testimonials",
+                "Future Scopes",
                 "Contact",
               ].map((item) => (
                 <a
                   key={item}
-                  href={`#${item.toLowerCase().replace(" ", "-")}`}
+                  href={
+                    item === "Future Scopes"
+                      ? "/future-scopes"
+                      : `#${item.toLowerCase().replace(" ", "-")}`
+                  }
                   className="text-gray-800 font-medium hover:text-red-600"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -362,32 +428,42 @@ const BloodChainLanding = () => {
       {/* Hero Section */}
       <section
         id="about"
-        className="min-h-screen bg-red-600 flex items-center justify-center text-white relative overflow-hidden"
+        className="min-h-screen hero-bg flex items-center justify-center text-white relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-black/30"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            BloodChain: Revolutionizing Blood Donation
-            <br />
-            <span className="text-yellow-300">With Blockchain Technology</span>
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1
+            className="text-4xl sm:text-5xl lg:text-7xl font-extrabold mb-6 leading-tight animate-fade-in"
+            style={{ animationDelay: "0.2s" }}
+          >
+            <span className="block">BloodChain</span>
+            <span className="block text-yellow-300">
+              Saving Lives with Blockchain
+            </span>
           </h1>
-          <p className="text-lg sm:text-xl lg:text-2xl mb-8 max-w-3xl mx-auto">
-            A decentralized platform that ensures transparency, security, and
-            efficiency in blood donation, connecting donors, blood banks, and
-            hospitals to save lives.
+          <p
+            className="text-lg sm:text-xl lg:text-2xl mb-10 max-w-4xl mx-auto animate-fade-in"
+            style={{ animationDelay: "0.4s" }}
+          >
+            A decentralized, blockchain-powered platform that connects donors,
+            blood banks, and hospitals to ensure secure, transparent, and
+            efficient blood donation, saving lives worldwide.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div
+            className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in"
+            style={{ animationDelay: "0.6s" }}
+          >
             <a
               href="/signup"
-              className="bg-white text-red-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition-all flex items-center justify-center animate-pulse"
+              className="bg-yellow-300 text-red-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-yellow-400 transition-all flex items-center justify-center hover-lift"
             >
-              Become a Donor <ChevronRight className="w-5 h-5 ml-2" />
+              Become a Donor <Heart className="w-5 h-5 ml-2" />
             </a>
             <a
-              href="#how-it-works"
-              className="border-2 border-white text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all"
+              href="/future-scopes"
+              className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all flex items-center justify-center hover-lift"
             >
-              Explore the Platform
+              Our Vision <ChevronRight className="w-5 h-5 ml-2" />
             </a>
           </div>
         </div>
@@ -400,26 +476,21 @@ const BloodChainLanding = () => {
             Why <span className="text-red-600">BloodChain</span>?
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-12 animate-fade-in">
-            Traditional blood donation systems face critical challenges: fraud,
-            black marketing, duplicate records, and wastage. BloodChain
-            leverages blockchain, smart contracts, and IPFS to create a secure,
-            transparent, and efficient platform, ensuring every drop of blood
-            reaches patients in need.
+            Traditional blood donation systems are plagued by fraud, wastage,
+            delays, and lack of transparency. BloodChain uses blockchain, smart
+            contracts, and IPFS to deliver a secure, efficient, and transparent
+            solution.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              {
-                title: "Fraud",
-                description:
-                  "Fake donations and records erode trust in the system.",
-              },
+              { title: "Fraud", description: "Fake donations erode trust." },
               {
                 title: "Wastage",
-                description: "Poor tracking leads to expired blood units.",
+                description: "Poor tracking leads to expired blood.",
               },
               {
                 title: "Delays",
-                description: "Slow processes hinder emergency responses.",
+                description: "Slow systems hinder emergencies.",
               },
               {
                 title: "Opacity",
@@ -428,7 +499,7 @@ const BloodChainLanding = () => {
             ].map((issue, index) => (
               <div
                 key={index}
-                className="p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-all animate-fade-in"
+                className="p-6 bg-gray-100 rounded-lg shadow-md transition-all hover-lift animate-fade-in"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
                 <Star className="w-10 h-10 text-red-600 mx-auto mb-4" />
@@ -440,7 +511,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* How It Works Section with Flowchart */}
+      {/* How It Works Section */}
       <section id="how-it-works" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
@@ -448,7 +519,7 @@ const BloodChainLanding = () => {
           </h2>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
             A seamless, blockchain-powered process to manage blood donations
-            from start to finish.
+            from donor to patient.
           </p>
           <div className="relative">
             <svg
@@ -489,8 +560,10 @@ const BloodChainLanding = () => {
               {howItWorksSteps.map((step, index) => (
                 <div
                   key={index}
-                  className={`p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition-all animate-fade-in ${
-                    activeFlowStep === index ? "bg-red-50" : ""
+                  className={`p-6 bg-white rounded-lg shadow-md transition-all hover-lift animate-fade-in ${
+                    activeFlowStep === index
+                      ? "bg-red-50 animate-flow-scale"
+                      : ""
                   }`}
                   style={{ animationDelay: `${index * 0.2}s` }}
                   onMouseEnter={() => setActiveFlowStep(index)}
@@ -519,14 +592,14 @@ const BloodChainLanding = () => {
             Who Benefits from <span className="text-red-600">BloodChain</span>?
           </h2>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
-            BloodChain empowers every stakeholder in the blood donation process
-            with tailored tools and benefits.
+            Tailored tools empower every stakeholder in the blood donation
+            ecosystem.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefitsByRole.map((role, index) => (
               <div
                 key={index}
-                className="p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-all animate-fade-in"
+                className="p-6 bg-gray-100 rounded-lg shadow-md transition-all hover-lift animate-fade-in"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
                 <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
@@ -556,14 +629,14 @@ const BloodChainLanding = () => {
             Key <span className="text-red-600">Features</span>
           </h2>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
-            BloodChain harnesses blockchain and modern tech to transform blood
+            BloodChain leverages cutting-edge technology to transform blood
             donation.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-all animate-fade-in"
+                className="p-6 bg-white rounded-lg shadow-md transition-all hover-lift animate-fade-in"
                 style={{ animationDelay: `${index * 0.2}s` }}
               >
                 <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
@@ -588,14 +661,13 @@ const BloodChainLanding = () => {
             Powered by <span className="text-red-600">Cutting-Edge Tech</span>
           </h2>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
-            BloodChain is built with a robust tech stack for security,
-            scalability, and performance.
+            A robust tech stack ensures security, scalability, and performance.
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             {techStack.map((tech, index) => (
               <div
                 key={index}
-                className="p-4 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-all animate-fade-in"
+                className="p-4 bg-gray-100 rounded-lg shadow-md transition-all hover-lift animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div
@@ -622,53 +694,41 @@ const BloodChainLanding = () => {
             What <span className="text-red-600">People Say</span>
           </h2>
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
-            Hear from those who trust BloodChain to save lives.
+            Trusted by donors, blood banks, and hospitals worldwide.
           </p>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className={`p-6 bg-white rounded-lg shadow-md transition-all duration-300 ${
-                  activeTestimonial === index
-                    ? "testimonial-active bg-red-50"
-                    : ""
-                }`}
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                <Quote className="w-8 h-8 text-red-600 mx-auto mb-4" />
-                <p className="text-gray-600 text-center text-sm mb-4">
-                  "{testimonial.content}"
-                </p>
-                <p className="text-gray-800 font-semibold text-center">
-                  {testimonial.name}
-                </p>
-                <p className="text-gray-500 text-sm text-center">
-                  {testimonial.role}
-                </p>
-              </div>
-            ))}
+          <div className="relative overflow-hidden">
+            <div
+              className="flex transition-transform duration-500"
+              style={{
+                transform: `translateX(-${
+                  activeTestimonial * (100 / testimonials.length)
+                }%)`,
+              }}
+            >
+              {testimonials.map((testimonial, index) => (
+                <div
+                  key={index}
+                  className="min-w-[100%] sm:min-w-[50%] lg:min-w-[33.33%] p-4"
+                >
+                  <div className="p-6 bg-white rounded-lg shadow-md transition-all hover-lift animate-slide-in">
+                    <div className="flex justify-center mb-4">
+                      <testimonial.icon className="w-10 h-10 text-red-600" />
+                    </div>
+                    <Quote className="w-8 h-8 text-red-600 mx-auto mb-4" />
+                    <p className="text-gray-600 text-center text-sm mb-4">
+                      "{testimonial.content}"
+                    </p>
+                    <p className="text-gray-800 font-semibold text-center">
+                      {testimonial.name}
+                    </p>
+                    <p className="text-gray-500 text-sm text-center">
+                      {testimonial.role}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Future Vision */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 animate-fade-in">
-            The <span className="text-red-600">Future</span> of BloodChain
-          </h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-12 animate-fade-in">
-            BloodChain is poised to revolutionize healthcare beyond blood
-            donation. By leveraging blockchain, it can manage plasma, organs,
-            and vaccines, ensuring transparency and efficiency in critical
-            resource distribution globally.
-          </p>
-          <a
-            href="/whitepaper"
-            className="bg-red-600 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-red-700 transition-all flex items-center justify-center mx-auto"
-          >
-            Read Our Vision <ChevronRight className="w-5 h-5 ml-2" />
-          </a>
         </div>
       </section>
 
@@ -685,13 +745,13 @@ const BloodChainLanding = () => {
           <div className="flex justify-center gap-4">
             <a
               href="/signup"
-              className="bg-white text-red-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition-all flex items-center"
+              className="bg-yellow-300 text-red-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-yellow-400 transition-all flex items-center hover-lift"
             >
               Become a Donor <Heart className="w-5 h-5 ml-2" />
             </a>
             <a
               href="/contact"
-              className="border-2 border-white text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all flex items-center"
+              className="border-2 border-white text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all flex items-center hover-lift"
             >
               Partner with Us <Users className="w-5 h-5 ml-2" />
             </a>
@@ -699,32 +759,42 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Back to Top Button */}
-      <button
-        className={`fixed bottom-6 right-6 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all ${
-          scrollY > 300 ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        aria-label="Scroll to top"
-      >
-        <ArrowUp className="w-6 h-6" />
-      </button>
-
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Heart className="w-8 h-8 text-red-600" />
                 <span className="text-xl font-bold">BloodChain</span>
               </div>
-              <p className="text-gray-400 text-sm">
-                Transforming blood donation with blockchain technology.
+              <p className="text-gray-400 text-sm mb-4">
+                Transforming blood donation with blockchain technology to save
+                lives globally.
               </p>
+              <div className="flex space-x-4">
+                <a
+                  href="https://twitter.com/bloodchain"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <Twitter className="w-6 h-6" />
+                </a>
+                <a
+                  href="https://github.com/bloodchain"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <Github className="w-6 h-6" />
+                </a>
+                <a
+                  href="https://linkedin.com/company/bloodchain"
+                  className="text-gray-400 hover:text-white"
+                >
+                  <Linkedin className="w-6 h-6" />
+                </a>
+              </div>
             </div>
             <div>
-              <h4 className="font-bold text-lg mb-4">Links</h4>
+              <h4 className="font-bold text-lg mb-4">Platform</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <a href="/about" className="hover:text-white">
@@ -746,17 +816,57 @@ const BloodChainLanding = () => {
                     For Blood Banks
                   </a>
                 </li>
+                <li>
+                  <a href="/future-scopes" className="hover:text-white">
+                    Future Scopes
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold text-lg mb-4">Contact</h4>
+              <h4 className="font-bold text-lg mb-4">Resources</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
-                  <a
-                    href="mailto:hello@bloodchain.org"
-                    className="hover:text-white"
-                  >
-                    hello@bloodchain.org
+                  <a href="/whitepaper" className="hover:text-white">
+                    Whitepaper
+                  </a>
+                </li>
+                <li>
+                  <a href="/docs" className="hover:text-white">
+                    Documentation
+                  </a>
+                </li>
+                <li>
+                  <a href="/blog" className="hover:text-white">
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="/faq" className="hover:text-white">
+                    FAQ
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-lg mb-4">Stay Connected</h4>
+              <p className="text-gray-400 text-sm mb-4">
+                Subscribe for updates on BloodChain’s mission.
+              </p>
+              <div className="flex">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="px-4 py-2 rounded-l-full text-gray-800 focus:outline-none"
+                />
+                <button className="bg-red-600 text-white px-4 py-2 rounded-r-full hover:bg-red-700">
+                  <Mail className="w-5 h-5" />
+                </button>
+              </div>
+              <ul className="space-y-2 text-gray-400 text-sm mt-4">
+                <li>
+                  <a href="/contact" className="hover:text-white">
+                    Contact Us
                   </a>
                 </li>
                 <li>
@@ -765,8 +875,8 @@ const BloodChainLanding = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="/whitepaper" className="hover:text-white">
-                    Whitepaper
+                  <a href="/privacy" className="hover:text-white">
+                    Privacy Policy
                   </a>
                 </li>
               </ul>
@@ -777,6 +887,17 @@ const BloodChainLanding = () => {
           </div>
         </div>
       </footer>
+
+      {/* Back to Top Button */}
+      <button
+        className={`fixed bottom-6 right-6 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all hover-lift ${
+          scrollY > 300 ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        aria-label="Scroll to top"
+      >
+        <ArrowUp className="w-6 h-6" />
+      </button>
     </div>
   );
 };
