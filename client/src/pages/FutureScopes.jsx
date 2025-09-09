@@ -1,5 +1,13 @@
 import React from "react";
-import { Heart, ChevronRight, ArrowUp } from "lucide-react";
+import {
+  Heart,
+  ChevronRight,
+  ArrowUp,
+  Twitter,
+  Github,
+  Linkedin,
+  Mail,
+} from "lucide-react";
 
 const FutureScopes = () => {
   const [scrollY, setScrollY] = React.useState(0);
