@@ -1,83 +1,101 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Heart, Activity, CheckCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Heart, Menu, X } from "lucide-react";
 
-const Navbar = ({
-  activeTab,
-  setActiveTab,
-  userType,
-  notifications,
-  connectWallet,
-  connectedWallet,
-  isLoading,
-}) => {
+const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navItems = [
+    "Home",
+    "About",
+    "How It Works",
+    "Benefits",
+    "Features",
+    "Technology",
+    "Testimonials",
+    "Future Scopes",
+    "Contact",
+  ];
+
   return (
-    <motion.header
-      initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="bg-gradient-to-r from-red-500 to-pink-400 text-white p-4 sticky top-0 z-10 shadow-md"
+    <nav
+      className={`fixed top-0 w-full z-50 bg-white shadow-lg transition-all duration-300`}
     >
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-white/20 rounded-lg">
-            <Heart className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold">BloodChain</h1>
-            <p className="text-red-100 text-sm">Blockchain Blood Management</p>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+        <div className="flex items-center space-x-2">
+          <Heart className="w-8 h-8 text-red-600" />
+          <span className="text-2xl font-bold text-red-600">BloodChain</span>
         </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-sm font-medium">{userType}</span>
-          <div className="relative">
-            <div className="p-2 bg-white/20 rounded-lg cursor-pointer">
-              <Activity className="w-5 h-5" />
-            </div>
-            {notifications > 0 && (
-              <div className="absolute -top-2 -right-2 bg-yellow-400 text-red-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                {notifications}
-              </div>
-            )}
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={connectWallet}
-            disabled={isLoading}
-            className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${
-              connectedWallet
-                ? "bg-green-500 text-white"
-                : "bg-white text-red-500 hover:bg-red-50"
-            }`}
-          >
-            {isLoading
-              ? "Connecting..."
-              : connectedWallet
-              ? "✓ Connected"
-              : "Connect Wallet"}
-          </motion.button>
-        </div>
-      </div>
-      <div className="flex space-x-1 bg-white/10 rounded-lg p-1 mt-4 max-w-7xl mx-auto">
-        {["dashboard", "inventory", "transactions", "profile", "education"].map(
-          (tab) => (
-            <motion.button
-              key={tab}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3 py-2 rounded-md font-medium text-sm capitalize transition-all ${
-                activeTab === tab
-                  ? "bg-white text-red-500"
-                  : "text-white hover:bg-white/20"
-              }`}
+        <div className="hidden md:flex space-x-6 items-center">
+          {navItems.map((item) => (
+            <a
+              key={item}
+              href={
+                item === "Home"
+                  ? "/"
+                  : item === "Future Scopes"
+                  ? "/future-scopes"
+                  : `#${item.toLowerCase().replace(" ", "-")}`
+              }
+              className="text-lg font-medium text-gray-800 hover:text-red-600 transition-colors"
             >
-              {tab}
-            </motion.button>
-          )
-        )}
+              {item}
+            </a>
+          ))}
+          <a
+            href="/signup"
+            className="bg-red-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-red-700 transition-all hover:scale-105"
+          >
+            Join Now
+          </a>
+        </div>
+        <button
+          className="md:hidden text-gray-800"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+        >
+          {isMenuOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
+        </button>
       </div>
-    </motion.header>
+      {isMenuOpen && (
+        <div className="md:hidden bg-white shadow-lg">
+          <div className="flex flex-col space-y-4 py-4 px-6">
+            {navItems.map((item) => (
+              <a
+                key={item}
+                href={
+                  item === "Home"
+                    ? "/"
+                    : item === "Future Scopes"
+                    ? "/future-scopes"
+                    : `#${item.toLowerCase().replace(" ", "-")}`
+                }
+                className="text-gray-800 font-medium hover:text-red-600"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item}
+              </a>
+            ))}
+            <a
+              href="/signup"
+              className="bg-red-600 text-white px-6 py-2 rounded-full font-semibold text-center hover:bg-red-700"
+            >
+              Join Now
+            </a>
+          </div>
+        </div>
+      )}
+    </nav>
   );
 };
 

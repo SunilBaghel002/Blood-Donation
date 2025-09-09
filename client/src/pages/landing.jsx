@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Heart,
   Users,
   Shield,
   Database,
@@ -9,15 +8,9 @@ import {
   Hospital,
   User,
   ChevronRight,
-  Menu,
-  X,
   ArrowUp,
   Star,
   Quote,
-  Mail,
-  Twitter,
-  Github,
-  Linkedin,
 } from "lucide-react";
 import {
   SiReact,
@@ -28,21 +21,20 @@ import {
   SiIpfs,
   SiWeb3Dotjs,
 } from "react-icons/si";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const BloodChainLanding = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
   const [activeFlowStep, setActiveFlowStep] = useState(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
 
-  // Handle scroll for navbar and back-to-top
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Testimonial sliding animation
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
@@ -335,100 +327,12 @@ const BloodChainLanding = () => {
         }
       `}</style>
 
-      {/* Navigation */}
-      <nav
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          scrollY > 50 ? "bg-white shadow-lg" : "bg-transparent"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
-          <div className="flex items-center space-x-2">
-            <Heart className="w-8 h-8 text-red-600" />
-            <span className="text-2xl font-bold text-red-600">BloodChain</span>
-          </div>
-          <div className="hidden md:flex space-x-6">
-            {[
-              "About",
-              "How It Works",
-              "Benefits",
-              "Features",
-              "Technology",
-              "Testimonials",
-              "Future Scopes",
-              "Contact",
-            ].map((item) => (
-              <a
-                key={item}
-                href={
-                  item === "Future Scopes"
-                    ? "/future-scopes"
-                    : `#${item.toLowerCase().replace(" ", "-")}`
-                }
-                className="text-lg font-medium text-gray-800 hover:text-red-600 transition-colors"
-              >
-                {item}
-              </a>
-            ))}
-            <a
-              href="/signup"
-              className="bg-red-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-red-700 transition-all"
-            >
-              Join Now
-            </a>
-          </div>
-          <button
-            className="md:hidden text-gray-800"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          >
-            {isMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
-        {isMenuOpen && (
-          <div className="md:hidden bg-white shadow-lg">
-            <div className="flex flex-col space-y-4 py-4 px-6">
-              {[
-                "About",
-                "How It Works",
-                "Benefits",
-                "Features",
-                "Technology",
-                "Testimonials",
-                "Future Scopes",
-                "Contact",
-              ].map((item) => (
-                <a
-                  key={item}
-                  href={
-                    item === "Future Scopes"
-                      ? "/future-scopes"
-                      : `#${item.toLowerCase().replace(" ", "-")}`
-                  }
-                  className="text-gray-800 font-medium hover:text-red-600"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item}
-                </a>
-              ))}
-              <a
-                href="/signup"
-                className="bg-red-600 text-white px-6 py-2 rounded-full font-semibold text-center hover:bg-red-700"
-              >
-                Join Now
-              </a>
-            </div>
-          </div>
-        )}
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section
         id="about"
-        className="min-h-screen hero-bg flex items-center justify-center text-white relative overflow-hidden"
+        className="min-h-screen hero-bg flex items-center justify-center text-white relative overflow-hidden pt-20"
       >
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -457,7 +361,7 @@ const BloodChainLanding = () => {
               href="/signup"
               className="bg-yellow-300 text-red-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-yellow-400 transition-all flex items-center justify-center hover-lift"
             >
-              Become a Donor <Heart className="w-5 h-5 ml-2" />
+              Become a Donor <Users className="w-5 h-5 ml-2" />
             </a>
             <a
               href="/future-scopes"
@@ -747,7 +651,7 @@ const BloodChainLanding = () => {
               href="/signup"
               className="bg-yellow-300 text-red-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-yellow-400 transition-all flex items-center hover-lift"
             >
-              Become a Donor <Heart className="w-5 h-5 ml-2" />
+              Become a Donor <Users className="w-5 h-5 ml-2" />
             </a>
             <a
               href="/contact"
@@ -759,134 +663,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <Heart className="w-8 h-8 text-red-600" />
-                <span className="text-xl font-bold">BloodChain</span>
-              </div>
-              <p className="text-gray-400 text-sm mb-4">
-                Transforming blood donation with blockchain technology to save
-                lives globally.
-              </p>
-              <div className="flex space-x-4">
-                <a
-                  href="https://twitter.com/bloodchain"
-                  className="text-gray-400 hover:text-white"
-                >
-                  <Twitter className="w-6 h-6" />
-                </a>
-                <a
-                  href="https://github.com/bloodchain"
-                  className="text-gray-400 hover:text-white"
-                >
-                  <Github className="w-6 h-6" />
-                </a>
-                <a
-                  href="https://linkedin.com/company/bloodchain"
-                  className="text-gray-400 hover:text-white"
-                >
-                  <Linkedin className="w-6 h-6" />
-                </a>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4">Platform</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <a href="/about" className="hover:text-white">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="/donors" className="hover:text-white">
-                    For Donors
-                  </a>
-                </li>
-                <li>
-                  <a href="/hospitals" className="hover:text-white">
-                    For Hospitals
-                  </a>
-                </li>
-                <li>
-                  <a href="/blood-banks" className="hover:text-white">
-                    For Blood Banks
-                  </a>
-                </li>
-                <li>
-                  <a href="/future-scopes" className="hover:text-white">
-                    Future Scopes
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4">Resources</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>
-                  <a href="/whitepaper" className="hover:text-white">
-                    Whitepaper
-                  </a>
-                </li>
-                <li>
-                  <a href="/docs" className="hover:text-white">
-                    Documentation
-                  </a>
-                </li>
-                <li>
-                  <a href="/blog" className="hover:text-white">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="/faq" className="hover:text-white">
-                    FAQ
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-lg mb-4">Stay Connected</h4>
-              <p className="text-gray-400 text-sm mb-4">
-                Subscribe for updates on BloodChain’s mission.
-              </p>
-              <div className="flex">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="px-4 py-2 rounded-l-full text-gray-800 focus:outline-none"
-                />
-                <button className="bg-red-600 text-white px-4 py-2 rounded-r-full hover:bg-red-700">
-                  <Mail className="w-5 h-5" />
-                </button>
-              </div>
-              <ul className="space-y-2 text-gray-400 text-sm mt-4">
-                <li>
-                  <a href="/contact" className="hover:text-white">
-                    Contact Us
-                  </a>
-                </li>
-                <li>
-                  <a href="/support" className="hover:text-white">
-                    Support
-                  </a>
-                </li>
-                <li>
-                  <a href="/privacy" className="hover:text-white">
-                    Privacy Policy
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-6 text-center text-gray-400 text-sm">
-            <p>&copy; 2025 BloodChain. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Back to Top Button */}
       <button
