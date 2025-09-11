@@ -287,14 +287,6 @@ const BloodChainLanding = () => {
     setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
   };
 
-  const handlePrevRole = () => {
-    setActiveTab((prev) => (prev === 0 ? benefitsByRole.length - 1 : prev - 1));
-  };
-
-  const handleNextRole = () => {
-    setActiveTab((prev) => (prev + 1) % benefitsByRole.length);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
       <style jsx>{`
@@ -328,16 +320,6 @@ const BloodChainLanding = () => {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
           }
         }
-        @keyframes tab-switch {
-          from {
-            opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
         .animate-fade-in {
           animation: fade-in 1s ease-out forwards;
         }
@@ -346,9 +328,6 @@ const BloodChainLanding = () => {
         }
         .hover-lift:hover {
           animation: hover-lift 0.3s ease-out forwards;
-        }
-        .animate-tab-switch {
-          animation: tab-switch 0.5s ease-out forwards;
         }
         .flow-path {
           stroke-dasharray: 1000;
@@ -372,16 +351,6 @@ const BloodChainLanding = () => {
               rgba(255, 255, 255, 0.1) 0%,
               transparent 20%
             );
-        }
-        .carousel-card {
-          transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
-        }
-        .carousel-container:hover .carousel-card {
-          opacity: 0.6;
-        }
-        .carousel-container:hover .carousel-card.active {
-          transform: scale(1.05);
-          opacity: 1;
         }
       `}</style>
 
@@ -534,7 +503,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Benefits by Role Section (Carousel) */}
+      {/* Benefits by Role Section (Grid) */}
       <section id="benefits" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
@@ -544,50 +513,28 @@ const BloodChainLanding = () => {
             Tailored tools empower every stakeholder in the blood donation
             ecosystem.
           </p>
-          <div className="relative">
-            <button
-              onClick={handlePrevRole}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all z-10"
-              aria-label="Previous role"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <button
-              onClick={handleNextRole}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all z-10"
-              aria-label="Next role"
-            >
-              <ChevronRightIcon className="w-6 h-6" />
-            </button>
-            <div className="carousel-container overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {benefitsByRole.map((role, index) => (
               <div
-                className="flex transition-transform duration-500"
-                style={{ transform: `translateX(-${activeTab * 100}%)` }}
+                key={index}
+                className="p-6 bg-white rounded-lg shadow-md hover-lift animate-fade-in"
+                style={{ animationDelay: `${index * 0.2}s` }}
               >
-                {benefitsByRole.map((role, index) => (
-                  <div
-                    key={index}
-                    className="carousel-card min-w-full lg:min-w-[25%] p-4 flex items-center justify-center"
-                  >
-                    <div className="bg-gradient-to-br from-gray-100 to-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
-                      <img
-                        src={role.image}
-                        alt={`${role.role} illustration`}
-                        className="w-40 h-40 object-cover rounded-lg mb-4"
-                      />
-                      <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                        {role.role}
-                      </h3>
-                      <ol className="text-gray-600 text-base space-y-2 list-decimal list-inside">
-                        {role.benefits.map((benefit, i) => (
-                          <li key={i}>{benefit}</li>
-                        ))}
-                      </ol>
-                    </div>
-                  </div>
-                ))}
+                <img
+                  src={role.image}
+                  alt={`${role.role} illustration`}
+                  className="w-full h-48 object-cover rounded-lg mb-4"
+                />
+                <h3 className="text-xl font-semibold text-gray-800 mb-3 text-center">
+                  {role.role}
+                </h3>
+                <ol className="text-gray-600 text-base space-y-2 list-decimal list-inside">
+                  {role.benefits.map((benefit, i) => (
+                    <li key={i}>{benefit}</li>
+                  ))}
+                </ol>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
