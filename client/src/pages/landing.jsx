@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ArrowUp,
   Star,
+  User,
   Quote,
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
