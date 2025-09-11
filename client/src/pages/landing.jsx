@@ -6,11 +6,12 @@ import {
   MapPin,
   Droplets,
   Hospital,
-  User,
   ChevronRight,
   ArrowUp,
   Star,
   Quote,
+  ChevronLeft,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-react";
 import {
   SiReact,
@@ -25,7 +26,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const BloodChainLanding = () => {
-  const [activeFlowStep, setActiveFlowStep] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [scrollY, setScrollY] = useState(0);
 
@@ -112,6 +113,8 @@ const BloodChainLanding = () => {
         "Securely manage your donation history",
         "Receive location-based urgent donation alerts",
       ],
+      image:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
     },
     {
       role: "Blood Banks",
@@ -122,6 +125,8 @@ const BloodChainLanding = () => {
         "Ensure compliance with tamper-proof records",
         "Streamline logistics with smart contracts",
       ],
+      image:
+        "https://images.unsplash.com/photo-1516321310762-479437144403?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
     },
     {
       role: "Hospitals",
@@ -132,6 +137,8 @@ const BloodChainLanding = () => {
         "Request blood securely via smart contracts",
         "Improve emergency response efficiency",
       ],
+      image:
+        "https://images.unsplash.com/photo-1519494026892-80cea6e6e7f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
     },
     {
       role: "Admins",
@@ -142,6 +149,8 @@ const BloodChainLanding = () => {
         "Generate automated compliance reports",
         "Manage user roles with blockchain security",
       ],
+      image:
+        "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
     },
   ];
 
@@ -151,35 +160,40 @@ const BloodChainLanding = () => {
       role: "Blood Bank Manager",
       content:
         "BloodChain has streamlined our operations, reducing errors and ensuring every unit is tracked accurately.",
-      icon: User,
+      image:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     },
     {
       name: "Amit Patel",
       role: "Donor",
       content:
         "Seeing where my blood goes is incredible. The NFT rewards make donating even more rewarding!",
-      icon: User,
+      image:
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     },
     {
       name: "Dr. Emily Wong",
       role: "Hospital Administrator",
       content:
         "BloodChain ensures we get verified blood units quickly, saving lives in emergencies.",
-      icon: Hospital,
+      image:
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     },
     {
       name: "Priya Sharma",
       role: "Donor",
       content:
         "The platform’s transparency gives me confidence that my donations are making a real impact.",
-      icon: User,
+      image:
+        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     },
     {
       name: "Dr. Michael Chen",
       role: "Medical Director",
       content:
         "BloodChain’s blockchain technology has transformed how we manage blood supply chains.",
-      icon: Hospital,
+      image:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     },
   ];
 
@@ -234,6 +248,44 @@ const BloodChainLanding = () => {
     },
   ];
 
+  const futureScopes = [
+    {
+      title: "Plasma and Platelet Management",
+      description:
+        "Expand BloodChain to track and manage plasma and platelet donations, ensuring efficient allocation for critical treatments like cancer and surgeries.",
+    },
+    {
+      title: "Organ Donation Tracking",
+      description:
+        "Integrate organ donation management, using blockchain to ensure ethical, transparent, and secure organ allocation processes.",
+    },
+    {
+      title: "Vaccine Distribution",
+      description:
+        "Enable secure tracking of vaccine supply chains, ensuring authenticity and timely delivery during pandemics or routine immunizations.",
+    },
+    {
+      title: "Global Healthcare Integration",
+      description:
+        "Partner with global health organizations to integrate BloodChain into international healthcare systems for unified resource management.",
+    },
+    {
+      title: "AI-Powered Predictive Analytics",
+      description:
+        "Incorporate AI to predict blood demand, optimize inventory, and alert donors during shortages, enhancing emergency preparedness.",
+    },
+  ];
+
+  const handlePrevTestimonial = () => {
+    setActiveTestimonial((prev) =>
+      prev === 0 ? testimonials.length - 1 : prev - 1
+    );
+  };
+
+  const handleNextTestimonial = () => {
+    setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
       <style jsx>{`
@@ -267,20 +319,14 @@ const BloodChainLanding = () => {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
           }
         }
-        @keyframes flow-scale {
-          0% {
-            transform: scale(1);
+        @keyframes tab-switch {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
           }
-          50% {
-            transform: scale(1.05);
-          }
-          100% {
-            transform: scale(1);
-          }
-        }
-        @keyframes flow-path {
           to {
-            stroke-dashoffset: 0;
+            opacity: 1;
+            transform: translateX(0);
           }
         }
         .animate-fade-in {
@@ -292,24 +338,17 @@ const BloodChainLanding = () => {
         .hover-lift:hover {
           animation: hover-lift 0.3s ease-out forwards;
         }
-        .animate-flow-scale {
-          animation: flow-scale 1.5s ease-out;
+        .animate-tab-switch {
+          animation: tab-switch 0.5s ease-out forwards;
         }
         .flow-path {
           stroke-dasharray: 1000;
           stroke-dashoffset: 1000;
           animation: flow-path 2s linear forwards;
         }
-        .flow-arrow {
-          animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.7;
+        @keyframes flow-path {
+          to {
+            stroke-dashoffset: 0;
           }
         }
         .hero-bg {
@@ -364,7 +403,7 @@ const BloodChainLanding = () => {
               Become a Donor <Users className="w-5 h-5 ml-2" />
             </a>
             <a
-              href="/future-scopes"
+              href="#future-scopes"
               className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transition-all flex items-center justify-center hover-lift"
             >
               Our Vision <ChevronRight className="w-5 h-5 ml-2" />
@@ -439,13 +478,7 @@ const BloodChainLanding = () => {
               />
               {howItWorksSteps.map((_, index) => (
                 <g key={index}>
-                  <circle
-                    cx={20 + index * 200}
-                    cy={32}
-                    r="6"
-                    fill="#b91c1c"
-                    className={activeFlowStep === index ? "flow-arrow" : ""}
-                  />
+                  <circle cx={20 + index * 200} cy={32} r="6" fill="#b91c1c" />
                   <path
                     d={`M ${20 + index * 200 + 6} 32 L ${
                       20 + index * 200 + 15
@@ -455,7 +488,6 @@ const BloodChainLanding = () => {
                     stroke="#b91c1c"
                     strokeWidth="2"
                     fill="none"
-                    className={activeFlowStep === index ? "flow-arrow" : ""}
                   />
                 </g>
               ))}
@@ -464,14 +496,8 @@ const BloodChainLanding = () => {
               {howItWorksSteps.map((step, index) => (
                 <div
                   key={index}
-                  className={`p-6 bg-white rounded-lg shadow-md transition-all hover-lift animate-fade-in ${
-                    activeFlowStep === index
-                      ? "bg-red-50 animate-flow-scale"
-                      : ""
-                  }`}
+                  className="p-6 bg-white rounded-lg shadow-md transition-all hover-lift animate-fade-in"
                   style={{ animationDelay: `${index * 0.2}s` }}
-                  onMouseEnter={() => setActiveFlowStep(index)}
-                  onMouseLeave={() => setActiveFlowStep(null)}
                 >
                   <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
                     <step.icon className="w-6 h-6" />
@@ -489,7 +515,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Benefits by Role Section */}
+      {/* Benefits by Role Section (Tabbed) */}
       <section id="benefits" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
@@ -499,29 +525,46 @@ const BloodChainLanding = () => {
             Tailored tools empower every stakeholder in the blood donation
             ecosystem.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {benefitsByRole.map((role, index) => (
-              <div
-                key={index}
-                className="p-6 bg-gray-100 rounded-lg shadow-md transition-all hover-lift animate-fade-in"
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
-                  <role.icon className="w-6 h-6" />
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Tabs */}
+            <div className="flex flex-col w-full lg:w-1/4">
+              {benefitsByRole.map((role, index) => (
+                <button
+                  key={index}
+                  className={`flex items-center p-4 rounded-lg mb-2 transition-all duration-300 ${
+                    activeTab === index
+                      ? "bg-red-600 text-white"
+                      : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                  }`}
+                  onClick={() => setActiveTab(index)}
+                >
+                  <role.icon className="w-6 h-6 mr-3" />
+                  <span className="text-lg font-semibold">{role.role}</span>
+                </button>
+              ))}
+            </div>
+            {/* Tab Content */}
+            <div className="flex-1 bg-gray-100 rounded-lg p-6 animate-tab-switch">
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="lg:w-1/2">
+                  <h3 className="text-2xl font-semibold mb-4">
+                    {benefitsByRole[activeTab].role}
+                  </h3>
+                  <ol className="text-gray-600 text-base space-y-3 list-decimal list-inside">
+                    {benefitsByRole[activeTab].benefits.map((benefit, i) => (
+                      <li key={i}>{benefit}</li>
+                    ))}
+                  </ol>
                 </div>
-                <h3 className="text-xl font-semibold text-center mb-4">
-                  {role.role}
-                </h3>
-                <ul className="text-gray-600 text-sm space-y-2">
-                  {role.benefits.map((benefit, i) => (
-                    <li key={i} className="flex items-start">
-                      <ChevronRight className="w-4 h-4 text-red-600 mr-2 mt-1" />
-                      {benefit}
-                    </li>
-                  ))}
-                </ul>
+                <div className="lg:w-1/2">
+                  <img
+                    src={benefitsByRole[activeTab].image}
+                    alt={`${benefitsByRole[activeTab].role} illustration`}
+                    className="w-full h-64 object-cover rounded-lg shadow-md"
+                  />
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
@@ -600,38 +643,83 @@ const BloodChainLanding = () => {
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
             Trusted by donors, blood banks, and hospitals worldwide.
           </p>
-          <div className="relative overflow-hidden">
-            <div
-              className="flex transition-transform duration-500"
-              style={{
-                transform: `translateX(-${
-                  activeTestimonial * (100 / testimonials.length)
-                }%)`,
-              }}
-            >
-              {testimonials.map((testimonial, index) => (
+          <div className="relative">
+            <div className="flex justify-center items-center">
+              <button
+                onClick={handlePrevTestimonial}
+                className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all mx-2"
+                aria-label="Previous testimonial"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <div className="flex-1 overflow-hidden">
                 <div
-                  key={index}
-                  className="min-w-[100%] sm:min-w-[50%] lg:min-w-[33.33%] p-4"
+                  className="flex transition-transform duration-500"
+                  style={{
+                    transform: `translateX(-${activeTestimonial * 100}%)`,
+                  }}
                 >
-                  <div className="p-6 bg-white rounded-lg shadow-md transition-all hover-lift animate-slide-in">
-                    <div className="flex justify-center mb-4">
-                      <testimonial.icon className="w-10 h-10 text-red-600" />
+                  {testimonials.map((testimonial, index) => (
+                    <div key={index} className="min-w-[100%] p-4">
+                      <div className="p-6 bg-white rounded-lg shadow-md transition-all hover-lift animate-slide-in">
+                        <img
+                          src={testimonial.image}
+                          alt={`${testimonial.name} profile`}
+                          className="w-16 h-16 rounded-full mx-auto mb-4 object-cover"
+                        />
+                        <Quote className="w-8 h-8 text-red-600 mx-auto mb-4" />
+                        <p className="text-gray-600 text-center text-sm mb-4">
+                          "{testimonial.content}"
+                        </p>
+                        <p className="text-gray-800 font-semibold text-center">
+                          {testimonial.name}
+                        </p>
+                        <p className="text-gray-500 text-sm text-center">
+                          {testimonial.role}
+                        </p>
+                      </div>
                     </div>
-                    <Quote className="w-8 h-8 text-red-600 mx-auto mb-4" />
-                    <p className="text-gray-600 text-center text-sm mb-4">
-                      "{testimonial.content}"
-                    </p>
-                    <p className="text-gray-800 font-semibold text-center">
-                      {testimonial.name}
-                    </p>
-                    <p className="text-gray-500 text-sm text-center">
-                      {testimonial.role}
-                    </p>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <button
+                onClick={handleNextTestimonial}
+                className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all mx-2"
+                aria-label="Next testimonial"
+              >
+                <ChevronRightIcon className="w-6 h-6" />
+              </button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Future Scopes Section */}
+      <section id="future-scopes" className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
+            Our Vision for <span className="text-red-600">Tomorrow</span>
+          </h2>
+          <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12 animate-fade-in">
+            BloodChain is more than blood donation—it's a platform for
+            transforming healthcare resource management worldwide.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {futureScopes.map((scope, index) => (
+              <div
+                key={index}
+                className="p-6 bg-gray-100 rounded-lg shadow-md transition-all hover-lift animate-fade-in"
+                style={{ animationDelay: `${index * 0.2}s` }}
+              >
+                <Users className="w-10 h-10 text-red-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-center mb-2">
+                  {scope.title}
+                </h3>
+                <p className="text-gray-600 text-sm text-center">
+                  {scope.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
