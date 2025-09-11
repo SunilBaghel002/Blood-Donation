@@ -287,6 +287,14 @@ const BloodChainLanding = () => {
     setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
   };
 
+  const handlePrevRole = () => {
+    setActiveTab((prev) => (prev === 0 ? benefitsByRole.length - 1 : prev - 1));
+  };
+
+  const handleNextRole = () => {
+    setActiveTab((prev) => (prev + 1) % benefitsByRole.length);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
       <style jsx>{`
@@ -364,6 +372,16 @@ const BloodChainLanding = () => {
               rgba(255, 255, 255, 0.1) 0%,
               transparent 20%
             );
+        }
+        .carousel-card {
+          transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+        }
+        .carousel-container:hover .carousel-card {
+          opacity: 0.6;
+        }
+        .carousel-container:hover .carousel-card.active {
+          transform: scale(1.05);
+          opacity: 1;
         }
       `}</style>
 
@@ -516,7 +534,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Benefits by Role Section (Tabbed) */}
+      {/* Benefits by Role Section (Carousel) */}
       <section id="benefits" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
@@ -526,44 +544,48 @@ const BloodChainLanding = () => {
             Tailored tools empower every stakeholder in the blood donation
             ecosystem.
           </p>
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Tabs */}
-            <div className="flex flex-col w-full lg:w-1/4">
-              {benefitsByRole.map((role, index) => (
-                <button
-                  key={index}
-                  className={`flex items-center p-4 rounded-lg mb-2 transition-all duration-300 ${
-                    activeTab === index
-                      ? "bg-red-600 text-white"
-                      : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                  }`}
-                  onClick={() => setActiveTab(index)}
-                >
-                  <role.icon className="w-6 h-6 mr-3" />
-                  <span className="text-lg font-semibold">{role.role}</span>
-                </button>
-              ))}
-            </div>
-            {/* Tab Content */}
-            <div className="flex-1 bg-gray-100 rounded-lg p-6 animate-tab-switch">
-              <div className="flex flex-col lg:flex-row gap-6">
-                <div className="lg:w-1/2">
-                  <h3 className="text-2xl font-semibold mb-4">
-                    {benefitsByRole[activeTab].role}
-                  </h3>
-                  <ol className="text-gray-600 text-base space-y-3 list-decimal list-inside">
-                    {benefitsByRole[activeTab].benefits.map((benefit, i) => (
-                      <li key={i}>{benefit}</li>
-                    ))}
-                  </ol>
-                </div>
-                <div className="lg:w-1/2">
-                  <img
-                    src={benefitsByRole[activeTab].image}
-                    alt={`${benefitsByRole[activeTab].role} illustration`}
-                    className="w-full h-64 object-cover rounded-lg shadow-md"
-                  />
-                </div>
+          <div className="relative">
+            <button
+              onClick={handlePrevRole}
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all z-10"
+              aria-label="Previous role"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={handleNextRole}
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all z-10"
+              aria-label="Next role"
+            >
+              <ChevronRightIcon className="w-6 h-6" />
+            </button>
+            <div className="carousel-container overflow-hidden">
+              <div
+                className="flex transition-transform duration-500"
+                style={{ transform: `translateX(-${activeTab * 100}%)` }}
+              >
+                {benefitsByRole.map((role, index) => (
+                  <div
+                    key={index}
+                    className="carousel-card min-w-full lg:min-w-[25%] p-4 flex items-center justify-center"
+                  >
+                    <div className="bg-gradient-to-br from-gray-100 to-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
+                      <img
+                        src={role.image}
+                        alt={`${role.role} illustration`}
+                        className="w-40 h-40 object-cover rounded-lg mb-4"
+                      />
+                      <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                        {role.role}
+                      </h3>
+                      <ol className="text-gray-600 text-base space-y-2 list-decimal list-inside">
+                        {role.benefits.map((benefit, i) => (
+                          <li key={i}>{benefit}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
