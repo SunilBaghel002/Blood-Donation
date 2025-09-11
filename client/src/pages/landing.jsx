@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ArrowUp,
   Star,
+  User,
   Quote,
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
@@ -319,16 +320,6 @@ const BloodChainLanding = () => {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
           }
         }
-        @keyframes tab-switch {
-          from {
-            opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
         .animate-fade-in {
           animation: fade-in 1s ease-out forwards;
         }
@@ -337,9 +328,6 @@ const BloodChainLanding = () => {
         }
         .hover-lift:hover {
           animation: hover-lift 0.3s ease-out forwards;
-        }
-        .animate-tab-switch {
-          animation: tab-switch 0.5s ease-out forwards;
         }
         .flow-path {
           stroke-dasharray: 1000;
@@ -515,7 +503,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* Benefits by Role Section (Tabbed) */}
+      {/* Benefits by Role Section (Grid) */}
       <section id="benefits" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 animate-fade-in">
@@ -525,46 +513,28 @@ const BloodChainLanding = () => {
             Tailored tools empower every stakeholder in the blood donation
             ecosystem.
           </p>
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Tabs */}
-            <div className="flex flex-col w-full lg:w-1/4">
-              {benefitsByRole.map((role, index) => (
-                <button
-                  key={index}
-                  className={`flex items-center p-4 rounded-lg mb-2 transition-all duration-300 ${
-                    activeTab === index
-                      ? "bg-red-600 text-white"
-                      : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                  }`}
-                  onClick={() => setActiveTab(index)}
-                >
-                  <role.icon className="w-6 h-6 mr-3" />
-                  <span className="text-lg font-semibold">{role.role}</span>
-                </button>
-              ))}
-            </div>
-            {/* Tab Content */}
-            <div className="flex-1 bg-gray-100 rounded-lg p-6 animate-tab-switch">
-              <div className="flex flex-col lg:flex-row gap-6">
-                <div className="lg:w-1/2">
-                  <h3 className="text-2xl font-semibold mb-4">
-                    {benefitsByRole[activeTab].role}
-                  </h3>
-                  <ol className="text-gray-600 text-base space-y-3 list-decimal list-inside">
-                    {benefitsByRole[activeTab].benefits.map((benefit, i) => (
-                      <li key={i}>{benefit}</li>
-                    ))}
-                  </ol>
-                </div>
-                <div className="lg:w-1/2">
-                  <img
-                    src={benefitsByRole[activeTab].image}
-                    alt={`${benefitsByRole[activeTab].role} illustration`}
-                    className="w-full h-64 object-cover rounded-lg shadow-md"
-                  />
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {benefitsByRole.map((role, index) => (
+              <div
+                key={index}
+                className="p-6 bg-white rounded-lg shadow-md hover-lift animate-fade-in"
+                style={{ animationDelay: `${index * 0.2}s` }}
+              >
+                <img
+                  src={role.image}
+                  alt={`${role.role} illustration`}
+                  className="w-full h-48 object-cover rounded-lg mb-4"
+                />
+                <h3 className="text-xl font-semibold text-gray-800 mb-3 text-center">
+                  {role.role}
+                </h3>
+                <ol className="text-gray-600 text-base space-y-2 list-decimal list-inside">
+                  {role.benefits.map((benefit, i) => (
+                    <li key={i}>{benefit}</li>
+                  ))}
+                </ol>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
