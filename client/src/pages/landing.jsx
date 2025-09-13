@@ -86,7 +86,11 @@ const BloodChainLanding = () => {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+    });
 
     const updateCanvasSize = () => {
       const width = Math.min(window.innerWidth, 600);
@@ -480,7 +484,7 @@ const BloodChainLanding = () => {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: { position: "top"},
+      legend: { position: "top" },
       title: {
         display: true,
         text: "Global Blood Donations (2018-2024)",
@@ -491,10 +495,14 @@ const BloodChainLanding = () => {
     scales: {
       y: {
         beginAtZero: true,
-        title: { display: true, text: "Donations (Millions)", font: { weight: "bold" } },
+        title: {
+          display: true,
+          text: "Donations (Millions)",
+          font: { weight: "bold" },
+        },
         grid: { color: "rgba(0,0,0,0.05)" },
       },
-      x: { 
+      x: {
         title: { display: true, text: "Year", font: { weight: "bold" } },
         grid: { display: false },
       },
@@ -511,23 +519,56 @@ const BloodChainLanding = () => {
       {/* Remove inline styles, use Tailwind and Framer Motion for animations */}
       <style jsx>{`
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 15px rgba(185, 28, 28, 0.4); }
-          50% { box-shadow: 0 0 30px rgba(185, 28, 28, 0.7), 0 0 50px rgba(185, 28, 28, 0.5); }
+          0%,
+          100% {
+            box-shadow: 0 0 15px rgba(185, 28, 28, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 30px rgba(185, 28, 28, 0.7),
+              0 0 50px rgba(185, 28, 28, 0.5);
+          }
         }
         @keyframes flow-scale {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-          100% { transform: scale(1); }
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+          100% {
+            transform: scale(1);
+          }
         }
         @keyframes flow-path {
-          to { stroke-dashoffset: 0; }
+          to {
+            stroke-dashoffset: 0;
+          }
         }
-        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-        .animate-flow-scale { animation: flow-scale 1.5s ease-in-out infinite; }
-        .flow-path { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: flow-path 2s linear forwards; }
-        .flow-arrow { animation: pulse-glow 2s ease-in-out infinite; }
-        .parallax-bg { background-attachment: fixed; background-position: center; background-repeat: no-repeat; background-size: cover; }
-        @media (max-width: 768px) { .parallax-bg { background-attachment: scroll; } }
+        .animate-pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+        .animate-flow-scale {
+          animation: flow-scale 1.5s ease-in-out infinite;
+        }
+        .flow-path {
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: flow-path 2s linear forwards;
+        }
+        .flow-arrow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+        .parallax-bg {
+          background-attachment: fixed;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-size: cover;
+        }
+        @media (max-width: 768px) {
+          .parallax-bg {
+            background-attachment: scroll;
+          }
+        }
       `}</style>
 
       {/* Navigation with enhanced blur and motion */}
@@ -535,22 +576,26 @@ const BloodChainLanding = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          scrollY > 50 ? "bg-white/95 backdrop-blur-lg shadow-lg" : "bg-transparent"
+          scrollY > 50
+            ? "bg-white/95 backdrop-blur-lg shadow-lg"
+            : "bg-transparent"
         }`}
         aria-label="Main navigation"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <motion.div 
+            <motion.div
               className="flex items-center space-x-2"
               whileHover={{ scale: 1.05 }}
             >
               <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-pink-500 rounded-lg flex items-center justify-center">
                 <Heart className="w-6 h-6 text-white" />
               </div>
-              <span className={`text-2xl font-bold ${
-                scrollY > 50 ? "text-gray-900" : "text-white"
-              }`}>
+              <span
+                className={`text-2xl font-bold ${
+                  scrollY > 50 ? "text-gray-900" : "text-white"
+                }`}
+              >
                 BloodChain
               </span>
             </motion.div>
@@ -588,11 +633,15 @@ const BloodChainLanding = () => {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
           {isMenuOpen && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               className="md:hidden bg-white/95 backdrop-blur-md shadow-md overflow-hidden"
@@ -637,18 +686,18 @@ const BloodChainLanding = () => {
         }}
       >
         <div className="absolute inset-0 bg-black/40"></div>
-        <motion.div 
+        <motion.div
           className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-8"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={containerVariants}
         >
-          <motion.div 
+          <motion.div
             className="text-center lg:text-left text-white lg:w-1/2"
             variants={itemVariants}
           >
-            <motion.h1 
+            <motion.h1
               className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -660,7 +709,7 @@ const BloodChainLanding = () => {
                 Life-Saving Trust
               </span>
             </motion.h1>
-            <motion.p 
+            <motion.p
               className="text-lg sm:text-xl lg:text-2xl mb-8 max-w-2xl opacity-90"
               variants={itemVariants}
             >
@@ -671,13 +720,13 @@ const BloodChainLanding = () => {
               , and{" "}
               <span className="font-semibold text-amber-300">security</span>.
             </motion.p>
-            <motion.p 
+            <motion.p
               className="text-base sm:text-lg mb-8"
               variants={itemVariants}
             >
               Join 118M+ donors saving lives with blockchain technology.
             </motion.p>
-            <motion.div 
+            <motion.div
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center"
               variants={itemVariants}
             >
@@ -691,7 +740,7 @@ const BloodChainLanding = () => {
                 <span>Join as Donor</span>
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </motion.a>
-              <motion.button 
+              <motion.button
                 className="group border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform transition-all duration-300 flex items-center space-x-2"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
@@ -701,7 +750,7 @@ const BloodChainLanding = () => {
               </motion.button>
             </motion.div>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="lg:w-1/2 flex justify-center"
             variants={itemVariants}
           >
@@ -716,7 +765,7 @@ const BloodChainLanding = () => {
       </section>
 
       {/* Impact Stats with staggered motion */}
-      <motion.section 
+      <motion.section
         className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
         initial="hidden"
         whileInView="visible"
@@ -724,19 +773,26 @@ const BloodChainLanding = () => {
         variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
-            <motion.h2 
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
+            <motion.h2
               className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              Our <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">Global Impact</span>
+              Our{" "}
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+                Global Impact
+              </span>
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Transforming the global blood supply chain with blockchain efficiency.
+              Transforming the global blood supply chain with blockchain
+              efficiency.
             </motion.p>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
             variants={containerVariants}
           >
@@ -754,7 +810,9 @@ const BloodChainLanding = () => {
                   className="w-full h-24 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
                   whileHover={{ scale: 1.05 }}
                 />
-                <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
+                <motion.div
+                  whileHover={{ rotate: 360, transition: { duration: 0.5 } }}
+                >
                   <stat.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
                 </motion.div>
                 <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
@@ -770,23 +828,33 @@ const BloodChainLanding = () => {
       </motion.section>
 
       {/* Donation Trends with enhanced chart styling */}
-      <section id="donation-trends" className="py-12 sm:py-16 lg:py-20 bg-white">
-        <motion.div 
+      <section
+        id="donation-trends"
+        className="py-12 sm:py-16 lg:py-20 bg-white"
+      >
+        <motion.div
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={containerVariants}
         >
-          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Blood Donation <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">Trends</span>
+              Blood Donation{" "}
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+                Trends
+              </span>
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Global blood donation growth over the years (Source: WHO estimates).
+              Global blood donation growth over the years (Source: WHO
+              estimates).
             </motion.p>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-xl"
             variants={itemVariants}
           >
@@ -798,8 +866,8 @@ const BloodChainLanding = () => {
       </section>
 
       {/* How It Works with interactive SVG enhancements */}
-      <motion.section 
-        id="how-it-works" 
+      <motion.section
+        id="how-it-works"
         className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
         initial="hidden"
         whileInView="visible"
@@ -807,9 +875,16 @@ const BloodChainLanding = () => {
         variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              How <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">BloodChain</span> Works
+              How{" "}
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+                BloodChain
+              </span>{" "}
+              Works
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
               A seamless, transparent process powered by blockchain technology.
@@ -838,11 +913,17 @@ const BloodChainLanding = () => {
                     r="8"
                     fill="#b91c1c"
                     className={activeFlowStep === index ? "flow-arrow" : ""}
-                    animate={activeFlowStep === index ? { scale: [1, 1.2, 1] } : {}}
+                    animate={
+                      activeFlowStep === index ? { scale: [1, 1.2, 1] } : {}
+                    }
                     transition={{ duration: 0.5 }}
                   />
                   <path
-                    d={`M ${20 + index * 200 + 8} 36 L ${20 + index * 200 + 20} 36 L ${20 + index * 200 + 14} 30 M ${20 + index * 200 + 20} 36 L ${20 + index * 200 + 14} 42`}
+                    d={`M ${20 + index * 200 + 8} 36 L ${
+                      20 + index * 200 + 20
+                    } 36 L ${20 + index * 200 + 14} 30 M ${
+                      20 + index * 200 + 20
+                    } 36 L ${20 + index * 200 + 14} 42`}
                     stroke="#b91c1c"
                     strokeWidth="3"
                     fill="none"
@@ -851,7 +932,7 @@ const BloodChainLanding = () => {
                 </g>
               ))}
             </svg>
-            <motion.div 
+            <motion.div
               className="relative flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8"
               variants={containerVariants}
             >
@@ -874,7 +955,7 @@ const BloodChainLanding = () => {
                     className="w-full h-32 object-cover rounded-xl mb-4"
                     whileHover={{ scale: 1.05 }}
                   />
-                  <motion.div 
+                  <motion.div
                     className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center"
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
@@ -895,8 +976,8 @@ const BloodChainLanding = () => {
       </motion.section>
 
       {/* Benefits by Role with micro-interactions */}
-      <motion.section 
-        id="benefits" 
+      <motion.section
+        id="benefits"
         className="py-12 sm:py-16 lg:py-20 bg-white"
         initial="hidden"
         whileInView="visible"
@@ -904,15 +985,22 @@ const BloodChainLanding = () => {
         variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Benefits for <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">Every Role</span>
+              Benefits for{" "}
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+                Every Role
+              </span>
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Tailored solutions for stakeholders in the blood donation ecosystem.
+              Tailored solutions for stakeholders in the blood donation
+              ecosystem.
             </motion.p>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
             variants={containerVariants}
           >
@@ -937,8 +1025,8 @@ const BloodChainLanding = () => {
                 </h3>
                 <ul className="list-none text-sm sm:text-base text-gray-600 space-y-3">
                   {role.benefits.map((benefit, i) => (
-                    <motion.li 
-                      key={i} 
+                    <motion.li
+                      key={i}
                       className="flex items-start"
                       initial={{ x: -20, opacity: 0 }}
                       whileInView={{ x: 0, opacity: 1 }}
@@ -956,8 +1044,8 @@ const BloodChainLanding = () => {
       </motion.section>
 
       {/* Features with gradient overlays and hovers */}
-      <motion.section 
-        id="features" 
+      <motion.section
+        id="features"
         className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
         initial="hidden"
         whileInView="visible"
@@ -965,15 +1053,23 @@ const BloodChainLanding = () => {
         variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Why <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">BloodChain</span>?
+              Why{" "}
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+                BloodChain
+              </span>
+              ?
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Advanced blockchain solutions for trust and efficiency in blood management.
+              Advanced blockchain solutions for trust and efficiency in blood
+              management.
             </motion.p>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
             variants={containerVariants}
           >
@@ -984,9 +1080,11 @@ const BloodChainLanding = () => {
                 variants={itemVariants}
                 whileHover={{ y: -10, scale: 1.02 }}
               >
-                <motion.div 
+                <motion.div
                   className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-700"
-                  style={{ background: `linear-gradient(to right, ${feature.gradient})` }}
+                  style={{
+                    background: `linear-gradient(to right, ${feature.gradient})`,
+                  }}
                 />
                 <motion.img
                   src={feature.image}
@@ -1000,22 +1098,20 @@ const BloodChainLanding = () => {
                 >
                   <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </motion.div>
-                <motion.h3 
+                <motion.h3
                   className="text-lg sm:text-xl font-bold text-gray-900 mb-4 relative z-10 group-hover:text-red-600 transition-colors"
                   whileHover={{ color: "#b91c1c" }}
                 >
                   {feature.title}
                 </motion.h3>
-                <motion.p 
+                <motion.p
                   className="text-sm sm:text-base text-gray-600 leading-relaxed relative z-10"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                 >
                   {feature.description}
                 </motion.p>
-                <motion.div 
-                  className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 relative z-10"
-                />
+                <motion.div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 relative z-10" />
               </motion.div>
             ))}
           </motion.div>
@@ -1023,8 +1119,8 @@ const BloodChainLanding = () => {
       </motion.section>
 
       {/* Technology Stack with tooltips and enhanced grid */}
-      <motion.section 
-        id="technology" 
+      <motion.section
+        id="technology"
         className="py-12 sm:py-16 lg:py-20 bg-white"
         initial="hidden"
         whileInView="visible"
@@ -1032,15 +1128,21 @@ const BloodChainLanding = () => {
         variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Powered by <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">Innovation</span>
+              Powered by{" "}
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+                Innovation
+              </span>
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
               A robust tech stack ensuring security and scalability.
             </motion.p>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16"
             variants={containerVariants}
           >
@@ -1057,16 +1159,18 @@ const BloodChainLanding = () => {
                   className="w-full h-24 object-cover rounded-xl mb-4"
                   whileHover={{ scale: 1.05 }}
                 />
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.2, rotate: 360 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <tech.icon className={`${tech.color} text-3xl sm:text-4xl mb-2 group-hover:scale-110 transition-transform`} />
+                  <tech.icon
+                    className={`${tech.color} text-3xl sm:text-4xl mb-2 group-hover:scale-110 transition-transform`}
+                  />
                 </motion.div>
                 <div className="font-semibold text-sm sm:text-base text-gray-900">
                   {tech.name}
                 </div>
-                <motion.div 
+                <motion.div
                   className="absolute inset-x-0 top-full mt-2 bg-gray-900 text-white text-xs sm:text-sm p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg"
                   initial={{ y: 10, opacity: 0 }}
                   whileHover={{ y: 0, opacity: 1 }}
@@ -1076,28 +1180,43 @@ const BloodChainLanding = () => {
               </motion.div>
             ))}
           </motion.div>
-          <motion.div 
+          <motion.div
             className="bg-gradient-to-r from-gray-900 via-gray-800 to-black rounded-3xl p-6 sm:p-8 lg:p-12 text-white overflow-hidden"
             variants={itemVariants}
           >
-            <motion.h3 
+            <motion.h3
               className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-8"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
             >
               System Architecture
             </motion.h3>
-            <motion.div 
+            <motion.div
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
               variants={containerVariants}
             >
               {[
-                { title: "Blockchain Layer", icon: Database, desc: "Ethereum smart contracts for immutable records.", img: "https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400" },
-                { title: "Storage Layer", icon: Globe, desc: "IPFS for decentralized, secure document storage.", img: "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400" },
-                { title: "Application Layer", icon: Shield, desc: "MERN stack for scalable, secure interfaces.", img: "https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400" },
+                {
+                  title: "Blockchain Layer",
+                  icon: Database,
+                  desc: "Ethereum smart contracts for immutable records.",
+                  img: "https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400",
+                },
+                {
+                  title: "Storage Layer",
+                  icon: Globe,
+                  desc: "IPFS for decentralized, secure document storage.",
+                  img: "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400",
+                },
+                {
+                  title: "Application Layer",
+                  icon: Shield,
+                  desc: "MERN stack for scalable, secure interfaces.",
+                  img: "https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400",
+                },
               ].map((layer, i) => (
-                <motion.div 
-                  key={i} 
+                <motion.div
+                  key={i}
                   className="text-center group"
                   variants={itemVariants}
                   whileHover={{ y: -5 }}
@@ -1108,14 +1227,16 @@ const BloodChainLanding = () => {
                     className="w-full h-32 object-cover rounded-xl mb-4"
                     whileHover={{ scale: 1.05 }}
                   />
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center"
                     whileHover={{ scale: 1.1 }}
                   >
                     <layer.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </motion.div>
                   <h4 className="font-bold text-lg mb-2">{layer.title}</h4>
-                  <p className="text-gray-200 text-sm sm:text-base">{layer.desc}</p>
+                  <p className="text-gray-200 text-sm sm:text-base">
+                    {layer.desc}
+                  </p>
                 </motion.div>
               ))}
             </motion.div>
@@ -1124,7 +1245,7 @@ const BloodChainLanding = () => {
       </motion.section>
 
       {/* Testimonials with smooth sliding and neon accents */}
-      <motion.section 
+      <motion.section
         className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
@@ -1133,12 +1254,18 @@ const BloodChainLanding = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-red-900/20 to-pink-900/20"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-              Trusted by <span className="text-red-400 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">Healthcare Leaders</span>
+              Trusted by{" "}
+              <span className="text-red-400 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">
+                Healthcare Leaders
+              </span>
             </motion.h2>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="relative max-w-4xl mx-auto overflow-hidden"
             variants={itemVariants}
           >
@@ -1152,9 +1279,12 @@ const BloodChainLanding = () => {
             >
               {testimonials.map((test, index) => (
                 <div key={index} className="min-w-full flex justify-center">
-                  <motion.div 
+                  <motion.div
                     className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 sm:p-8 lg:p-12 text-center max-w-lg shadow-2xl border border-white/20"
-                    whileHover={{ scale: 1.02, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+                    whileHover={{
+                      scale: 1.02,
+                      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                    }}
                   >
                     <motion.img
                       src={test.avatar}
@@ -1162,7 +1292,7 @@ const BloodChainLanding = () => {
                       className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto mb-6 object-cover border-4 border-red-400/30"
                       whileHover={{ scale: 1.1, rotate: 10 }}
                     />
-                    <motion.blockquote 
+                    <motion.blockquote
                       className="text-base sm:text-lg lg:text-xl mb-6 italic text-gray-200"
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
@@ -1179,7 +1309,10 @@ const BloodChainLanding = () => {
                 </div>
               ))}
             </motion.div>
-            <motion.div className="flex justify-center mt-6 sm:mt-8 space-x-2" variants={itemVariants}>
+            <motion.div
+              className="flex justify-center mt-6 sm:mt-8 space-x-2"
+              variants={itemVariants}
+            >
               {testimonials.map((_, index) => (
                 <motion.button
                   key={index}
@@ -1193,7 +1326,11 @@ const BloodChainLanding = () => {
                   whileTap={{ scale: 0.9 }}
                   aria-label={`View testimonial ${index + 1}`}
                 >
-                  <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-current ${index === activeTestimonial ? 'w-6 sm:w-8' : ''}`}></div>
+                  <div
+                    className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-current ${
+                      index === activeTestimonial ? "w-6 sm:w-8" : ""
+                    }`}
+                  ></div>
                 </motion.button>
               ))}
             </motion.div>
@@ -1202,7 +1339,7 @@ const BloodChainLanding = () => {
       </motion.section>
 
       {/* CTA with bold contrasts and neon glow */}
-      <motion.section 
+      <motion.section
         className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-red-600 via-pink-500 to-red-800 text-white relative"
         initial="hidden"
         whileInView="visible"
@@ -1211,19 +1348,20 @@ const BloodChainLanding = () => {
       >
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <motion.h2 
+          <motion.h2
             className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
             variants={itemVariants}
           >
             Join the Life-Saving Revolution
           </motion.h2>
-          <motion.p 
+          <motion.p
             className="text-base sm:text-lg lg:text-xl mb-8 max-w-3xl mx-auto opacity-90"
             variants={itemVariants}
           >
-            Empower blood donation with secure, transparent blockchain technology.
+            Empower blood donation with secure, transparent blockchain
+            technology.
           </motion.p>
-          <motion.div 
+          <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center"
             variants={itemVariants}
           >
@@ -1267,7 +1405,7 @@ const BloodChainLanding = () => {
       </motion.button>
 
       {/* Footer with subtle gradients */}
-      <motion.footer 
+      <motion.footer
         className="bg-gradient-to-r from-gray-900 to-black text-white py-12 relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
@@ -1276,14 +1414,19 @@ const BloodChainLanding = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 to-pink-900/5"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8"
             variants={containerVariants}
           >
             <motion.div variants={itemVariants}>
-              <motion.div className="flex items-center space-x-2 mb-4" whileHover={{ scale: 1.02 }}>
+              <motion.div
+                className="flex items-center space-x-2 mb-4"
+                whileHover={{ scale: 1.02 }}
+              >
                 <Heart className="w-8 h-8 text-red-600" />
-                <span className="text-xl sm:text-2xl font-bold">BloodChain</span>
+                <span className="text-xl sm:text-2xl font-bold">
+                  BloodChain
+                </span>
               </motion.div>
               <p className="text-gray-400 text-sm sm:text-base">
                 Revolutionizing blood management with blockchain technology.
@@ -1292,9 +1435,18 @@ const BloodChainLanding = () => {
             <motion.div variants={itemVariants}>
               <h4 className="font-bold text-lg mb-4">Platform</h4>
               <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                {["For Donors", "For Blood Banks", "For Hospitals", "API Access"].map((item) => (
+                {[
+                  "For Donors",
+                  "For Blood Banks",
+                  "For Hospitals",
+                  "API Access",
+                ].map((item) => (
                   <motion.li key={item}>
-                    <a href="/" className="hover:text-red-400 transition-colors" whileHover={{ x: 5 }}>
+                    <a
+                      href="/"
+                      className="hover:text-red-400 transition-colors"
+                      whileHover={{ x: 5 }}
+                    >
                       {item}
                     </a>
                   </motion.li>
@@ -1304,9 +1456,18 @@ const BloodChainLanding = () => {
             <motion.div variants={itemVariants}>
               <h4 className="font-bold text-lg mb-4">Resources</h4>
               <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                {["Documentation", "White Paper", "Help Center", "Community"].map((item) => (
+                {[
+                  "Documentation",
+                  "White Paper",
+                  "Help Center",
+                  "Community",
+                ].map((item) => (
                   <motion.li key={item}>
-                    <a href="/" className="hover:text-red-400 transition-colors" whileHover={{ x: 5 }}>
+                    <a
+                      href="/"
+                      className="hover:text-red-400 transition-colors"
+                      whileHover={{ x: 5 }}
+                    >
                       {item}
                     </a>
                   </motion.li>
@@ -1317,13 +1478,20 @@ const BloodChainLanding = () => {
               <h4 className="font-bold text-lg mb-4">Contact</h4>
               <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
                 {[
-                  { href: "mailto:hello@bloodchain.org", text: "hello@bloodchain.org" },
+                  {
+                    href: "mailto:hello@bloodchain.org",
+                    text: "hello@bloodchain.org",
+                  },
                   { href: "tel:+15551234567", text: "+1 (555) 123-4567" },
                   { href: "https://twitter.com", text: "Twitter" },
                   { href: "https://linkedin.com", text: "LinkedIn" },
                 ].map((item, i) => (
                   <motion.li key={i}>
-                    <a href={item.href} className="hover:text-red-400 transition-colors" whileHover={{ x: 5 }}>
+                    <a
+                      href={item.href}
+                      className="hover:text-red-400 transition-colors"
+                      whileHover={{ x: 5 }}
+                    >
                       {item.text}
                     </a>
                   </motion.li>
@@ -1331,17 +1499,26 @@ const BloodChainLanding = () => {
               </ul>
             </motion.div>
           </motion.div>
-          <motion.div 
+          <motion.div
             className="border-t border-gray-800 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-gray-400 text-sm sm:text-base"
             variants={itemVariants}
           >
             <p>
-              &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for humanity.{" "}
-              <a href="/privacy" className="hover:text-red-400" whileHover={{ underline: "always" }}>
+              &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for
+              humanity.{" "}
+              <a
+                href="/privacy"
+                className="hover:text-red-400"
+                whileHover={{ underline: "always" }}
+              >
                 Privacy Policy
               </a>{" "}
               |{" "}
-              <a href="/terms" className="hover:text-red-400" whileHover={{ underline: "always" }}>
+              <a
+                href="/terms"
+                className="hover:text-red-400"
+                whileHover={{ underline: "always" }}
+              >
                 Terms of Service
               </a>
             </p>
