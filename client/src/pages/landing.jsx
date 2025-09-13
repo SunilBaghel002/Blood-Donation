@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
@@ -78,56 +79,70 @@ const BloodChainLanding = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 3D Interactive Blood Drop
+  // 3D Interactive Blood Drop with enhanced lighting and rotation
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.6, 2000);
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
 
     const updateCanvasSize = () => {
-      const width =
-        window.innerWidth < 640 ? 600 : window.innerWidth < 1024 ? 600 : 600;
-      const height = width;
+      const width = Math.min(window.innerWidth, 600);
+      const height = width * 0.8;
       renderer.setSize(width, height);
-      camera.aspect = 1;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
     };
     updateCanvasSize();
     window.addEventListener("resize", updateCanvasSize);
 
+    // Enhanced blood drop geometry with more segments for smoothness
     const points = [];
-    for (let i = 0; i < 20; i++) {
-      const x = Math.sin((i * Math.PI) / 20) * (1 - i / 20) * 1.5;
-      const y = (i - 10) * 0.2;
+    for (let i = 0; i < 50; i++) {
+      const x = Math.sin((i * Math.PI) / 50) * (1 - i / 50) * 1.5;
+      const y = (i - 25) * 0.08;
       points.push(new THREE.Vector2(x, y));
     }
-    const geometry = new THREE.LatheGeometry(points, 32);
-    const material = new THREE.MeshPhongMaterial({
+    const geometry = new THREE.LatheGeometry(points, 64);
+    const material = new THREE.MeshPhysicalMaterial({
       color: 0xb91c1c,
-      shininess: 300,
+      metalness: 0.1,
+      roughness: 0.2,
+      clearcoat: 1,
+      clearcoatRoughness: 0.1,
       side: THREE.DoubleSide,
     });
     const bloodDrop = new THREE.Mesh(geometry, material);
     scene.add(bloodDrop);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    // Enhanced lighting for dramatic effect
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
     directionalLight.position.set(5, 5, 5);
+    directionalLight.castShadow = true;
     scene.add(directionalLight);
-    const ambientLight = new THREE.AmbientLight(0x404040, 2.5);
+
+    const pointLight = new THREE.PointLight(0xff6b6b, 1, 100);
+    pointLight.position.set(-5, -5, 5);
+    scene.add(pointLight);
+
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambientLight);
-    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+
+    const hemisphereLight = new THREE.HemisphereLight(0xffd700, 0xb91c1c, 0.8);
     scene.add(hemisphereLight);
 
-    camera.position.z = 5;
+    camera.position.z = 4;
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableZoom = false;
     controls.enablePan = false;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.5;
+    controls.autoRotateSpeed = 0.8;
 
     const animate = () => {
       requestAnimationFrame(animate);
+      bloodDrop.rotation.y += 0.005; // Subtle additional rotation
       controls.update();
       renderer.render(scene, camera);
     };
@@ -139,6 +154,26 @@ const BloodChainLanding = () => {
       controls.dispose();
     };
   }, []);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
+  };
 
   const impactStats = [
     {
@@ -435,7 +470,9 @@ const BloodChainLanding = () => {
         data: [110, 112, 108, 115, 117, 118, 120],
         backgroundColor: "rgba(185, 28, 28, 0.8)",
         borderColor: "rgba(185, 28, 28, 1)",
-        borderWidth: 1,
+        borderWidth: 2,
+        borderRadius: 8,
+        borderSkipped: false,
       },
     ],
   };
@@ -443,118 +480,80 @@ const BloodChainLanding = () => {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: { position: "top" },
+      legend: { position: "top"},
       title: {
         display: true,
         text: "Global Blood Donations (2018-2024)",
-        font: { size: 20 },
+        font: { size: 20, weight: "bold" },
+        color: "#1f2937",
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        title: { display: true, text: "Donations (Millions)" },
+        title: { display: true, text: "Donations (Millions)", font: { weight: "bold" } },
+        grid: { color: "rgba(0,0,0,0.05)" },
       },
-      x: { title: { display: true, text: "Year" } },
+      x: { 
+        title: { display: true, text: "Year", font: { weight: "bold" } },
+        grid: { display: false },
+      },
     },
     animation: {
       duration: 2000,
       easing: "easeOutCubic",
     },
+    backgroundColor: "#f9fafb",
   };
 
   return (
     <div className="min-h-screen bg-white font-sans">
+      {/* Remove inline styles, use Tailwind and Framer Motion for animations */}
       <style jsx>{`
         @keyframes pulse-glow {
-          0%,
-          100% {
-            box-shadow: 0 0 15px rgba(185, 28, 28, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 30px rgba(185, 28, 28, 0.7),
-              0 0 50px rgba(185, 28, 28, 0.5);
-          }
-        }
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          0%, 100% { box-shadow: 0 0 15px rgba(185, 28, 28, 0.4); }
+          50% { box-shadow: 0 0 30px rgba(185, 28, 28, 0.7), 0 0 50px rgba(185, 28, 28, 0.5); }
         }
         @keyframes flow-scale {
-          0% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.05);
-          }
-          100% {
-            transform: scale(1);
-          }
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
         }
         @keyframes flow-path {
-          to {
-            stroke-dashoffset: 0;
-          }
+          to { stroke-dashoffset: 0; }
         }
-        .animate-fade-in {
-          animation: fade-in 1s ease-out forwards;
-        }
-        .animate-pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        .animate-flow-scale {
-          animation: flow-scale 1.5s ease-in-out infinite;
-        }
-        .flow-path {
-          stroke-dasharray: 1000;
-          stroke-dashoffset: 1000;
-          animation: flow-path 2s linear forwards;
-        }
-        .flow-arrow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        .parallax-bg {
-          background-attachment: fixed;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
-        }
-        @media (max-width: 768px) {
-          .parallax-bg {
-            background-attachment: scroll;
-          }
-        }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .animate-flow-scale { animation: flow-scale 1.5s ease-in-out infinite; }
+        .flow-path { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: flow-path 2s linear forwards; }
+        .flow-arrow { animation: pulse-glow 2s ease-in-out infinite; }
+        .parallax-bg { background-attachment: fixed; background-position: center; background-repeat: no-repeat; background-size: cover; }
+        @media (max-width: 768px) { .parallax-bg { background-attachment: scroll; } }
       `}</style>
 
-      {/* Navigation */}
-      <nav
+      {/* Navigation with enhanced blur and motion */}
+      <motion.nav
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          scrollY > 50
-            ? "bg-white/95 backdrop-blur-md shadow-md"
-            : "bg-transparent"
+          scrollY > 50 ? "bg-white/95 backdrop-blur-lg shadow-lg" : "bg-transparent"
         }`}
         aria-label="Main navigation"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
+            <motion.div 
+              className="flex items-center space-x-2"
+              whileHover={{ scale: 1.05 }}
+            >
               <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-pink-500 rounded-lg flex items-center justify-center">
                 <Heart className="w-6 h-6 text-white" />
               </div>
-              <span
-                className={`text-2xl font-bold ${
-                  scrollY > 50 ? "text-gray-900" : "text-white"
-                }`}
-              >
+              <span className={`text-2xl font-bold ${
+                scrollY > 50 ? "text-gray-900" : "text-white"
+              }`}>
                 BloodChain
               </span>
-            </div>
+            </motion.div>
             <div className="hidden md:flex items-center space-x-6">
               {[
                 "Features",
@@ -564,37 +563,40 @@ const BloodChainLanding = () => {
                 "Benefits",
                 "Contact",
               ].map((item) => (
-                <a
+                <motion.a
                   key={item}
                   href={`#${item.toLowerCase().replace(" ", "-")}`}
                   className={`font-medium text-lg hover:text-red-500 transition-colors ${
                     scrollY > 50 ? "text-gray-800" : "text-white"
                   }`}
+                  whileHover={{ y: -2 }}
                 >
                   {item}
-                </a>
+                </motion.a>
               ))}
-              <a
+              <motion.a
                 href="/signup"
-                className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 animate-pulse-glow"
+                className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-pink-600 transform transition-all duration-300 animate-pulse-glow"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 Sign Up
-              </a>
+              </motion.a>
             </div>
             <button
               className="md:hidden text-white"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
           {isMenuOpen && (
-            <div className="md:hidden bg-white/95 backdrop-blur-md shadow-md">
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="md:hidden bg-white/95 backdrop-blur-md shadow-md overflow-hidden"
+            >
               <div className="flex flex-col space-y-4 py-4 px-6">
                 {[
                   "Features",
@@ -604,175 +606,243 @@ const BloodChainLanding = () => {
                   "Benefits",
                   "Contact",
                 ].map((item) => (
-                  <a
+                  <motion.a
                     key={item}
                     href={`#${item.toLowerCase().replace(" ", "-")}`}
                     className="text-gray-800 font-medium hover:text-red-500 transition-colors"
                     onClick={() => setIsMenuOpen(false)}
+                    whileHover={{ x: 5 }}
                   >
                     {item}
-                  </a>
+                  </motion.a>
                 ))}
-                <a
+                <motion.a
                   href="/signup"
                   className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold text-center hover:from-red-700 hover:to-pink-600 transition-all"
+                  whileHover={{ scale: 1.02 }}
                 >
                   Sign Up
-                </a>
+                </motion.a>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
-      </nav>
+      </motion.nav>
 
-      {/* Hero Section with Photo */}
+      {/* Hero Section with enhanced motion and bold contrasts */}
       <section
-        className="relative min-h-screen bg-gradient-to-br from-red-600 to-pink-500 flex items-center overflow-hidden parallax-bg"
+        className="relative min-h-screen bg-gradient-to-br from-red-600 via-pink-500 to-red-800 flex items-center overflow-hidden parallax-bg"
         style={{
           backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
         }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-8">
-          <div className="text-center lg:text-left text-white lg:w-1/2 animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+        <div className="absolute inset-0 bg-black/40"></div>
+        <motion.div 
+          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+        >
+          <motion.div 
+            className="text-center lg:text-left text-white lg:w-1/2"
+            variants={itemVariants}
+          >
+            <motion.h1 
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
               Empowering
               <br />
-              <span className="bg-gradient-to-r from-yellow-400 to-amber-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400 bg-clip-text text-transparent">
                 Life-Saving Trust
               </span>
-            </h1>
-            <p className="text-lg sm:text-xl lg:text-2xl mb-8 max-w-2xl opacity-90">
+            </motion.h1>
+            <motion.p 
+              className="text-lg sm:text-xl lg:text-2xl mb-8 max-w-2xl opacity-90"
+              variants={itemVariants}
+            >
               Revolutionize blood management with blockchain-powered{" "}
               <span className="font-semibold text-amber-300">transparency</span>
               ,{" "}
               <span className="font-semibold text-amber-300">traceability</span>
               , and{" "}
               <span className="font-semibold text-amber-300">security</span>.
-            </p>
-            <p className="text-base sm:text-lg mb-8">
+            </motion.p>
+            <motion.p 
+              className="text-base sm:text-lg mb-8"
+              variants={itemVariants}
+            >
               Join 118M+ donors saving lives with blockchain technology.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
-              <a
+            </motion.p>
+            <motion.div 
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center"
+              variants={itemVariants}
+            >
+              <motion.a
                 href="/signup"
-                className="group bg-white text-red-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2 animate-pulse-glow"
+                className="group bg-white text-red-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform transition-all duration-300 flex items-center space-x-2 animate-pulse-glow"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
                 aria-label="Join as a donor"
               >
                 <span>Join as Donor</span>
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
-              <button className="group border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform hover:scale-105 transition-all duration-300 flex items-center space-x-2">
+              </motion.a>
+              <motion.button 
+                className="group border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform transition-all duration-300 flex items-center space-x-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 <Play className="w-5 h-5" />
                 <span>Watch Demo</span>
-              </button>
-            </div>
-          </div>
-          <div className="lg:w-1/2 flex justify-center">
-            <canvas
+              </motion.button>
+            </motion.div>
+          </motion.div>
+          <motion.div 
+            className="lg:w-1/2 flex justify-center"
+            variants={itemVariants}
+          >
+            <motion.canvas
               ref={canvasRef}
               className="w-[200px] sm:w-[300px] lg:w-[400px] h-[200px] sm:h-[300px] lg:h-[400px]"
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.3 }}
             />
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* Impact Stats Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+      {/* Impact Stats with staggered motion */}
+      <motion.section 
+        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Our <span className="text-red-600">Global Impact</span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Transforming the global blood supply chain with blockchain
-              efficiency.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+            <motion.h2 
+              className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              Our <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">Global Impact</span>
+            </motion.h2>
+            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+              Transforming the global blood supply chain with blockchain efficiency.
+            </motion.p>
+          </motion.div>
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
+            variants={containerVariants}
+          >
             {impactStats.map((stat, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="group text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in border border-gray-100"
-                style={{ animationDelay: `${index * 0.2}s` }}
+                className="group text-center p-4 sm:p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 backdrop-blur-sm"
+                variants={itemVariants}
+                whileHover={{ y: -10, scale: 1.02 }}
+                transition={{ duration: 0.3 }}
               >
-                <img
+                <motion.img
                   src={stat.image}
                   alt={stat.label}
-                  className="w-full h-24 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-24 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
+                  whileHover={{ scale: 1.05 }}
                 />
-                <stat.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
+                <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
+                  <stat.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
+                </motion.div>
                 <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                   {stat.value}
                 </div>
                 <div className="text-sm sm:text-base text-gray-600">
                   {stat.label}
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
+      </motion.section>
+
+      {/* Donation Trends with enhanced chart styling */}
+      <section id="donation-trends" className="py-12 sm:py-16 lg:py-20 bg-white">
+        <motion.div 
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+        >
+          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+            <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Blood Donation <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">Trends</span>
+            </motion.h2>
+            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+              Global blood donation growth over the years (Source: WHO estimates).
+            </motion.p>
+          </motion.div>
+          <motion.div 
+            className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-xl"
+            variants={itemVariants}
+          >
+            <div className="bg-gradient-to-r from-red-50 to-pink-50 p-6">
+              <Bar data={donationData} options={chartOptions} />
+            </div>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* Donation Trends Section */}
-      <section
-        id="donation-trends"
-        className="py-12 sm:py-16 lg:py-20 bg-white"
+      {/* How It Works with interactive SVG enhancements */}
+      <motion.section 
+        id="how-it-works" 
+        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Blood Donation <span className="text-red-600">Trends</span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Global blood donation growth over the years (Source: WHO
-              estimates).
-            </p>
-          </div>
-          <div className="max-w-4xl mx-auto animate-fade-in">
-            <Bar data={donationData} options={chartOptions} />
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section with Enhanced Interactive Flowchart */}
-      <section id="how-it-works" className="py-12 sm:py-16 lg:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              How <span className="text-red-600">BloodChain</span> Works
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+            <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              How <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">BloodChain</span> Works
+            </motion.h2>
+            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
               A seamless, transparent process powered by blockchain technology.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
           <div className="relative">
             <svg
               className="absolute top-1/2 left-0 w-full h-24 hidden lg:block -mt-12"
               style={{ zIndex: 0 }}
             >
-              <path
+              <motion.path
                 className="flow-path"
                 d="M 20 36 H 180 C 200 36 200 60 220 60 H 380 C 400 60 400 36 420 36 H 580 C 600 36 600 60 620 60 H 780 C 800 60 800 36 820 36 H 980"
                 stroke="#b91c1c"
                 strokeWidth="6"
                 fill="none"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 2, ease: "easeInOut" }}
               />
               {howItWorksSteps.map((_, index) => (
                 <g key={index}>
-                  <circle
+                  <motion.circle
                     cx={20 + index * 200}
                     cy={36}
                     r="8"
                     fill="#b91c1c"
                     className={activeFlowStep === index ? "flow-arrow" : ""}
+                    animate={activeFlowStep === index ? { scale: [1, 1.2, 1] } : {}}
+                    transition={{ duration: 0.5 }}
                   />
                   <path
-                    d={`M ${20 + index * 200 + 8} 36 L ${
-                      20 + index * 200 + 20
-                    } 36 L ${20 + index * 200 + 14} 30 M ${
-                      20 + index * 200 + 20
-                    } 36 L ${20 + index * 200 + 14} 42`}
+                    d={`M ${20 + index * 200 + 8} 36 L ${20 + index * 200 + 20} 36 L ${20 + index * 200 + 14} 30 M ${20 + index * 200 + 20} 36 L ${20 + index * 200 + 14} 42`}
                     stroke="#b91c1c"
                     strokeWidth="3"
                     fill="none"
@@ -781,420 +851,503 @@ const BloodChainLanding = () => {
                 </g>
               ))}
             </svg>
-            <div className="relative flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8">
+            <motion.div 
+              className="relative flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8"
+              variants={containerVariants}
+            >
               {howItWorksSteps.map((step, index) => (
-                <div
+                <motion.div
                   key={index}
-                  className={`relative w-full lg:w-[18%] text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in cursor-pointer z-10 ${
+                  className={`relative w-full lg:w-[18%] text-center p-4 sm:p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 backdrop-blur-sm z-10 cursor-pointer ${
                     activeFlowStep === index
                       ? "animate-flow-scale bg-gradient-to-r from-red-50 to-pink-50"
                       : ""
                   }`}
-                  style={{ animationDelay: `${index * 0.2}s` }}
-                  onMouseEnter={() => setActiveFlowStep(index)}
-                  onMouseLeave={() => setActiveFlowStep(null)}
+                  variants={itemVariants}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  onHoverStart={() => setActiveFlowStep(index)}
+                  onHoverEnd={() => setActiveFlowStep(null)}
                 >
-                  <img
+                  <motion.img
                     src={step.image}
                     alt={`${step.title} illustration`}
-                    className="w-full h-32 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-32 object-cover rounded-xl mb-4"
+                    whileHover={{ scale: 1.05 }}
                   />
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center">
+                  <motion.div 
+                    className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center"
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                  >
                     <step.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                  </div>
+                  </motion.div>
                   <div className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                     {index + 1}. {step.title}
                   </div>
                   <p className="text-sm sm:text-base text-gray-600">
                     {step.description}
                   </p>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Benefits by Role Section */}
-      <section id="benefits" className="py-12 sm:py-16 lg:py-20 bg-white">
+      {/* Benefits by Role with micro-interactions */}
+      <motion.section 
+        id="benefits" 
+        className="py-12 sm:py-16 lg:py-20 bg-white"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Benefits for <span className="text-red-600">Every Role</span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Tailored solutions for stakeholders in the blood donation
-              ecosystem.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+            <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Benefits for <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">Every Role</span>
+            </motion.h2>
+            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+              Tailored solutions for stakeholders in the blood donation ecosystem.
+            </motion.p>
+          </motion.div>
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
+            variants={containerVariants}
+          >
             {roleBenefits.map((role, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="group p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in border border-gray-100"
-                style={{ animationDelay: `${index * 0.2}s` }}
+                className="group p-4 sm:p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 backdrop-blur-sm"
+                variants={itemVariants}
+                whileHover={{ y: -10 }}
               >
-                <img
+                <motion.img
                   src={role.image}
                   alt={`${role.role} illustration`}
-                  className="w-full h-32 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-32 object-cover rounded-xl mb-4"
+                  whileHover={{ scale: 1.05 }}
                 />
-                <role.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
+                <motion.div whileHover={{ scale: 1.1, rotate: 5 }}>
+                  <role.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
+                </motion.div>
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 text-center">
                   {role.role}
                 </h3>
                 <ul className="list-none text-sm sm:text-base text-gray-600 space-y-3">
                   {role.benefits.map((benefit, i) => (
-                    <li key={i} className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-red-600 mr-2 mt-1" />
+                    <motion.li 
+                      key={i} 
+                      className="flex items-start"
+                      initial={{ x: -20, opacity: 0 }}
+                      whileInView={{ x: 0, opacity: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <CheckCircle className="w-5 h-5 text-red-600 mr-2 mt-1 flex-shrink-0" />
                       <span>{benefit}</span>
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Features Section */}
-      <section id="features" className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+      {/* Features with gradient overlays and hovers */}
+      <motion.section 
+        id="features" 
+        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Why <span className="text-red-600">BloodChain</span>?
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Advanced blockchain solutions for trust and efficiency in blood
-              management.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+            <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Why <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">BloodChain</span>?
+            </motion.h2>
+            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+              Advanced blockchain solutions for trust and efficiency in blood management.
+            </motion.p>
+          </motion.div>
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
+            variants={containerVariants}
+          >
             {features.map((feature, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="group relative bg-white rounded-xl p-6 sm:p-8 shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100 overflow-hidden animate-fade-in"
-                style={{ animationDelay: `${index * 0.2}s` }}
+                className="group relative bg-white rounded-2xl p-6 sm:p-8 shadow-md hover:shadow-2xl transition-all duration-700 border border-gray-100/50 overflow-hidden backdrop-blur-sm"
+                variants={itemVariants}
+                whileHover={{ y: -10, scale: 1.02 }}
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-10`}
-                  ></div>
-                </div>
-                <img
+                <motion.div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-700"
+                  style={{ background: `linear-gradient(to right, ${feature.gradient})` }}
+                />
+                <motion.img
                   src={feature.image}
                   alt={feature.title}
-                  className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-40 object-cover rounded-xl mb-4 relative z-10"
+                  whileHover={{ scale: 1.05 }}
                 />
-                <div
-                  className={`relative w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r ${feature.gradient} rounded-lg flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300`}
+                <motion.div
+                  className={`relative z-10 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300`}
+                  whileHover={{ rotate: 5 }}
                 >
                   <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 group-hover:text-red-600 transition-colors">
+                </motion.div>
+                <motion.h3 
+                  className="text-lg sm:text-xl font-bold text-gray-900 mb-4 relative z-10 group-hover:text-red-600 transition-colors"
+                  whileHover={{ color: "#b91c1c" }}
+                >
                   {feature.title}
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                </motion.h3>
+                <motion.p 
+                  className="text-sm sm:text-base text-gray-600 leading-relaxed relative z-10"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                >
                   {feature.description}
-                </p>
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              </div>
+                </motion.p>
+                <motion.div 
+                  className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 relative z-10"
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Technology Stack */}
-      <section id="technology" className="py-12 sm:py-16 lg:py-20 bg-white">
+      {/* Technology Stack with tooltips and enhanced grid */}
+      <motion.section 
+        id="technology" 
+        className="py-12 sm:py-16 lg:py-20 bg-white"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Powered by <span className="text-red-600">Innovation</span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+            <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Powered by <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">Innovation</span>
+            </motion.h2>
+            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
               A robust tech stack ensuring security and scalability.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
+            </motion.p>
+          </motion.div>
+          <motion.div 
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16"
+            variants={containerVariants}
+          >
             {techStack.map((tech, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="group relative text-center p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className="group relative text-center p-4 sm:p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 backdrop-blur-sm"
+                variants={itemVariants}
+                whileHover={{ y: -5, scale: 1.05 }}
               >
-                <img
+                <motion.img
                   src={tech.image}
                   alt={tech.name}
-                  className="w-full h-24 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-24 object-cover rounded-xl mb-4"
+                  whileHover={{ scale: 1.05 }}
                 />
-                <tech.icon
-                  className={`${tech.color} text-3xl sm:text-4xl mb-2 group-hover:scale-110 transition-transform`}
-                />
+                <motion.div 
+                  whileHover={{ scale: 1.2, rotate: 360 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <tech.icon className={`${tech.color} text-3xl sm:text-4xl mb-2 group-hover:scale-110 transition-transform`} />
+                </motion.div>
                 <div className="font-semibold text-sm sm:text-base text-gray-900">
                   {tech.name}
                 </div>
-                <div className="absolute inset-x-0 top-full mt-2 bg-gray-800 text-white text-xs sm:text-sm p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                <motion.div 
+                  className="absolute inset-x-0 top-full mt-2 bg-gray-900 text-white text-xs sm:text-sm p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg"
+                  initial={{ y: 10, opacity: 0 }}
+                  whileHover={{ y: 0, opacity: 1 }}
+                >
                   {tech.description}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             ))}
-          </div>
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 sm:p-8 lg:p-12 text-white animate-fade-in">
-            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-8">
+          </motion.div>
+          <motion.div 
+            className="bg-gradient-to-r from-gray-900 via-gray-800 to-black rounded-3xl p-6 sm:p-8 lg:p-12 text-white overflow-hidden"
+            variants={itemVariants}
+          >
+            <motion.h3 
+              className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-8"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+            >
               System Architecture
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-              <div className="text-center">
-                <img
-                  src="https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="Blockchain Layer"
-                  className="w-full h-32 object-cover rounded-lg mb-4"
-                />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
-                  <Database className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-                <h4 className="font-bold text-lg mb-2">Blockchain Layer</h4>
-                <p className="text-gray-200 text-sm sm:text-base">
-                  Ethereum smart contracts for immutable records.
-                </p>
-              </div>
-              <div className="text-center">
-                <img
-                  src="https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="Storage Layer"
-                  className="w-full h-32 object-cover rounded-lg mb-4"
-                />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
-                  <Globe className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-                <h4 className="font-bold text-lg mb-2">Storage Layer</h4>
-                <p className="text-gray-200 text-sm sm:text-base">
-                  IPFS for decentralized, secure document storage.
-                </p>
-              </div>
-              <div className="text-center">
-                <img
-                  src="https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400"
-                  alt="Application Layer"
-                  className="w-full h-32 object-cover rounded-lg mb-4"
-                />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-red-600 rounded-full flex items-center justify-center">
-                  <Shield className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-                <h4 className="font-bold text-lg mb-2">Application Layer</h4>
-                <p className="text-gray-200 text-sm sm:text-base">
-                  MERN stack for scalable, secure interfaces.
-                </p>
-              </div>
-            </div>
-          </div>
+            </motion.h3>
+            <motion.div 
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
+              variants={containerVariants}
+            >
+              {[
+                { title: "Blockchain Layer", icon: Database, desc: "Ethereum smart contracts for immutable records.", img: "https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400" },
+                { title: "Storage Layer", icon: Globe, desc: "IPFS for decentralized, secure document storage.", img: "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400" },
+                { title: "Application Layer", icon: Shield, desc: "MERN stack for scalable, secure interfaces.", img: "https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400" },
+              ].map((layer, i) => (
+                <motion.div 
+                  key={i} 
+                  className="text-center group"
+                  variants={itemVariants}
+                  whileHover={{ y: -5 }}
+                >
+                  <motion.img
+                    src={layer.img}
+                    alt={layer.title}
+                    className="w-full h-32 object-cover rounded-xl mb-4"
+                    whileHover={{ scale: 1.05 }}
+                  />
+                  <motion.div 
+                    className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <layer.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                  </motion.div>
+                  <h4 className="font-bold text-lg mb-2">{layer.title}</h4>
+                  <p className="text-gray-200 text-sm sm:text-base">{layer.desc}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Testimonials Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-              Trusted by{" "}
-              <span className="text-red-400">Healthcare Leaders</span>
-            </h2>
-          </div>
-          <div className="relative max-w-4xl mx-auto overflow-hidden animate-fade-in">
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${activeTestimonial * 100}%)` }}
+      {/* Testimonials with smooth sliding and neon accents */}
+      <motion.section 
+        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-red-900/20 to-pink-900/20"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div className="text-center mb-12 sm:mb-16" variants={itemVariants}>
+            <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
+              Trusted by <span className="text-red-400 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">Healthcare Leaders</span>
+            </motion.h2>
+          </motion.div>
+          <motion.div 
+            className="relative max-w-4xl mx-auto overflow-hidden"
+            variants={itemVariants}
+          >
+            <motion.div
+              className="flex"
+              key={activeTestimonial}
+              initial={{ x: 100 }}
+              animate={{ x: 0 }}
+              exit={{ x: -100 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
             >
               {testimonials.map((test, index) => (
                 <div key={index} className="min-w-full flex justify-center">
-                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 sm:p-8 lg:p-12 text-center max-w-lg shadow-lg">
-                    <img
+                  <motion.div 
+                    className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 sm:p-8 lg:p-12 text-center max-w-lg shadow-2xl border border-white/20"
+                    whileHover={{ scale: 1.02, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
+                  >
+                    <motion.img
                       src={test.avatar}
                       alt={test.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto mb-6 object-cover"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto mb-6 object-cover border-4 border-red-400/30"
+                      whileHover={{ scale: 1.1, rotate: 10 }}
                     />
-                    <blockquote className="text-base sm:text-lg lg:text-xl mb-6 italic text-gray-200">
+                    <motion.blockquote 
+                      className="text-base sm:text-lg lg:text-xl mb-6 italic text-gray-200"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                    >
                       "{test.content}"
-                    </blockquote>
+                    </motion.blockquote>
                     <div className="font-bold text-lg sm:text-xl text-white">
                       {test.name}
                     </div>
-                    <div className="text-red-400 text-sm sm:text-base">
+                    <div className="text-red-400 text-sm sm:text-base font-semibold">
                       {test.role}
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               ))}
-            </div>
-            <div className="flex justify-center mt-6 sm:mt-8 space-x-2">
+            </motion.div>
+            <motion.div className="flex justify-center mt-6 sm:mt-8 space-x-2" variants={itemVariants}>
               {testimonials.map((_, index) => (
-                <button
+                <motion.button
                   key={index}
                   onClick={() => setActiveTestimonial(index)}
-                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
+                  className={`rounded-full transition-all duration-300 ${
                     index === activeTestimonial
-                      ? "bg-red-500 w-6 sm:w-8"
-                      : "bg-white/30"
+                      ? "bg-red-500 w-6 sm:w-8 shadow-lg shadow-red-500/50"
+                      : "bg-white/30 hover:bg-white/50"
                   }`}
+                  whileHover={{ scale: 1.3 }}
+                  whileTap={{ scale: 0.9 }}
                   aria-label={`View testimonial ${index + 1}`}
-                ></button>
+                >
+                  <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-current ${index === activeTestimonial ? 'w-6 sm:w-8' : ''}`}></div>
+                </motion.button>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* CTA Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-red-600 to-pink-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
+      {/* CTA with bold contrasts and neon glow */}
+      <motion.section 
+        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-red-600 via-pink-500 to-red-800 text-white relative"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+      >
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <motion.h2 
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
+            variants={itemVariants}
+          >
             Join the Life-Saving Revolution
-          </h2>
-          <p className="text-base sm:text-lg lg:text-xl mb-8 max-w-3xl mx-auto opacity-90">
-            Empower blood donation with secure, transparent blockchain
-            technology.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
+          </motion.h2>
+          <motion.p 
+            className="text-base sm:text-lg lg:text-xl mb-8 max-w-3xl mx-auto opacity-90"
+            variants={itemVariants}
+          >
+            Empower blood donation with secure, transparent blockchain technology.
+          </motion.p>
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            variants={itemVariants}
+          >
+            <motion.a
               href="/signup"
-              className="bg-white text-red-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow"
+              className="bg-white text-red-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform transition-all duration-300 flex items-center justify-center space-x-2 animate-pulse-glow shadow-2xl shadow-white/20"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
               aria-label="Become a donor"
             >
               <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
               <span>Become a Donor</span>
-            </a>
-            <a
+            </motion.a>
+            <motion.a
               href="/contact"
-              className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2"
+              className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform transition-all duration-300 flex items-center justify-center space-x-2 shadow-2xl shadow-white/20"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
               aria-label="Partner with us"
             >
               <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
               <span>Partner with Us</span>
-            </a>
-          </div>
+            </motion.a>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Back to Top Button */}
-      <button
+      {/* Back to Top with enhanced animation */}
+      <motion.button
         className={`fixed bottom-6 right-6 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 ${
           scrollY > 300 ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        initial={{ scale: 0 }}
+        animate={{ scale: scrollY > 300 ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
         aria-label="Scroll to top"
+        whileHover={{ scale: 1.1, rotate: 360 }}
       >
         <ArrowUp className="w-6 h-6" />
-      </button>
+      </motion.button>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
+      {/* Footer with subtle gradients */}
+      <motion.footer 
+        className="bg-gradient-to-r from-gray-900 to-black text-white py-12 relative overflow-hidden"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 to-pink-900/5"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8"
+            variants={containerVariants}
+          >
+            <motion.div variants={itemVariants}>
+              <motion.div className="flex items-center space-x-2 mb-4" whileHover={{ scale: 1.02 }}>
                 <Heart className="w-8 h-8 text-red-600" />
-                <span className="text-xl sm:text-2xl font-bold">
-                  BloodChain
-                </span>
-              </div>
+                <span className="text-xl sm:text-2xl font-bold">BloodChain</span>
+              </motion.div>
               <p className="text-gray-400 text-sm sm:text-base">
                 Revolutionizing blood management with blockchain technology.
               </p>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div variants={itemVariants}>
               <h4 className="font-bold text-lg mb-4">Platform</h4>
               <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                <li>
-                  <a href="/donors" className="hover:text-white">
-                    For Donors
-                  </a>
-                </li>
-                <li>
-                  <a href="/blood-banks" className="hover:text-white">
-                    For Blood Banks
-                  </a>
-                </li>
-                <li>
-                  <a href="/hospitals" className="hover:text-white">
-                    For Hospitals
-                  </a>
-                </li>
-                <li>
-                  <a href="/api" className="hover:text-white">
-                    API Access
-                  </a>
-                </li>
+                {["For Donors", "For Blood Banks", "For Hospitals", "API Access"].map((item) => (
+                  <motion.li key={item}>
+                    <a href="/" className="hover:text-red-400 transition-colors" whileHover={{ x: 5 }}>
+                      {item}
+                    </a>
+                  </motion.li>
+                ))}
               </ul>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div variants={itemVariants}>
               <h4 className="font-bold text-lg mb-4">Resources</h4>
               <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                <li>
-                  <a href="/docs" className="hover:text-white">
-                    Documentation
-                  </a>
-                </li>
-                <li>
-                  <a href="/whitepaper" className="hover:text-white">
-                    White Paper
-                  </a>
-                </li>
-                <li>
-                  <a href="/help" className="hover:text-white">
-                    Help Center
-                  </a>
-                </li>
-                <li>
-                  <a href="/community" className="hover:text-white">
-                    Community
-                  </a>
-                </li>
+                {["Documentation", "White Paper", "Help Center", "Community"].map((item) => (
+                  <motion.li key={item}>
+                    <a href="/" className="hover:text-red-400 transition-colors" whileHover={{ x: 5 }}>
+                      {item}
+                    </a>
+                  </motion.li>
+                ))}
               </ul>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div variants={itemVariants}>
               <h4 className="font-bold text-lg mb-4">Contact</h4>
               <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
-                <li>
-                  <a
-                    href="mailto:hello@bloodchain.org"
-                    className="hover:text-white"
-                  >
-                    hello@bloodchain.org
-                  </a>
-                </li>
-                <li>
-                  <a href="tel:+15551234567" className="hover:text-white">
-                    +1 (555) 123-4567
-                  </a>
-                </li>
-                <li>
-                  <a href="https://twitter.com" className="hover:text-white">
-                    Twitter
-                  </a>
-                </li>
-                <li>
-                  <a href="https://linkedin.com" className="hover:text-white">
-                    LinkedIn
-                  </a>
-                </li>
+                {[
+                  { href: "mailto:hello@bloodchain.org", text: "hello@bloodchain.org" },
+                  { href: "tel:+15551234567", text: "+1 (555) 123-4567" },
+                  { href: "https://twitter.com", text: "Twitter" },
+                  { href: "https://linkedin.com", text: "LinkedIn" },
+                ].map((item, i) => (
+                  <motion.li key={i}>
+                    <a href={item.href} className="hover:text-red-400 transition-colors" whileHover={{ x: 5 }}>
+                      {item.text}
+                    </a>
+                  </motion.li>
+                ))}
               </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-gray-400 text-sm sm:text-base">
+            </motion.div>
+          </motion.div>
+          <motion.div 
+            className="border-t border-gray-800 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-gray-400 text-sm sm:text-base"
+            variants={itemVariants}
+          >
             <p>
-              &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for
-              humanity.{" "}
-              <a href="/privacy" className="hover:text-white">
+              &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for humanity.{" "}
+              <a href="/privacy" className="hover:text-red-400" whileHover={{ underline: "always" }}>
                 Privacy Policy
               </a>{" "}
               |{" "}
-              <a href="/terms" className="hover:text-white">
+              <a href="/terms" className="hover:text-red-400" whileHover={{ underline: "always" }}>
                 Terms of Service
               </a>
             </p>
-          </div>
+          </motion.div>
         </div>
-      </footer>
+      </motion.footer>
     </div>
   );
 };
