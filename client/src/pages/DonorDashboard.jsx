@@ -23,6 +23,7 @@ import {
   BookOpen,
   ChevronUp,
   ChevronDown,
+  CheckCircle,
 } from "lucide-react";
 import Header from "../components/Header";
 import BloodDroplet from "../components/BloodDroplet";
