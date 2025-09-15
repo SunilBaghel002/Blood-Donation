@@ -215,7 +215,9 @@ const authMiddleware = async (req, res, next) => {
 // Admin Role Middleware
 const adminMiddleware = async (req, res, next) => {
   if (req.userRole !== "Admin") {
-    return res.status(403).json({ error: "Access denied: Admin role required" });
+    return res
+      .status(403)
+      .json({ error: "Access denied: Admin role required" });
   }
   next();
 };
@@ -259,7 +261,8 @@ app.post("/api/auth/signup", async (req, res) => {
       role,
       otp,
       otpExpires,
-      adminInfo: role === "Admin" ? { name: `${firstName} ${lastName}` } : undefined,
+      adminInfo:
+        role === "Admin" ? { name: `${firstName} ${lastName}` } : undefined,
     });
     await user.save();
     await sendOTPEmail(email, otp);
@@ -409,7 +412,9 @@ app.post("/api/auth/submit-questionnaire", async (req, res) => {
     } else if (role === "Admin") {
       const { contactNumber } = questionnaire;
       if (!contactNumber) {
-        return res.status(400).json({ error: "Contact number is required for admin" });
+        return res
+          .status(400)
+          .json({ error: "Contact number is required for admin" });
       }
       user.adminInfo = {
         ...user.adminInfo,
@@ -524,162 +529,217 @@ app.post("/api/auth/connect-wallet", authMiddleware, async (req, res) => {
 });
 
 // Admin Routes
-app.get("/api/admin/users", authMiddleware, adminMiddleware, async (req, res) => {
-  try {
-    const users = await User.find().select(
-      "-password -otp -otpExpires"
-    );
-    res.status(200).json({ users });
-  } catch (error) {
-    console.error("Get all users error:", error);
-    res.status(500).json({ error: "Server error" });
+app.get(
+  "/api/admin/users",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const users = await User.find().select("-password -otp -otpExpires");
+      res.status(200).json({ users });
+    } catch (error) {
+      console.error("Get all users error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
-app.put("/api/admin/users/:id", authMiddleware, adminMiddleware, async (req, res) => {
-  const { id } = req.params;
-  const { firstName, lastName, email, role, donorInfo, hospitalInfo, bloodBankInfo, adminInfo } = req.body;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
+app.put(
+  "/api/admin/users/:id",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    const { id } = req.params;
+    const {
+      firstName,
+      lastName,
+      email,
+      role,
+      donorInfo,
+      hospitalInfo,
+      bloodBankInfo,
+      adminInfo,
+    } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+    try {
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      if (email && email !== user.email) {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          return res.status(400).json({ error: "Email already in use" });
+        }
+        user.email = email;
+      }
+      if (role && !["Donor", "Hospital", "BloodBank", "Admin"].includes(role)) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+      if (role === "Donor" || role === "Admin") {
+        if (!firstName || !lastName) {
+          return res
+            .status(400)
+            .json({ error: "First name and last name are required" });
+        }
+        user.firstName = firstName;
+        user.lastName = lastName;
+      }
+      if (role) user.role = role;
+      if (donorInfo) {
+        if (
+          donorInfo.bloodGroup &&
+          !["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(
+            donorInfo.bloodGroup
+          )
+        ) {
+          return res.status(400).json({ error: "Invalid blood group" });
+        }
+        user.donorInfo = {
+          ...user.donorInfo,
+          ...donorInfo,
+          donationCount:
+            Number(donorInfo.donationCount) ||
+            user.donorInfo.donationCount ||
+            0,
+          lastDonationDate: donorInfo.lastDonationDate
+            ? new Date(donorInfo.lastDonationDate)
+            : user.donorInfo.lastDonationDate,
+          rewards: user.donorInfo.rewards || { points: 0, badges: [] },
+        };
+      }
+      if (hospitalInfo) {
+        if (
+          !hospitalInfo.name ||
+          !hospitalInfo.location ||
+          !hospitalInfo.bedCount ||
+          !hospitalInfo.contactNumber
+        ) {
+          return res
+            .status(400)
+            .json({ error: "All hospital fields are required" });
+        }
+        user.hospitalInfo = {
+          ...user.hospitalInfo,
+          ...hospitalInfo,
+          bedCount: Number(hospitalInfo.bedCount),
+        };
+      }
+      if (bloodBankInfo) {
+        if (
+          !bloodBankInfo.name ||
+          !bloodBankInfo.location ||
+          !bloodBankInfo.bloodStorageCapacity ||
+          !bloodBankInfo.contactNumber
+        ) {
+          return res
+            .status(400)
+            .json({ error: "All blood bank fields are required" });
+        }
+        user.bloodBankInfo = {
+          ...user.bloodBankInfo,
+          ...bloodBankInfo,
+          bloodStorageCapacity: Number(bloodBankInfo.bloodStorageCapacity),
+        };
+      }
+      if (adminInfo) {
+        if (!adminInfo.contactNumber) {
+          return res
+            .status(400)
+            .json({ error: "Contact number is required for admin" });
+        }
+        user.adminInfo = {
+          ...user.adminInfo,
+          ...adminInfo,
+          name: user.adminInfo?.name || `${firstName} ${lastName}`,
+        };
+      }
+      await user.save();
+      res.status(200).json({ message: "User updated successfully", user });
+    } catch (error) {
+      console.error("Update user error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
   }
-  try {
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ error: "Email already in use" });
-      }
-      user.email = email;
-    }
-    if (role && !["Donor", "Hospital", "BloodBank", "Admin"].includes(role)) {
-      return res.status(400).json({ error: "Invalid role" });
-    }
-    if (role === "Donor" || role === "Admin") {
-      if (!firstName || !lastName) {
-        return res.status(400).json({ error: "First name and last name are required" });
-      }
-      user.firstName = firstName;
-      user.lastName = lastName;
-    }
-    if (role) user.role = role;
-    if (donorInfo) {
-      if (
-        donorInfo.bloodGroup &&
-        !["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(donorInfo.bloodGroup)
-      ) {
-        return res.status(400).json({ error: "Invalid blood group" });
-      }
-      user.donorInfo = {
-        ...user.donorInfo,
-        ...donorInfo,
-        donationCount: Number(donorInfo.donationCount) || user.donorInfo.donationCount || 0,
-        lastDonationDate: donorInfo.lastDonationDate
-          ? new Date(donorInfo.lastDonationDate)
-          : user.donorInfo.lastDonationDate,
-        rewards: user.donorInfo.rewards || { points: 0, badges: [] },
-      };
-    }
-    if (hospitalInfo) {
-      if (!hospitalInfo.name || !hospitalInfo.location || !hospitalInfo.bedCount || !hospitalInfo.contactNumber) {
-        return res.status(400).json({ error: "All hospital fields are required" });
-      }
-      user.hospitalInfo = {
-        ...user.hospitalInfo,
-        ...hospitalInfo,
-        bedCount: Number(hospitalInfo.bedCount),
-      };
-    }
-    if (bloodBankInfo) {
-      if (
-        !bloodBankInfo.name ||
-        !bloodBankInfo.location ||
-        !bloodBankInfo.bloodStorageCapacity ||
-        !bloodBankInfo.contactNumber
-      ) {
-        return res.status(400).json({ error: "All blood bank fields are required" });
-      }
-      user.bloodBankInfo = {
-        ...user.bloodBankInfo,
-        ...bloodBankInfo,
-        bloodStorageCapacity: Number(bloodBankInfo.bloodStorageCapacity),
-      };
-    }
-    if (adminInfo) {
-      if (!adminInfo.contactNumber) {
-        return res.status(400).json({ error: "Contact number is required for admin" });
-      }
-      user.adminInfo = {
-        ...user.adminInfo,
-        ...adminInfo,
-        name: user.adminInfo?.name || `${firstName} ${lastName}`,
-      };
-    }
-    await user.save();
-    res.status(200).json({ message: "User updated successfully", user });
-  } catch (error) {
-    console.error("Update user error:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
+);
 
-app.delete("/api/admin/users/:id", authMiddleware, adminMiddleware, async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: "Invalid user ID" });
-  }
-  try {
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+app.delete(
+  "/api/admin/users/:id",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid user ID" });
     }
-    await User.deleteOne({ _id: id });
-    res.status(200).json({ message: "User deleted successfully" });
-  } catch (error) {
-    console.error("Delete user error:", error);
-    res.status(500).json({ error: "Server error" });
+    try {
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      await User.deleteOne({ _id: id });
+      res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Delete user error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
-app.get("/api/admin/inventory", authMiddleware, adminMiddleware, async (req, res) => {
-  try {
-    const inventory = await BloodInventory.find().populate(
-      "bloodBankId",
-      "bloodBankInfo.name"
-    );
-    res.status(200).json({ inventory });
-  } catch (error) {
-    console.error("Get all inventory error:", error);
-    res.status(500).json({ error: "Server error" });
+app.get(
+  "/api/admin/inventory",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const inventory = await BloodInventory.find().populate(
+        "bloodBankId",
+        "bloodBankInfo.name"
+      );
+      res.status(200).json({ inventory });
+    } catch (error) {
+      console.error("Get all inventory error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
-app.get("/api/admin/requests", authMiddleware, adminMiddleware, async (req, res) => {
-  try {
-    const requests = await Request.find()
-      .populate("hospitalId", "hospitalInfo.name")
-      .populate("bloodBankId", "bloodBankInfo.name");
-    res.status(200).json({ requests });
-  } catch (error) {
-    console.error("Get all requests error:", error);
-    res.status(500).json({ error: "Server error" });
+app.get(
+  "/api/admin/requests",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const requests = await Request.find()
+        .populate("hospitalId", "hospitalInfo.name")
+        .populate("bloodBankId", "bloodBankInfo.name");
+      res.status(200).json({ requests });
+    } catch (error) {
+      console.error("Get all requests error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
-app.get("/api/admin/transactions", authMiddleware, adminMiddleware, async (req, res) => {
-  try {
-    const transactions = await Transaction.find()
-      .populate("donorId", "firstName lastName")
-      .populate("hospitalId", "hospitalInfo.name")
-      .populate("bloodBankId", "bloodBankInfo.name");
-    res.status(200).json({ transactions });
-  } catch (error) {
-    console.error("Get all transactions error:", error);
-    res.status(500).json({ error: "Server error" });
+app.get(
+  "/api/admin/transactions",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const transactions = await Transaction.find()
+        .populate("donorId", "firstName lastName")
+        .populate("hospitalId", "hospitalInfo.name")
+        .populate("bloodBankId", "bloodBankInfo.name");
+      res.status(200).json({ transactions });
+    } catch (error) {
+      console.error("Get all transactions error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
 // Blood Bank Routes
 app.get("/api/bloodbank/donors", authMiddleware, async (req, res) => {
