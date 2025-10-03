@@ -223,7 +223,7 @@ const Commitment = mongoose.model("Commitment", commitmentSchema);
 const Event = mongoose.model("Event", eventSchema);
 
 // Nodemailer Setup
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
     user: process.env.EMAIL_USER,
