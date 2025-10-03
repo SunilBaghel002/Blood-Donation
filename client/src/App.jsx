@@ -14,6 +14,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const FutureScopes = lazy(() => import("./pages/FutureScopes"));
+const EmergencyBloodDonationPortal = lazy(() => import("./pages/EmergencyDashboard"));
 
 // Protected Route component to handle authentication and role-based access
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -73,6 +74,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/future-scopes" element={<FutureScopes />} />
+          <Route path="/EmergencyBloodDonationPortal" element={<EmergencyBloodDonationPortal />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
