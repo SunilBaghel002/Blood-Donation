@@ -41,61 +41,11 @@ const HospitalEmergencyDashboard = () => {
   const [filterSeverity, setFilterSeverity] = useState("all");
   const [sortBy, setSortBy] = useState("createdAt");
   const [isLoading, setIsLoading] = useState(false);
-
-  const [campaigns, setCampaigns] = useState([
-    {
-      id: 1,
-      title: "Earthquake Relief - Gujarat",
-      status: "active",
-      severity: "critical",
-      unitsNeeded: 450,
-      unitsReceived: 180,
-      unitsCommitted: 95,
-      location: "Civil Hospital, Gujarat",
-      createdAt: "2 hours ago",
-      deadline: "24 hours",
-      bloodTypes: ["O+", "O-", "A+", "B+"],
-      description:
-        "Major earthquake aftermath requiring immediate blood supply for trauma care",
-      donors: 45,
-      blockchainId: "0x7a89f...3d2c1",
-      verified: true,
-    },
-    {
-      id: 2,
-      title: "Flood Emergency - Mumbai",
-      status: "active",
-      severity: "high",
-      unitsNeeded: 280,
-      unitsReceived: 95,
-      unitsCommitted: 60,
-      location: "Lilavati Hospital, Mumbai",
-      createdAt: "5 hours ago",
-      deadline: "48 hours",
-      bloodTypes: ["O+", "A+", "AB+"],
-      description: "Flash floods affecting multiple areas",
-      donors: 32,
-      blockchainId: "0x9b12c...5e4a3",
-      verified: true,
-    },
-    {
-      id: 3,
-      title: "Building Collapse - Delhi",
-      status: "completed",
-      severity: "medium",
-      unitsNeeded: 120,
-      unitsReceived: 125,
-      unitsCommitted: 0,
-      location: "AIIMS, Delhi",
-      createdAt: "1 day ago",
-      deadline: "Completed",
-      bloodTypes: ["B+", "O+", "A-"],
-      description: "Building collapse rescue operation successfully completed",
-      donors: 28,
-      blockchainId: "0x4c56b...7f9d2",
-      verified: true,
-    },
-  ]);
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [campaigns, setCampaigns] = useState([]);
+  const [stats, setStats] = useState({});
+  const [timelineEvents, setTimelineEvents] = useState([]);
+  const [analytics, setAnalytics] = useState({});
 
   const [newCampaign, setNewCampaign] = useState({
     title: "",
@@ -111,76 +61,71 @@ const HospitalEmergencyDashboard = () => {
 
   const bloodTypes = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
 
-  const timelineEvents = [
-    {
-      id: 1,
-      type: "campaign",
-      title: "New Emergency Campaign",
-      desc: "Gujarat Earthquake Relief activated",
-      time: "2h ago",
-      status: "critical",
-      icon: AlertTriangle,
-    },
-    {
-      id: 2,
-      type: "donation",
-      title: "50 Units Received",
-      desc: "Blood Bank donated O+ units",
-      time: "3h ago",
-      status: "success",
-      icon: Droplet,
-    },
-    {
-      id: 3,
-      type: "milestone",
-      title: "Campaign 50% Complete",
-      desc: "Mumbai Relief reached halfway",
-      time: "4h ago",
-      status: "info",
-      icon: Target,
-    },
-    {
-      id: 4,
-      type: "complete",
-      title: "Campaign Completed",
-      desc: "Delhi operation successful",
-      time: "1d ago",
-      status: "success",
-      icon: Award,
-    },
-    {
-      id: 5,
-      type: "verify",
-      title: "Blockchain Verified",
-      desc: "All transactions recorded",
-      time: "1d ago",
-      status: "info",
-      icon: Shield,
-    },
-  ];
-
   useEffect(() => {
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      setCampaigns((prev) =>
-        prev.map((campaign) => {
-          if (campaign.status === "active" && Math.random() > 0.8) {
-            return {
-              ...campaign,
-              unitsReceived: Math.min(
-                campaign.unitsNeeded,
-                campaign.unitsReceived + Math.floor(Math.random() * 10)
-              ),
-              donors: campaign.donors + Math.floor(Math.random() * 2),
-            };
-          }
-          return campaign;
-        })
-      );
-    }, 30000); // Update every 30 seconds
+    if (!token) {
+      // Redirect to login or handle auth
+      console.log("No token, please login");
+      return;
+    }
+    fetchCampaigns();
+    fetchStats();
+    fetchTimeline();
+    fetchAnalytics();
+  }, [token]);
 
-    return () => clearInterval(interval);
-  }, []);
+  const fetchCampaigns = async () => {
+    try {
+      const res = await fetch("/api/hospital/campaigns", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const { campaigns } = await res.json();
+        setCampaigns(campaigns);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/hospital/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setStats(await res.json());
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchTimeline = async () => {
+    try {
+      const res = await fetch("/api/hospital/timeline", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const { timelineEvents } = await res.json();
+        setTimelineEvents(timelineEvents);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const res = await fetch("/api/hospital/analytics", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setAnalytics(await res.json());
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -203,40 +148,76 @@ const HospitalEmergencyDashboard = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleCreateCampaign = () => {
+  const handleCreateCampaign = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    setTimeout(() => {
-      const newId = campaigns.length + 1;
-      const createdCampaign = {
-        id: newId,
-        ...newCampaign,
-        status: "active",
-        unitsReceived: 0,
-        unitsCommitted: 0,
-        createdAt: "Just now",
-        donors: 0,
-        blockchainId: `0x${Math.random()
-          .toString(16)
-          .substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`,
-        verified: false,
-        unitsNeeded: parseInt(newCampaign.unitsNeeded),
-      };
-      setCampaigns([createdCampaign, ...campaigns]);
-      setShowCreateModal(false);
-      setNewCampaign({
-        title: "",
-        severity: "high",
-        unitsNeeded: "",
-        location: "",
-        deadline: "",
-        bloodTypes: [],
-        description: "",
+    try {
+      const res = await fetch("/api/hospital/campaigns", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newCampaign),
       });
-      setErrors({});
+      if (res.ok) {
+        const { campaign } = await res.json();
+        setCampaigns([campaign, ...campaigns]);
+        setShowCreateModal(false);
+        setNewCampaign({
+          title: "",
+          severity: "high",
+          unitsNeeded: "",
+          location: "",
+          deadline: "",
+          bloodTypes: [],
+          description: "",
+        });
+        setErrors({});
+        fetchStats(); // Refresh stats
+      } else {
+        const err = await res.json();
+        console.error(err);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  const handleUpdateCampaign = async (id, updates) => {
+    try {
+      const res = await fetch(`/api/hospital/campaigns/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        fetchCampaigns(); // Refresh list
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteCampaign = async (id) => {
+    try {
+      const res = await fetch(`/api/hospital/campaigns/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setCampaigns(campaigns.filter((c) => c._id !== id));
+        fetchStats();
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const toggleBloodType = (type) => {
@@ -354,37 +335,37 @@ const HospitalEmergencyDashboard = () => {
             {[
               {
                 label: "Active",
-                value: "2",
+                value: stats.active || "0",
                 icon: Radio,
                 gradient: "from-red-500 to-orange-500",
               },
               {
                 label: "Required",
-                value: "730",
+                value: stats.required || "0",
                 icon: Target,
                 gradient: "from-blue-500 to-cyan-500",
               },
               {
                 label: "Received",
-                value: "275",
+                value: stats.received || "0",
                 icon: Droplet,
                 gradient: "from-green-500 to-emerald-500",
               },
               {
                 label: "Donors",
-                value: "77",
+                value: stats.donors || "0",
                 icon: Users,
                 gradient: "from-purple-500 to-pink-500",
               },
               {
                 label: "Completed",
-                value: "1",
+                value: stats.completed || "0",
                 icon: CheckCircle,
                 gradient: "from-teal-500 to-cyan-500",
               },
               {
                 label: "Verified",
-                value: "3",
+                value: stats.verified || "0",
                 icon: Shield,
                 gradient: "from-yellow-500 to-orange-500",
               },
@@ -487,7 +468,7 @@ const HospitalEmergencyDashboard = () => {
 
               {filteredCampaigns.map((campaign, idx) => (
                 <div
-                  key={campaign.id}
+                  key={campaign._id}
                   className="group relative animate-fadeInUp"
                   style={{ animationDelay: `${idx * 0.15}s` }}
                 >
@@ -535,7 +516,7 @@ const HospitalEmergencyDashboard = () => {
 
                         <h2
                           className="text-4xl font-bold text-white mb-3"
-                          id={`campaign-title-${campaign.id}`}
+                          id={`campaign-title-${campaign._id}`}
                         >
                           {campaign.title}
                         </h2>
@@ -547,7 +528,7 @@ const HospitalEmergencyDashboard = () => {
                           </span>
                           <span className="flex items-center text-base">
                             <Clock className="h-5 w-5 mr-2" />
-                            {campaign.createdAt}
+                            {new Date(campaign.createdAt).toLocaleString()}
                           </span>
                           <span className="flex items-center text-base">
                             <Users className="h-5 w-5 mr-2" />
@@ -567,12 +548,16 @@ const HospitalEmergencyDashboard = () => {
                         <button
                           className="p-3 hover:bg-white/10 rounded-xl transition-all"
                           aria-label="Edit campaign"
+                          onClick={() => {
+                            /* edit logic */
+                          }}
                         >
                           <Edit className="h-6 w-6 text-white" />
                         </button>
                         <button
                           className="p-3 hover:bg-red-500/20 rounded-xl transition-all"
                           aria-label="Delete campaign"
+                          onClick={() => handleDeleteCampaign(campaign._id)}
                         >
                           <Trash2 className="h-6 w-6 text-red-300" />
                         </button>
@@ -743,7 +728,7 @@ const HospitalEmergencyDashboard = () => {
                 <div className="space-y-8">
                   {timelineEvents.map((event, idx) => (
                     <div
-                      key={event.id}
+                      key={event._id}
                       className="relative pl-20 animate-fadeInLeft"
                       style={{ animationDelay: `${idx * 0.1}s` }}
                     >
@@ -756,7 +741,8 @@ const HospitalEmergencyDashboard = () => {
                             : "bg-gradient-to-br from-blue-500 to-cyan-600"
                         }`}
                       >
-                        <event.icon className="h-5 w-5 text-white" />
+                        {/* Icon based on event.icon */}
+                        <AlertTriangle className="h-5 w-5 text-white" />
                       </div>
                       <div className="bg-white/10 hover:bg-white/15 backdrop-blur-sm rounded-2xl p-6 border border-white/20 transition-all">
                         <div className="flex justify-between items-start mb-2">
@@ -785,17 +771,14 @@ const HospitalEmergencyDashboard = () => {
                     Campaign Progress
                   </h3>
                   <div className="space-y-6">
-                    {campaigns.map((c) => (
-                      <div key={c.id}>
+                    {analytics.campaignsProgress?.map((c) => (
+                      <div key={c._id}>
                         <div className="flex justify-between mb-2">
                           <span className="text-white font-semibold text-lg">
                             {c.title}
                           </span>
                           <span className="text-blue-200 text-lg">
-                            {Math.round(
-                              (c.unitsReceived / c.unitsNeeded) * 100
-                            )}
-                            %
+                            {c.progress}%
                           </span>
                         </div>
                         <div className="h-3 bg-white/20 rounded-full overflow-hidden">
@@ -803,15 +786,11 @@ const HospitalEmergencyDashboard = () => {
                             className={`h-full bg-gradient-to-r ${getSeverityColor(
                               c.severity
                             )} rounded-full`}
-                            style={{
-                              width: `${
-                                (c.unitsReceived / c.unitsNeeded) * 100
-                              }%`,
-                            }}
+                            style={{ width: `${c.progress}%` }}
                           ></div>
                         </div>
                       </div>
-                    ))}
+                    )) || []}
                   </div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20">
@@ -820,32 +799,7 @@ const HospitalEmergencyDashboard = () => {
                     Key Metrics
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[
-                      {
-                        label: "Total Donors",
-                        value: "77",
-                        trend: "+15%",
-                        color: "from-blue-500 to-cyan-600",
-                      },
-                      {
-                        label: "Avg Response",
-                        value: "2.3h",
-                        trend: "Fast",
-                        color: "from-purple-500 to-pink-600",
-                      },
-                      {
-                        label: "Success Rate",
-                        value: "94%",
-                        trend: "High",
-                        color: "from-green-500 to-emerald-600",
-                      },
-                      {
-                        label: "Active Now",
-                        value: "2",
-                        trend: "Live",
-                        color: "from-orange-500 to-red-600",
-                      },
-                    ].map((metric, i) => (
+                    {analytics.keyMetrics?.map((metric, i) => (
                       <div
                         key={i}
                         className={`bg-gradient-to-br ${metric.color} bg-opacity-20 backdrop-blur-sm rounded-2xl p-6 border border-white/20`}
@@ -860,7 +814,7 @@ const HospitalEmergencyDashboard = () => {
                           {metric.trend}
                         </div>
                       </div>
-                    ))}
+                    )) || []}
                   </div>
                 </div>
               </div>
@@ -870,12 +824,7 @@ const HospitalEmergencyDashboard = () => {
                   Blood Type Distribution
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {[
-                    { type: "O+", units: 96, percent: 35 },
-                    { type: "A+", units: 77, percent: 28 },
-                    { type: "B+", units: 55, percent: 20 },
-                    { type: "AB+", units: 47, percent: 17 },
-                  ].map((blood, i) => (
+                  {analytics.bloodDistribution?.map((blood, i) => (
                     <div
                       key={i}
                       className="text-center hover:scale-105 transition-transform"
@@ -896,7 +845,7 @@ const HospitalEmergencyDashboard = () => {
                         <div className="text-blue-300 text-sm">units</div>
                       </div>
                     </div>
-                  ))}
+                  )) || []}
                 </div>
               </div>
             </div>

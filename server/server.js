@@ -157,13 +157,73 @@ const transactionSchema = new mongoose.Schema({
   txHash: { type: String },
 });
 
+const campaignSchema = new mongoose.Schema({
+  hospitalId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  title: { type: String, required: true },
+  status: { type: String, enum: ["active", "completed"], default: "active" },
+  severity: {
+    type: String,
+    enum: ["critical", "high", "medium"],
+    required: true,
+  },
+  unitsNeeded: { type: Number, required: true },
+  unitsReceived: { type: Number, default: 0 },
+  unitsCommitted: { type: Number, default: 0 },
+  location: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  deadline: { type: String, required: true },
+  bloodTypes: [{ type: String }],
+  description: { type: String, required: true },
+  donors: { type: Number, default: 0 },
+  blockchainId: { type: String },
+  verified: { type: Boolean, default: false },
+});
+
+const commitmentSchema = new mongoose.Schema({
+  campaignId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Campaign",
+    required: true,
+  },
+  donorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  bloodType: { type: String, required: true },
+  units: { type: Number, default: 1 },
+  status: {
+    type: String,
+    enum: ["committed", "donated"],
+    default: "committed",
+  },
+  createdAt: { type: Date, default: Date.now },
+});
+
+const eventSchema = new mongoose.Schema({
+  type: { type: String, required: true },
+  title: { type: String, required: true },
+  desc: { type: String, required: true },
+  time: { type: Date, default: Date.now },
+  status: { type: String }, // critical, success, info
+  campaignId: { type: mongoose.Schema.Types.ObjectId, ref: "Campaign" },
+  icon: { type: String }, // string for icon name
+});
+
 const User = mongoose.model("User", userSchema);
 const BloodInventory = mongoose.model("BloodInventory", bloodInventorySchema);
 const Request = mongoose.model("Request", requestSchema);
 const Transaction = mongoose.model("Transaction", transactionSchema);
+const Campaign = mongoose.model("Campaign", campaignSchema);
+const Commitment = mongoose.model("Commitment", commitmentSchema);
+const Event = mongoose.model("Event", eventSchema);
 
 // Nodemailer Setup
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransporter({
   service: "Gmail",
   auth: {
     user: process.env.EMAIL_USER,
@@ -205,6 +265,7 @@ const authMiddleware = async (req, res, next) => {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ error: "User not found" });
     req.userRole = user.role;
+    req.user = user;
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
@@ -218,6 +279,26 @@ const adminMiddleware = async (req, res, next) => {
     return res
       .status(403)
       .json({ error: "Access denied: Admin role required" });
+  }
+  next();
+};
+
+// Hospital Role Middleware
+const hospitalMiddleware = async (req, res, next) => {
+  if (req.userRole !== "Hospital") {
+    return res
+      .status(403)
+      .json({ error: "Access denied: Hospital role required" });
+  }
+  next();
+};
+
+// Donor Role Middleware
+const donorMiddleware = async (req, res, next) => {
+  if (req.userRole !== "Donor") {
+    return res
+      .status(403)
+      .json({ error: "Access denied: Donor role required" });
   }
   next();
 };
@@ -888,7 +969,7 @@ app.post("/api/bloodbank/record-donation", authMiddleware, async (req, res) => {
   }
 });
 
-// Hospital Routes
+// Hospital Routes - Existing
 app.post("/api/hospital/request-blood", authMiddleware, async (req, res) => {
   const { bloodBankId, bloodType, quantity } = req.body;
   if (!bloodBankId || !bloodType || !quantity) {
@@ -927,46 +1008,6 @@ app.post("/api/hospital/request-blood", authMiddleware, async (req, res) => {
   }
 });
 
-// Donor Routes
-app.post("/api/donor/schedule", authMiddleware, async (req, res) => {
-  const { bloodBankId, date, time } = req.body;
-  if (!bloodBankId || !date || !time) {
-    return res
-      .status(400)
-      .json({ error: "Blood bank ID, date, and time are required" });
-  }
-  try {
-    if (req.userRole !== "Donor") {
-      return res.status(403).json({ error: "Access denied" });
-    }
-    const bloodBank = await User.findById(bloodBankId);
-    if (!bloodBank || bloodBank.role !== "BloodBank") {
-      return res.status(400).json({ error: "Invalid blood bank" });
-    }
-    const scheduleDate = new Date(`${date}T${time}`);
-    if (isNaN(scheduleDate.getTime()) || scheduleDate < Date.now()) {
-      return res.status(400).json({ error: "Invalid or past date/time" });
-    }
-    const transaction = new Transaction({
-      type: "Donation",
-      donorId: req.userId,
-      bloodBankId,
-      bloodType: (await User.findById(req.userId)).donorInfo.bloodGroup,
-      quantity: 1,
-      status: "Scheduled",
-      timestamp: scheduleDate,
-    });
-    await transaction.save();
-    res
-      .status(200)
-      .json({ message: "Donation scheduled successfully", transaction });
-  } catch (error) {
-    console.error("Schedule donation error:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Hospital Routes
 app.get("/api/hospital/requests", authMiddleware, async (req, res) => {
   try {
     if (req.userRole !== "Hospital") {
@@ -1009,7 +1050,344 @@ app.get("/api/hospital/transactions", authMiddleware, async (req, res) => {
   }
 });
 
-// Donor Routes
+// Hospital Dashboard Routes
+app.post(
+  "/api/hospital/campaigns",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    const {
+      title,
+      severity,
+      unitsNeeded,
+      location,
+      deadline,
+      bloodTypes,
+      description,
+    } = req.body;
+    if (
+      !title ||
+      !severity ||
+      !unitsNeeded ||
+      !location ||
+      !deadline ||
+      !description
+    ) {
+      return res.status(400).json({ error: "Required fields missing" });
+    }
+    if (!["critical", "high", "medium"].includes(severity)) {
+      return res.status(400).json({ error: "Invalid severity" });
+    }
+    try {
+      const blockchainId = `0x${crypto
+        .randomBytes(10)
+        .toString("hex")}...${crypto.randomBytes(4).toString("hex")}`;
+      const campaign = new Campaign({
+        hospitalId: req.userId,
+        title,
+        severity,
+        unitsNeeded: parseInt(unitsNeeded),
+        location,
+        deadline,
+        bloodTypes: bloodTypes || [],
+        description,
+        blockchainId,
+        verified: false,
+      });
+      await campaign.save();
+
+      // Add event
+      const event = new Event({
+        type: "campaign",
+        title: "New Emergency Campaign",
+        desc: `${title} activated`,
+        status: severity,
+        campaignId: campaign._id,
+        icon: "AlertTriangle",
+      });
+      await event.save();
+
+      const populated = await Campaign.findById(campaign._id).populate(
+        "hospitalId",
+        "hospitalInfo.name"
+      );
+      res.status(201).json({ campaign: populated });
+    } catch (error) {
+      console.error("Create campaign error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.get(
+  "/api/hospital/campaigns",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    try {
+      const campaigns = await Campaign.find({ hospitalId: req.userId })
+        .sort({ createdAt: -1 })
+        .populate("hospitalId", "hospitalInfo.name");
+      res.status(200).json({ campaigns });
+    } catch (error) {
+      console.error("Get campaigns error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.put(
+  "/api/hospital/campaigns/:id",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid campaign ID" });
+    }
+    try {
+      const campaign = await Campaign.findOne({
+        _id: id,
+        hospitalId: req.userId,
+      });
+      if (!campaign) {
+        return res.status(404).json({ error: "Campaign not found" });
+      }
+      Object.assign(campaign, req.body);
+      await campaign.save();
+      const populated = await Campaign.findById(campaign._id).populate(
+        "hospitalId",
+        "hospitalInfo.name"
+      );
+      res.status(200).json({ campaign: populated });
+    } catch (error) {
+      console.error("Update campaign error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.delete(
+  "/api/hospital/campaigns/:id",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid campaign ID" });
+    }
+    try {
+      const campaign = await Campaign.findOneAndDelete({
+        _id: id,
+        hospitalId: req.userId,
+      });
+      if (!campaign) {
+        return res.status(404).json({ error: "Campaign not found" });
+      }
+      res.status(200).json({ message: "Campaign deleted successfully" });
+    } catch (error) {
+      console.error("Delete campaign error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.get(
+  "/api/hospital/stats",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    try {
+      const campaigns = await Campaign.find({ hospitalId: req.userId });
+      const active = campaigns.filter((c) => c.status === "active").length;
+      const required = campaigns.reduce((sum, c) => sum + c.unitsNeeded, 0);
+      const received = campaigns.reduce((sum, c) => sum + c.unitsReceived, 0);
+      const donorsTotal = campaigns.reduce((sum, c) => sum + c.donors, 0);
+      const completed = campaigns.filter(
+        (c) => c.status === "completed"
+      ).length;
+      const verified = campaigns.filter((c) => c.verified).length;
+      res.status(200).json({
+        active,
+        required,
+        received,
+        donors: donorsTotal,
+        completed,
+        verified,
+      });
+    } catch (error) {
+      console.error("Get stats error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.get(
+  "/api/hospital/timeline",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    try {
+      const events = await Event.find({}).sort({ time: -1 }).limit(5);
+      res.status(200).json({ timelineEvents: events });
+    } catch (error) {
+      console.error("Get timeline error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.get(
+  "/api/hospital/analytics",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    try {
+      const campaigns = await Campaign.find({ hospitalId: req.userId });
+      // Key metrics - computed or mock
+      const totalDonors = campaigns.reduce((sum, c) => sum + c.donors, 0);
+      const avgResponse = "2.3h"; // mock
+      const successRate =
+        campaigns.length > 0
+          ? Math.round(
+              (campaigns.filter((c) => c.status === "completed").length /
+                campaigns.length) *
+                100
+            ) + "%"
+          : "0%";
+      const activeNow = campaigns.filter((c) => c.status === "active").length;
+
+      // Blood type distribution - aggregate commitments
+      const distribution = await Commitment.aggregate([
+        { $match: { campaignId: { $in: campaigns.map((c) => c._id) } } },
+        {
+          $group: {
+            _id: "$bloodType",
+            units: { $sum: "$units" },
+            percent: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            type: "$_id",
+            units: 1,
+            percent: {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ["$percent", { $sum: "$percent" }] },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          },
+        },
+      ]);
+      // Fill with defaults if empty
+      const bloodDist = [
+        {
+          type: "O+",
+          units: distribution.find((d) => d.type === "O+")?.units || 96,
+          percent: distribution.find((d) => d.type === "O+")?.percent || 35,
+        },
+        {
+          type: "A+",
+          units: distribution.find((d) => d.type === "A+")?.units || 77,
+          percent: distribution.find((d) => d.type === "A+")?.percent || 28,
+        },
+        {
+          type: "B+",
+          units: distribution.find((d) => d.type === "B+")?.units || 55,
+          percent: distribution.find((d) => d.type === "B+")?.percent || 20,
+        },
+        {
+          type: "AB+",
+          units: distribution.find((d) => d.type === "AB+")?.units || 47,
+          percent: distribution.find((d) => d.type === "AB+")?.percent || 17,
+        },
+      ];
+
+      res.status(200).json({
+        campaignsProgress: campaigns.map((c) => ({
+          ...c.toObject(),
+          progress: Math.round((c.unitsReceived / c.unitsNeeded) * 100),
+        })),
+        keyMetrics: [
+          {
+            label: "Total Donors",
+            value: totalDonors.toString(),
+            trend: "+15%",
+            color: "from-blue-500 to-cyan-600",
+          },
+          {
+            label: "Avg Response",
+            value: avgResponse,
+            trend: "Fast",
+            color: "from-purple-500 to-pink-600",
+          },
+          {
+            label: "Success Rate",
+            value: successRate,
+            trend: "High",
+            color: "from-green-500 to-emerald-600",
+          },
+          {
+            label: "Active Now",
+            value: activeNow.toString(),
+            trend: "Live",
+            color: "from-orange-500 to-red-600",
+          },
+        ],
+        bloodDistribution: bloodDist,
+      });
+    } catch (error) {
+      console.error("Get analytics error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+// Donor Routes - Existing
+app.post("/api/donor/schedule", authMiddleware, async (req, res) => {
+  const { bloodBankId, date, time } = req.body;
+  if (!bloodBankId || !date || !time) {
+    return res
+      .status(400)
+      .json({ error: "Blood bank ID, date, and time are required" });
+  }
+  try {
+    if (req.userRole !== "Donor") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    const bloodBank = await User.findById(bloodBankId);
+    if (!bloodBank || bloodBank.role !== "BloodBank") {
+      return res.status(400).json({ error: "Invalid blood bank" });
+    }
+    const scheduleDate = new Date(`${date}T${time}`);
+    if (isNaN(scheduleDate.getTime()) || scheduleDate < Date.now()) {
+      return res.status(400).json({ error: "Invalid or past date/time" });
+    }
+    const transaction = new Transaction({
+      type: "Donation",
+      donorId: req.userId,
+      bloodBankId,
+      bloodType: (await User.findById(req.userId)).donorInfo.bloodGroup,
+      quantity: 1,
+      status: "Scheduled",
+      timestamp: scheduleDate,
+    });
+    await transaction.save();
+    res
+      .status(200)
+      .json({ message: "Donation scheduled successfully", transaction });
+  } catch (error) {
+    console.error("Schedule donation error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.get("/api/donor/history", authMiddleware, async (req, res) => {
   try {
     if (req.userRole !== "Donor") {
@@ -1037,6 +1415,164 @@ app.get("/api/donor/rewards", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// Donor Dashboard Routes
+app.get(
+  "/api/donor/disasters",
+  authMiddleware,
+  donorMiddleware,
+  async (req, res) => {
+    try {
+      const campaigns = await Campaign.find({ status: "active" })
+        .populate("hospitalId", "hospitalInfo.name location")
+        .sort({ createdAt: -1 });
+      const disasters = campaigns.map((c) => ({
+        id: c._id,
+        type: c.title.split(" - ")[0] || "Emergency",
+        location: c.location,
+        severity: c.severity,
+        unitsNeeded: c.unitsNeeded,
+        unitsCollected: c.unitsReceived,
+        distance: `${Math.floor(Math.random() * 100)} km`, // Mock distance
+        timePosted: `${Math.floor(Math.random() * 24) + 1} hours ago`, // Mock time
+        deadline: c.deadline,
+        bloodTypes: c.bloodTypes,
+        coordinates: {
+          lat: 23.0225 + Math.random() * 10,
+          lng: 72.5714 + Math.random() * 10,
+        }, // Mock
+        description: c.description,
+        hospitals: [c.hospitalId?.hospitalInfo?.name || c.location],
+        blockchainId: c.blockchainId,
+        verified: c.verified,
+      }));
+      res.status(200).json({ disasters });
+    } catch (error) {
+      console.error("Get disasters error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.post(
+  "/api/donor/commit/:campaignId",
+  authMiddleware,
+  donorMiddleware,
+  async (req, res) => {
+    const { campaignId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(campaignId)) {
+      return res.status(400).json({ error: "Invalid campaign ID" });
+    }
+    try {
+      const campaign = await Campaign.findById(campaignId);
+      if (!campaign || campaign.status !== "active") {
+        return res.status(404).json({ error: "Invalid or inactive campaign" });
+      }
+      const user = await User.findById(req.userId);
+      const bloodType = user.donorInfo.bloodGroup;
+      if (!bloodType) {
+        return res.status(400).json({ error: "Donor blood group not set" });
+      }
+      // Check if already committed (simple check)
+      const existing = await Commitment.findOne({
+        campaignId,
+        donorId: req.userId,
+        status: "committed",
+      });
+      if (existing) {
+        return res
+          .status(400)
+          .json({ error: "Already committed to this campaign" });
+      }
+      const commitment = new Commitment({
+        campaignId,
+        donorId: req.userId,
+        bloodType,
+        units: 1,
+      });
+      await commitment.save();
+      campaign.unitsCommitted += 1;
+      campaign.donors += 1;
+      await campaign.save();
+
+      // Add event
+      const event = new Event({
+        type: "donation",
+        title: "Donation Committed",
+        desc: `${user.firstName} ${user.lastName} committed to ${campaign.title}`,
+        status: "success",
+        campaignId: campaign._id,
+        icon: "Droplet",
+      });
+      await event.save();
+
+      res.status(200).json({ message: "Commitment registered successfully" });
+    } catch (error) {
+      console.error("Commit donation error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.get(
+  "/api/donor/stats",
+  authMiddleware,
+  donorMiddleware,
+  async (req, res) => {
+    try {
+      const activeCampaigns = await Campaign.find({ status: "active" });
+      const activeCount = activeCampaigns.length;
+      const unitsNeeded = activeCampaigns.reduce(
+        (sum, c) => sum + c.unitsNeeded,
+        0
+      );
+      const unitsCollected = activeCampaigns.reduce(
+        (sum, c) => sum + c.unitsReceived,
+        0
+      );
+      const activeDonors = activeCampaigns.reduce(
+        (sum, c) => sum + c.donors,
+        0
+      );
+      res.status(200).json({
+        activeDisasters: activeCount.toString(),
+        unitsNeeded: unitsNeeded.toString(),
+        unitsCollected: unitsCollected.toString(),
+        activeDonors: activeDonors.toLocaleString(),
+      });
+    } catch (error) {
+      console.error("Get donor stats error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.get(
+  "/api/donor/timeline",
+  authMiddleware,
+  donorMiddleware,
+  async (req, res) => {
+    try {
+      const events = await Event.find({}).sort({ time: -1 }).limit(6);
+      // Map to include category, unitsCollected if applicable
+      const timelineEvents = events.map((e) => ({
+        id: e._id,
+        type: e.type,
+        title: e.title,
+        description: e.desc,
+        time: `${Math.floor(Math.random() * 24)}h ago`, // Mock relative time
+        category: e.status,
+        icon: e.icon || "AlertCircle",
+        location: "Various", // Mock
+        unitsCollected: Math.floor(Math.random() * 100), // Mock
+      }));
+      res.status(200).json({ timelineEvents });
+    } catch (error) {
+      console.error("Get donor timeline error:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
 
 // Reward Routes
 app.post("/api/rewards/issue", authMiddleware, async (req, res) => {
