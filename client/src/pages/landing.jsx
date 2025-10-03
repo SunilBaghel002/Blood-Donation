@@ -26,6 +26,8 @@ import {
   Banknote,
   UserCheck,
   ArrowUp,
+  HeartPulse,
+  Stethoscope,
 } from "lucide-react";
 import {
   SiReact,
@@ -111,7 +113,7 @@ const BloodChainLanding = () => {
     }
     const geometry = new THREE.LatheGeometry(points, 64);
     const material = new THREE.MeshPhysicalMaterial({
-      color: 0xb91c1c,
+      color: 0x9b2c2c, // Deeper crimson red for improved color scheme
       metalness: 0.1,
       roughness: 0.2,
       clearcoat: 1,
@@ -127,14 +129,14 @@ const BloodChainLanding = () => {
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    const pointLight = new THREE.PointLight(0xff6b6b, 1, 100);
+    const pointLight = new THREE.PointLight(0xf43f5e, 1, 100); // Rose accent
     pointLight.position.set(-5, -5, 5);
     scene.add(pointLight);
 
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambientLight);
 
-    const hemisphereLight = new THREE.HemisphereLight(0xffd700, 0xb91c1c, 0.8);
+    const hemisphereLight = new THREE.HemisphereLight(0xf59e0b, 0x9b2c2c, 0.8); // Gold to crimson
     scene.add(hemisphereLight);
 
     camera.position.z = 4;
@@ -181,39 +183,57 @@ const BloodChainLanding = () => {
 
   const impactStats = [
     {
-      value: "118M+",
-      label: "Global Blood Donations Annually (WHO)",
+      value: "118.5M+",
+      label: "Global Blood Donations Annually (WHO, 2025)",
       icon: Droplets,
-      image:
-        "https://images.pexels.com/photos/7551812/pexels-photo-7551812.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       value: "40%",
-      label: "Donations from 16% of Population",
+      label: "Donations from 16% of Population (High-Income Countries)",
       icon: Globe,
-      image:
-        "https://images.pexels.com/photos/6942461/pexels-photo-6942461.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       value: "Every 2s",
-      label: "Someone Needs Blood",
+      label: "Someone Needs Blood Worldwide",
       icon: Clock,
-      image:
-        "https://images.pexels.com/photos/7551805/pexels-photo-7551805.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       value: "$1.4B",
-      label: "Blockchain Healthcare Market",
+      label: "Blockchain Healthcare Market (2025 Projection)",
       icon: TrendingUp,
-      image:
-        "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       value: "34%",
       label: "CAGR for Blockchain in Healthcare",
       icon: Zap,
-      image:
-        "https://images.pexels.com/photos/356040/pexels-photo-356040.jpeg?auto=compress&cs=tinysrgb&w=400",
+    },
+  ];
+
+  // New section data for Why Donate Blood
+  const whyDonateBenefits = [
+    {
+      title: "Health Benefits for Donors",
+      description:
+        "Regular donation lowers blood pressure, reduces heart attack risk, and regulates iron levels. Plus, enjoy free health screenings at every visit.",
+      icon: HeartPulse,
+      benefits: [
+        "Reduced cardiovascular risks",
+        "Free mini-physical checkup",
+        "Improved emotional well-being and stress reduction",
+        "Sense of purpose and community belonging",
+      ],
+    },
+    {
+      title: "Life-Saving Impact for Recipients",
+      description:
+        "One donation can save up to three lives, helping accident victims, surgery patients, cancer fighters, and new mothers.",
+      icon: Stethoscope,
+      benefits: [
+        "Supports trauma and emergency care",
+        "Aids chronic illness treatments like cancer",
+        "Essential for surgeries and transplants",
+        "Critical for maternal and newborn health",
+      ],
     },
   ];
 
@@ -221,42 +241,32 @@ const BloodChainLanding = () => {
     {
       title: "Donor Registers",
       description:
-        "Securely register with blockchain-verified identity, ensuring trust and privacy.",
+        "Securely register with blockchain-verified identity, ensuring trust and privacy while learning about blood types and eligibility.",
       icon: User,
-      image:
-        "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       title: "Blood Donation",
       description:
-        "Donate blood, with each event immutably logged on Ethereum for transparency.",
+        "Donate blood at certified centers; each unit is tested for safety and logged immutably on Ethereum for full transparency.",
       icon: Droplets,
-      image:
-        "https://images.pexels.com/photos/7551818/pexels-photo-7551818.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       title: "Inventory Update",
       description:
-        "Blood banks update real-time inventory using smart contracts for accuracy.",
+        "Blood banks update real-time inventory using smart contracts, with AI predictions to prevent shortages and reduce waste.",
       icon: Database,
-      image:
-        "https://images.pexels.com/photos/4167542/pexels-photo-4167542.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       title: "Hospital Request",
       description:
-        "Hospitals request blood via secure smart contracts, ensuring verified transfers.",
+        "Hospitals request blood via secure smart contracts, with instant verification to ensure compatibility and safety.",
       icon: Hospital,
-      image:
-        "https://images.pexels.com/photos/1692693/pexels-photo-1692693.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       title: "Trace & Use",
       description:
-        "Track blood from donor to recipient with full transparency and accountability.",
+        "Full traceability from donor to recipient, promoting accountability and enabling impact tracking for donors.",
       icon: MapPin,
-      image:
-        "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
   ];
 
@@ -271,8 +281,6 @@ const BloodChainLanding = () => {
         "Secure access to donation history and health insights",
         "Contribute to global blood supply transparency",
       ],
-      image:
-        "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       role: "Hospitals",
@@ -284,8 +292,6 @@ const BloodChainLanding = () => {
         "Compliance with regulatory standards via immutable records",
         "Streamlined emergency response with trusted data",
       ],
-      image:
-        "https://images.pexels.com/photos/263402/pexels-photo-263402.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       role: "Blood Banks",
@@ -297,8 +303,6 @@ const BloodChainLanding = () => {
         "Secure data sharing with hospitals and regulators",
         "Optimized logistics with real-time tracking",
       ],
-      image:
-        "https://images.pexels.com/photos/4167541/pexels-photo-4167541.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       role: "Admins",
@@ -310,8 +314,6 @@ const BloodChainLanding = () => {
         "Manage decentralized network with ease",
         "Ensure data integrity across the platform",
       ],
-      image:
-        "https://images.pexels.com/photos/3184297/pexels-photo-3184297.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
   ];
 
@@ -320,8 +322,8 @@ const BloodChainLanding = () => {
       icon: Database,
       title: "Blockchain Transparency",
       description:
-        "Immutable Ethereum records for every donation and transfer, ensuring trust.",
-      gradient: "from-red-600 to-pink-600",
+        "Immutable Ethereum records for every donation and transfer, ensuring trust and preventing fraud in the supply chain.",
+      gradient: "from-red-600 to-rose-500", // Updated to rose for better scheme
       image:
         "https://images.pexels.com/photos/3183171/pexels-photo-3183171.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
@@ -329,8 +331,8 @@ const BloodChainLanding = () => {
       icon: Shield,
       title: "Data Security",
       description:
-        "Encrypted off-chain storage with blockchain-verified hashes for privacy.",
-      gradient: "from-red-600 to-pink-600",
+        "Encrypted off-chain storage with blockchain-verified hashes, protecting sensitive health data while enabling secure sharing.",
+      gradient: "from-red-600 to-rose-500",
       image:
         "https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
@@ -338,8 +340,8 @@ const BloodChainLanding = () => {
       icon: Globe,
       title: "IPFS Storage",
       description:
-        "Decentralized, secure storage for medical records and consent forms.",
-      gradient: "from-red-600 to-pink-600",
+        "Decentralized, tamper-proof storage for medical records, consent forms, and donation histories, reducing central points of failure.",
+      gradient: "from-red-600 to-rose-500",
       image:
         "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
@@ -347,8 +349,8 @@ const BloodChainLanding = () => {
       icon: Activity,
       title: "Real-time Tracking",
       description:
-        "Track donations from collection to usage with complete visibility.",
-      gradient: "from-red-600 to-pink-600",
+        "End-to-end visibility from vein to vein, allowing donors to see their impact and stakeholders to monitor supply in real-time.",
+      gradient: "from-red-600 to-rose-500",
       image:
         "https://images.pexels.com/photos/590016/pexels-photo-590016.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
@@ -356,8 +358,8 @@ const BloodChainLanding = () => {
       icon: Users,
       title: "Multi-stakeholder",
       description:
-        "Unified platform connecting donors, hospitals, and blood banks seamlessly.",
-      gradient: "from-red-600 to-pink-600",
+        "Unified platform connecting donors, hospitals, blood banks, and regulators for efficient, collaborative blood management.",
+      gradient: "from-red-600 to-rose-500",
       image:
         "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
@@ -365,8 +367,8 @@ const BloodChainLanding = () => {
       icon: Lock,
       title: "Smart Contracts",
       description:
-        "Automated, secure workflows powered by Solidity smart contracts.",
-      gradient: "from-red-600 to-pink-600",
+        "Automated, self-executing contracts in Solidity for secure payments, verifications, and compliance without intermediaries.",
+      gradient: "from-red-600 to-rose-500",
       image:
         "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=800",
     },
@@ -377,7 +379,7 @@ const BloodChainLanding = () => {
       name: "Dr. Sarah Johnson",
       role: "Blood Bank Director",
       content:
-        "BloodChain's transparency and automation have transformed our operations, ensuring every unit is traceable.",
+        "BloodChain's transparency and automation have transformed our operations, ensuring every unit is traceable and safe.",
       avatar:
         "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=100",
     },
@@ -385,7 +387,7 @@ const BloodChainLanding = () => {
       name: "Michael Chen",
       role: "Regular Donor",
       content:
-        "Seeing my donations save lives in real-time is incredible. The NFT rewards are a great bonus!",
+        "Seeing my donations save lives in real-time is incredible. The NFT rewards and health insights are a great bonus!",
       avatar:
         "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=100",
     },
@@ -393,7 +395,7 @@ const BloodChainLanding = () => {
       name: "Dr. Maria Rodriguez",
       role: "Hospital Administrator",
       content:
-        "BloodChain's instant verification and inventory access have streamlined our emergency responses.",
+        "BloodChain's instant verification and inventory access have streamlined our emergency responses, saving precious time.",
       avatar:
         "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100",
     },
@@ -405,75 +407,59 @@ const BloodChainLanding = () => {
       color: "text-blue-500",
       icon: SiReact,
       description: "Dynamic, responsive UI for seamless user experience",
-      image:
-        "https://images.pexels.com/photos/11035471/pexels-photo-11035471.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Node.js",
       color: "text-green-500",
       icon: SiNodedotjs,
       description: "Scalable backend for real-time data processing",
-      image:
-        "https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "MongoDB",
       color: "text-green-600",
       icon: SiMongodb,
       description: "Secure NoSQL database for efficient data storage",
-      image:
-        "https://images.pexels.com/photos/4167542/pexels-photo-4167542.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Express",
       color: "text-gray-600",
       icon: SiExpress,
       description: "Robust API framework for seamless integrations",
-      image:
-        "https://images.pexels.com/photos/1181359/pexels-photo-1181359.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Ethereum",
       color: "text-purple-500",
       icon: SiEthereum,
       description: "Immutable blockchain for transparent records",
-      image:
-        "https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Solidity",
       color: "text-blue-600",
       icon: SiSolidity,
       description: "Smart contracts for automated workflows",
-      image:
-        "https://images.pexels.com/photos/159888/pexels-photo-159888.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "IPFS",
       color: "text-orange-500",
       icon: SiIpfs,
       description: "Decentralized storage for secure medical records",
-      image:
-        "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
     {
       name: "Web3",
       color: "text-yellow-500",
       icon: SiWeb3Dotjs,
       description: "Enables blockchain interactions for trust",
-      image:
-        "https://images.pexels.com/photos/270360/pexels-photo-270360.jpeg?auto=compress&cs=tinysrgb&w=400",
     },
   ];
 
   const donationData = {
-    labels: ["2018", "2019", "2020", "2021", "2022", "2023", "2024"],
+    labels: ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"],
     datasets: [
       {
         label: "Blood Donations (Millions)",
-        data: [110, 112, 108, 115, 117, 118, 120],
-        backgroundColor: "rgba(185, 28, 28, 0.8)",
-        borderColor: "rgba(185, 28, 28, 1)",
+        data: [110, 112, 108, 115, 117, 118, 120, 122], // Updated with 2025 projection
+        backgroundColor: "rgba(155, 44, 44, 0.8)", // Crimson
+        borderColor: "rgba(155, 44, 44, 1)",
         borderWidth: 2,
         borderRadius: 8,
         borderSkipped: false,
@@ -487,7 +473,7 @@ const BloodChainLanding = () => {
       legend: { position: "top" },
       title: {
         display: true,
-        text: "Global Blood Donations (2018-2024)",
+        text: "Global Blood Donations Trend (2018-2025 Projection)",
         font: { size: 20, weight: "bold" },
         color: "#1f2937",
       },
@@ -515,17 +501,17 @@ const BloodChainLanding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      {/* Remove inline styles, use Tailwind and Framer Motion for animations */}
+    <div className="min-h-screen bg-white font-sans antialiased">
+      {/* Enhanced styles for better formatting and color scheme */}
       <style jsx>{`
         @keyframes pulse-glow {
           0%,
           100% {
-            box-shadow: 0 0 15px rgba(185, 28, 28, 0.4);
+            box-shadow: 0 0 15px rgba(155, 44, 44, 0.4);
           }
           50% {
-            box-shadow: 0 0 30px rgba(185, 28, 28, 0.7),
-              0 0 50px rgba(185, 28, 28, 0.5);
+            box-shadow: 0 0 30px rgba(155, 44, 44, 0.7),
+              0 0 50px rgba(155, 44, 44, 0.5);
           }
         }
         @keyframes flow-scale {
@@ -588,7 +574,7 @@ const BloodChainLanding = () => {
               className="flex items-center space-x-2"
               whileHover={{ scale: 1.05 }}
             >
-              <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-pink-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-rose-500 rounded-lg flex items-center justify-center">
                 <Heart className="w-6 h-6 text-white" />
               </div>
               <span
@@ -601,10 +587,11 @@ const BloodChainLanding = () => {
             </motion.div>
             <div className="hidden md:flex items-center space-x-6">
               {[
+                "Why Donate",
                 "Features",
-                "Technology",
                 "How It Works",
-                "Donation Trends",
+                "Technology",
+                "Trends",
                 "Benefits",
                 "Contact",
               ].map((item) => (
@@ -621,7 +608,7 @@ const BloodChainLanding = () => {
               ))}
               <motion.a
                 href="/signup"
-                className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-pink-600 transform transition-all duration-300 animate-pulse-glow"
+                className="bg-gradient-to-r from-red-600 to-rose-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-rose-600 transform transition-all duration-300 animate-pulse-glow"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -648,10 +635,11 @@ const BloodChainLanding = () => {
             >
               <div className="flex flex-col space-y-4 py-4 px-6">
                 {[
+                  "Why Donate",
                   "Features",
-                  "Technology",
                   "How It Works",
-                  "Donation Trends",
+                  "Technology",
+                  "Trends",
                   "Benefits",
                   "Contact",
                 ].map((item) => (
@@ -667,7 +655,7 @@ const BloodChainLanding = () => {
                 ))}
                 <motion.a
                   href="/signup"
-                  className="bg-gradient-to-r from-red-600 to-pink-500 text-white px-6 py-2 rounded-full font-semibold text-center hover:from-red-700 hover:to-pink-600 transition-all"
+                  className="bg-gradient-to-r from-red-600 to-rose-500 text-white px-6 py-2 rounded-full font-semibold text-center hover:from-red-700 hover:to-rose-600 transition-all"
                   whileHover={{ scale: 1.02 }}
                 >
                   Sign Up
@@ -680,7 +668,7 @@ const BloodChainLanding = () => {
 
       {/* Hero Section with enhanced motion and bold contrasts */}
       <section
-        className="relative min-h-screen bg-gradient-to-br from-red-600 via-pink-500 to-red-800 flex items-center overflow-hidden parallax-bg"
+        className="relative min-h-screen bg-gradient-to-br from-red-600 via-rose-500 to-red-800 flex items-center overflow-hidden parallax-bg"
         style={{
           backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
         }}
@@ -705,7 +693,7 @@ const BloodChainLanding = () => {
             >
               Empowering
               <br />
-              <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent">
                 Life-Saving Trust
               </span>
             </motion.h1>
@@ -719,12 +707,14 @@ const BloodChainLanding = () => {
               <span className="font-semibold text-amber-300">traceability</span>
               , and{" "}
               <span className="font-semibold text-amber-300">security</span>.
+              One donation can save up to three lives—join the chain today.
             </motion.p>
             <motion.p
               className="text-base sm:text-lg mb-8"
               variants={itemVariants}
             >
-              Join 118M+ donors saving lives with blockchain technology.
+              Blood donation is safe, simple, and profoundly rewarding. Discover
+              how BloodChain makes it even more impactful.
             </motion.p>
             <motion.div
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center"
@@ -764,7 +754,80 @@ const BloodChainLanding = () => {
         </motion.div>
       </section>
 
-      {/* Impact Stats with staggered motion */}
+      {/* New: Why Donate Blood Section */}
+      <motion.section
+        id="why-donate"
+        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
+            <motion.h2
+              className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              Why{" "}
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
+                Donate Blood
+              </span>
+              ?
+            </motion.h2>
+            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+              Blood donation is a simple act with profound benefits for both
+              donors and recipients. Learn how you can make a difference.
+            </motion.p>
+          </motion.div>
+          <motion.div
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+            variants={containerVariants}
+          >
+            {whyDonateBenefits.map((benefit, index) => (
+              <motion.div
+                key={index}
+                className="group text-center p-6 sm:p-8 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-500 border border-gray-100/50"
+                variants={itemVariants}
+                whileHover={{ y: -5, scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <motion.div
+                  className="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-red-600 to-rose-500 rounded-full flex items-center justify-center"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <benefit.icon className="w-8 h-8 text-white" />
+                </motion.div>
+                <div className="text-2xl font-bold text-gray-900 mb-4">
+                  {benefit.title}
+                </div>
+                <p className="text-gray-600 mb-6">{benefit.description}</p>
+                <ul className="space-y-3 text-left">
+                  {benefit.benefits.map((item, i) => (
+                    <motion.li
+                      key={i}
+                      className="flex items-start"
+                      initial={{ x: -20, opacity: 0 }}
+                      whileInView={{ x: 0, opacity: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <CheckCircle className="w-5 h-5 text-red-600 mr-3 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700">{item}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Impact Stats with staggered motion - no images, no rotation */}
       <motion.section
         className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
         initial="hidden"
@@ -783,44 +846,32 @@ const BloodChainLanding = () => {
               animate={{ opacity: 1, y: 0 }}
             >
               Our{" "}
-              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
                 Global Impact
               </span>
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
               Transforming the global blood supply chain with blockchain
-              efficiency.
+              efficiency and transparency.
             </motion.p>
           </motion.div>
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8"
             variants={containerVariants}
           >
             {impactStats.map((stat, index) => (
               <motion.div
                 key={index}
-                className="group text-center p-4 sm:p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 backdrop-blur-sm"
+                className="group text-center p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50"
                 variants={itemVariants}
                 whileHover={{ y: -10, scale: 1.02 }}
                 transition={{ duration: 0.3 }}
               >
-                <motion.img
-                  src={stat.image}
-                  alt={stat.label}
-                  className="w-full h-24 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform duration-300"
-                  whileHover={{ scale: 1.05 }}
-                />
-                <motion.div
-                  whileHover={{ rotate: 360, transition: { duration: 0.5 } }}
-                >
-                  <stat.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
-                </motion.div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                <stat.icon className="w-12 h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform duration-300" />
+                <div className="text-3xl font-bold text-gray-900 mb-2">
                   {stat.value}
                 </div>
-                <div className="text-sm sm:text-base text-gray-600">
-                  {stat.label}
-                </div>
+                <div className="text-sm text-gray-600">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
@@ -828,6 +879,39 @@ const BloodChainLanding = () => {
       </motion.section>
 
       {/* Donation Trends with enhanced chart styling */}
+      {/* <section id="trends" className="py-12 sm:py-16 lg:py-20 bg-white">
+        <motion.div
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+        >
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            variants={itemVariants}
+          >
+            <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Blood Donation{" "}
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
+                Trends
+              </span>
+            </motion.h2>
+            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+              Steady growth in global donations, with blockchain poised to
+              address shortages (WHO estimates).
+            </motion.p>
+          </motion.div>
+          <motion.div
+            className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-xl"
+            variants={itemVariants}
+          >
+            <div className="bg-gradient-to-r from-red-50 to-rose-50 p-6">
+              <Bar data={donationData} options={chartOptions} />
+            </div>
+          </motion.div>
+        </motion.div>
+      </section> */}
       <section
         id="donation-trends"
         className="py-12 sm:py-16 lg:py-20 bg-white"
@@ -865,7 +949,7 @@ const BloodChainLanding = () => {
         </motion.div>
       </section>
 
-      {/* How It Works with interactive SVG enhancements */}
+      {/* How It Works with interactive SVG enhancements - no images, no rotation, improved hover */}
       <motion.section
         id="how-it-works"
         className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white"
@@ -881,13 +965,14 @@ const BloodChainLanding = () => {
           >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
               How{" "}
-              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
                 BloodChain
               </span>{" "}
               Works
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              A seamless, transparent process powered by blockchain technology.
+              A seamless, transparent process powered by blockchain, from
+              registration to life-saving delivery.
             </motion.p>
           </motion.div>
           <div className="relative">
@@ -898,7 +983,7 @@ const BloodChainLanding = () => {
               <motion.path
                 className="flow-path"
                 d="M 20 36 H 180 C 200 36 200 60 220 60 H 380 C 400 60 400 36 420 36 H 580 C 600 36 600 60 620 60 H 780 C 800 60 800 36 820 36 H 980"
-                stroke="#b91c1c"
+                stroke="#dc2626"
                 strokeWidth="6"
                 fill="none"
                 initial={{ pathLength: 0 }}
@@ -911,7 +996,7 @@ const BloodChainLanding = () => {
                     cx={20 + index * 200}
                     cy={36}
                     r="8"
-                    fill="#b91c1c"
+                    fill="#dc2626"
                     className={activeFlowStep === index ? "flow-arrow" : ""}
                     animate={
                       activeFlowStep === index ? { scale: [1, 1.2, 1] } : {}
@@ -924,7 +1009,7 @@ const BloodChainLanding = () => {
                     } 36 L ${20 + index * 200 + 14} 30 M ${
                       20 + index * 200 + 20
                     } 36 L ${20 + index * 200 + 14} 42`}
-                    stroke="#b91c1c"
+                    stroke="#dc2626"
                     strokeWidth="3"
                     fill="none"
                     className={activeFlowStep === index ? "flow-arrow" : ""}
@@ -933,41 +1018,37 @@ const BloodChainLanding = () => {
               ))}
             </svg>
             <motion.div
-              className="relative flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8"
+              className="relative flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8"
               variants={containerVariants}
             >
               {howItWorksSteps.map((step, index) => (
                 <motion.div
                   key={index}
-                  className={`relative w-full lg:w-[18%] text-center p-4 sm:p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 backdrop-blur-sm z-10 cursor-pointer ${
+                  className={`relative w-full lg:w-[18%] text-center p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 z-10 cursor-pointer ${
                     activeFlowStep === index
-                      ? "animate-flow-scale bg-gradient-to-r from-red-50 to-pink-50"
+                      ? "animate-flow-scale bg-gradient-to-r from-red-50 to-rose-50 ring-2 ring-red-500/50"
                       : ""
                   }`}
                   variants={itemVariants}
-                  whileHover={{ y: -5, scale: 1.02 }}
+                  whileHover={{
+                    y: -8,
+                    scale: 1.03,
+                    boxShadow: "0 20px 40px rgba(220, 38, 38, 0.1)",
+                  }}
                   onHoverStart={() => setActiveFlowStep(index)}
                   onHoverEnd={() => setActiveFlowStep(null)}
                 >
-                  <motion.img
-                    src={step.image}
-                    alt={`${step.title} illustration`}
-                    className="w-full h-32 object-cover rounded-xl mb-4"
-                    whileHover={{ scale: 1.05 }}
-                  />
                   <motion.div
-                    className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center"
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.6 }}
+                    className="w-14 h-14 mx-auto mb-4 bg-gradient-to-r from-red-600 to-rose-500 rounded-full flex items-center justify-center"
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    <step.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    <step.icon className="w-8 h-8 text-white" />
                   </motion.div>
-                  <div className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                  <div className="text-xl font-bold text-gray-900 mb-2">
                     {index + 1}. {step.title}
                   </div>
-                  <p className="text-sm sm:text-base text-gray-600">
-                    {step.description}
-                  </p>
+                  <p className="text-base text-gray-600">{step.description}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -975,7 +1056,7 @@ const BloodChainLanding = () => {
         </div>
       </motion.section>
 
-      {/* Benefits by Role with micro-interactions */}
+      {/* Benefits by Role with micro-interactions - no images, no rotation */}
       <motion.section
         id="benefits"
         className="py-12 sm:py-16 lg:py-20 bg-white"
@@ -991,39 +1072,31 @@ const BloodChainLanding = () => {
           >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
               Benefits for{" "}
-              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
                 Every Role
               </span>
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Tailored solutions for stakeholders in the blood donation
-              ecosystem.
+              Tailored blockchain solutions enhancing efficiency and trust
+              across the blood donation ecosystem.
             </motion.p>
           </motion.div>
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
             variants={containerVariants}
           >
             {roleBenefits.map((role, index) => (
               <motion.div
                 key={index}
-                className="group p-4 sm:p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 backdrop-blur-sm"
+                className="group p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50"
                 variants={itemVariants}
                 whileHover={{ y: -10 }}
               >
-                <motion.img
-                  src={role.image}
-                  alt={`${role.role} illustration`}
-                  className="w-full h-32 object-cover rounded-xl mb-4"
-                  whileHover={{ scale: 1.05 }}
-                />
-                <motion.div whileHover={{ scale: 1.1, rotate: 5 }}>
-                  <role.icon className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform" />
-                </motion.div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 text-center">
+                <role.icon className="w-12 h-12 mx-auto mb-4 text-red-600 group-hover:scale-110 transition-transform duration-300" />
+                <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
                   {role.role}
                 </h3>
-                <ul className="list-none text-sm sm:text-base text-gray-600 space-y-3">
+                <ul className="list-none text-sm text-gray-600 space-y-3">
                   {role.benefits.map((benefit, i) => (
                     <motion.li
                       key={i}
@@ -1059,24 +1132,24 @@ const BloodChainLanding = () => {
           >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
               Why{" "}
-              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
                 BloodChain
               </span>
               ?
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Advanced blockchain solutions for trust and efficiency in blood
-              management.
+              Cutting-edge blockchain features revolutionizing blood donation
+              with unmatched security and efficiency.
             </motion.p>
           </motion.div>
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
             variants={containerVariants}
           >
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className="group relative bg-white rounded-2xl p-6 sm:p-8 shadow-md hover:shadow-2xl transition-all duration-700 border border-gray-100/50 overflow-hidden backdrop-blur-sm"
+                className="group relative bg-white rounded-2xl p-6 sm:p-8 shadow-md hover:shadow-2xl transition-all duration-700 border border-gray-100/50 overflow-hidden"
                 variants={itemVariants}
                 whileHover={{ y: -10, scale: 1.02 }}
               >
@@ -1093,19 +1166,19 @@ const BloodChainLanding = () => {
                   whileHover={{ scale: 1.05 }}
                 />
                 <motion.div
-                  className={`relative z-10 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300`}
-                  whileHover={{ rotate: 5 }}
+                  className={`relative z-10 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                  whileHover={{ scale: 1.1 }}
                 >
-                  <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </motion.div>
                 <motion.h3
-                  className="text-lg sm:text-xl font-bold text-gray-900 mb-4 relative z-10 group-hover:text-red-600 transition-colors"
-                  whileHover={{ color: "#b91c1c" }}
+                  className="text-xl font-bold text-gray-900 mb-4 relative z-10 group-hover:text-red-600 transition-colors"
+                  whileHover={{ color: "#dc2626" }}
                 >
                   {feature.title}
                 </motion.h3>
                 <motion.p
-                  className="text-sm sm:text-base text-gray-600 leading-relaxed relative z-10"
+                  className="text-base text-gray-600 leading-relaxed relative z-10"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                 >
@@ -1118,7 +1191,7 @@ const BloodChainLanding = () => {
         </div>
       </motion.section>
 
-      {/* Technology Stack with tooltips and enhanced grid */}
+      {/* Technology Stack with tooltips and enhanced grid - no rotation, improved hover */}
       <motion.section
         id="technology"
         className="py-12 sm:py-16 lg:py-20 bg-white"
@@ -1134,44 +1207,38 @@ const BloodChainLanding = () => {
           >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
               Powered by{" "}
-              <span className="text-red-600 bg-gradient-to-r from-red-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
                 Innovation
               </span>
             </motion.h2>
             <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              A robust tech stack ensuring security and scalability.
+              A robust, scalable tech stack built for secure blood management.
             </motion.p>
           </motion.div>
           <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8 mb-12 sm:mb-16"
             variants={containerVariants}
           >
             {techStack.map((tech, index) => (
               <motion.div
                 key={index}
-                className="group relative text-center p-4 sm:p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50 backdrop-blur-sm"
+                className="group relative text-center p-6 bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100/50"
                 variants={itemVariants}
                 whileHover={{ y: -5, scale: 1.05 }}
               >
-                <motion.img
-                  src={tech.image}
-                  alt={tech.name}
-                  className="w-full h-24 object-cover rounded-xl mb-4"
-                  whileHover={{ scale: 1.05 }}
-                />
                 <motion.div
-                  whileHover={{ scale: 1.2, rotate: 360 }}
-                  transition={{ duration: 0.4 }}
+                  whileHover={{ scale: 1.2 }}
+                  transition={{ duration: 0.3 }}
                 >
                   <tech.icon
-                    className={`${tech.color} text-3xl sm:text-4xl mb-2 group-hover:scale-110 transition-transform`}
+                    className={`${tech.color} text-4xl mb-2 group-hover:scale-110 transition-transform duration-300`}
                   />
                 </motion.div>
-                <div className="font-semibold text-sm sm:text-base text-gray-900">
+                <div className="font-semibold text-base text-gray-900">
                   {tech.name}
                 </div>
                 <motion.div
-                  className="absolute inset-x-0 top-full mt-2 bg-gray-900 text-white text-xs sm:text-sm p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg"
+                  className="absolute inset-x-0 top-full mt-2 bg-gray-900 text-white text-sm p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg"
                   initial={{ y: 10, opacity: 0 }}
                   whileHover={{ y: 0, opacity: 1 }}
                 >
@@ -1185,33 +1252,33 @@ const BloodChainLanding = () => {
             variants={itemVariants}
           >
             <motion.h3
-              className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-8"
+              className="text-2xl sm:text-3xl font-bold text-center mb-8"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
             >
               System Architecture
             </motion.h3>
             <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
               variants={containerVariants}
             >
               {[
                 {
                   title: "Blockchain Layer",
                   icon: Database,
-                  desc: "Ethereum smart contracts for immutable records.",
+                  desc: "Ethereum smart contracts for immutable records and automated verifications.",
                   img: "https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=400",
                 },
                 {
                   title: "Storage Layer",
                   icon: Globe,
-                  desc: "IPFS for decentralized, secure document storage.",
+                  desc: "IPFS for decentralized, secure document storage with blockchain pinning.",
                   img: "https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=400",
                 },
                 {
                   title: "Application Layer",
                   icon: Shield,
-                  desc: "MERN stack for scalable, secure interfaces.",
+                  desc: "MERN stack for scalable, user-friendly interfaces with Web3 integration.",
                   img: "https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=400",
                 },
               ].map((layer, i) => (
@@ -1228,15 +1295,13 @@ const BloodChainLanding = () => {
                     whileHover={{ scale: 1.05 }}
                   />
                   <motion.div
-                    className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-gradient-to-r from-red-600 to-pink-500 rounded-full flex items-center justify-center"
+                    className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-red-600 to-rose-500 rounded-full flex items-center justify-center"
                     whileHover={{ scale: 1.1 }}
                   >
-                    <layer.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                    <layer.icon className="w-10 h-10 text-white" />
                   </motion.div>
                   <h4 className="font-bold text-lg mb-2">{layer.title}</h4>
-                  <p className="text-gray-200 text-sm sm:text-base">
-                    {layer.desc}
-                  </p>
+                  <p className="text-gray-200 text-base">{layer.desc}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -1252,7 +1317,7 @@ const BloodChainLanding = () => {
         viewport={{ once: true }}
         variants={containerVariants}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-red-900/20 to-pink-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-red-900/20 to-rose-900/20"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             className="text-center mb-12 sm:mb-16"
@@ -1260,7 +1325,7 @@ const BloodChainLanding = () => {
           >
             <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
               Trusted by{" "}
-              <span className="text-red-400 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">
+              <span className="text-red-400 bg-gradient-to-r from-red-400 to-rose-400 bg-clip-text text-transparent">
                 Healthcare Leaders
               </span>
             </motion.h2>
@@ -1280,7 +1345,7 @@ const BloodChainLanding = () => {
               {testimonials.map((test, index) => (
                 <div key={index} className="min-w-full flex justify-center">
                   <motion.div
-                    className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 sm:p-8 lg:p-12 text-center max-w-lg shadow-2xl border border-white/20"
+                    className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 lg:p-12 text-center max-w-lg shadow-2xl border border-white/20"
                     whileHover={{
                       scale: 1.02,
                       boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
@@ -1289,20 +1354,20 @@ const BloodChainLanding = () => {
                     <motion.img
                       src={test.avatar}
                       alt={test.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto mb-6 object-cover border-4 border-red-400/30"
+                      className="w-20 h-20 rounded-full mx-auto mb-6 object-cover border-4 border-red-400/30"
                       whileHover={{ scale: 1.1, rotate: 10 }}
                     />
                     <motion.blockquote
-                      className="text-base sm:text-lg lg:text-xl mb-6 italic text-gray-200"
+                      className="text-lg lg:text-xl mb-6 italic text-gray-200"
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
                     >
                       "{test.content}"
                     </motion.blockquote>
-                    <div className="font-bold text-lg sm:text-xl text-white">
+                    <div className="font-bold text-xl text-white">
                       {test.name}
                     </div>
-                    <div className="text-red-400 text-sm sm:text-base font-semibold">
+                    <div className="text-red-400 text-base font-semibold">
                       {test.role}
                     </div>
                   </motion.div>
@@ -1310,7 +1375,7 @@ const BloodChainLanding = () => {
               ))}
             </motion.div>
             <motion.div
-              className="flex justify-center mt-6 sm:mt-8 space-x-2"
+              className="flex justify-center mt-8 space-x-2"
               variants={itemVariants}
             >
               {testimonials.map((_, index) => (
@@ -1319,7 +1384,7 @@ const BloodChainLanding = () => {
                   onClick={() => setActiveTestimonial(index)}
                   className={`rounded-full transition-all duration-300 ${
                     index === activeTestimonial
-                      ? "bg-red-500 w-6 sm:w-8 shadow-lg shadow-red-500/50"
+                      ? "bg-red-500 w-8 shadow-lg shadow-red-500/50"
                       : "bg-white/30 hover:bg-white/50"
                   }`}
                   whileHover={{ scale: 1.3 }}
@@ -1327,8 +1392,8 @@ const BloodChainLanding = () => {
                   aria-label={`View testimonial ${index + 1}`}
                 >
                   <div
-                    className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-current ${
-                      index === activeTestimonial ? "w-6 sm:w-8" : ""
+                    className={`w-3 h-3 rounded-full bg-current ${
+                      index === activeTestimonial ? "w-8" : ""
                     }`}
                   ></div>
                 </motion.button>
@@ -1340,7 +1405,7 @@ const BloodChainLanding = () => {
 
       {/* CTA with bold contrasts and neon glow */}
       <motion.section
-        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-red-600 via-pink-500 to-red-800 text-white relative"
+        className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-red-600 via-rose-500 to-red-800 text-white relative"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
@@ -1358,8 +1423,8 @@ const BloodChainLanding = () => {
             className="text-base sm:text-lg lg:text-xl mb-8 max-w-3xl mx-auto opacity-90"
             variants={itemVariants}
           >
-            Empower blood donation with secure, transparent blockchain
-            technology.
+            Secure your legacy in blockchain-powered blood donation. Every drop
+            counts.
           </motion.p>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center"
@@ -1372,7 +1437,7 @@ const BloodChainLanding = () => {
               whileTap={{ scale: 0.98 }}
               aria-label="Become a donor"
             >
-              <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Heart className="w-6 h-6" />
               <span>Become a Donor</span>
             </motion.a>
             <motion.a
@@ -1382,7 +1447,7 @@ const BloodChainLanding = () => {
               whileTap={{ scale: 0.98 }}
               aria-label="Partner with us"
             >
-              <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Building2 className="w-6 h-6" />
               <span>Partner with Us</span>
             </motion.a>
           </motion.div>
@@ -1412,10 +1477,10 @@ const BloodChainLanding = () => {
         viewport={{ once: true }}
         variants={containerVariants}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 to-pink-900/5"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 to-rose-900/5"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
             variants={containerVariants}
           >
             <motion.div variants={itemVariants}>
@@ -1424,17 +1489,16 @@ const BloodChainLanding = () => {
                 whileHover={{ scale: 1.02 }}
               >
                 <Heart className="w-8 h-8 text-red-600" />
-                <span className="text-xl sm:text-2xl font-bold">
-                  BloodChain
-                </span>
+                <span className="text-2xl font-bold">BloodChain</span>
               </motion.div>
-              <p className="text-gray-400 text-sm sm:text-base">
-                Revolutionizing blood management with blockchain technology.
+              <p className="text-gray-400 text-base">
+                Revolutionizing blood management with blockchain for a safer
+                world.
               </p>
             </motion.div>
             <motion.div variants={itemVariants}>
               <h4 className="font-bold text-lg mb-4">Platform</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
+              <ul className="space-y-2 text-gray-400 text-base">
                 {[
                   "For Donors",
                   "For Blood Banks",
@@ -1455,7 +1519,7 @@ const BloodChainLanding = () => {
             </motion.div>
             <motion.div variants={itemVariants}>
               <h4 className="font-bold text-lg mb-4">Resources</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
+              <ul className="space-y-2 text-gray-400 text-base">
                 {[
                   "Documentation",
                   "White Paper",
@@ -1476,7 +1540,7 @@ const BloodChainLanding = () => {
             </motion.div>
             <motion.div variants={itemVariants}>
               <h4 className="font-bold text-lg mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-400 text-sm sm:text-base">
+              <ul className="space-y-2 text-gray-400 text-base">
                 {[
                   {
                     href: "mailto:hello@bloodchain.org",
@@ -1500,7 +1564,7 @@ const BloodChainLanding = () => {
             </motion.div>
           </motion.div>
           <motion.div
-            className="border-t border-gray-800 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-gray-400 text-sm sm:text-base"
+            className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 text-base"
             variants={itemVariants}
           >
             <p>
