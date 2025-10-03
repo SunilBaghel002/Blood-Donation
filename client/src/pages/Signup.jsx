@@ -308,7 +308,7 @@ const Signup = () => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.user.role);
         setTimeout(() => {
-          window.location.href = "/dashboard";
+          window.location.href = "/dashboard/donor";
         }, 1500);
       }
     } catch (error) {
