@@ -8,6 +8,7 @@ import {
   Database,
   Lock,
   Clock,
+  CheckCircle,
 } from "lucide-react";
 import Header from "../components/Header";
 import BloodDroplet from "../components/BloodDroplet";

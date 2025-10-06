@@ -14,6 +14,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const FutureScopes = lazy(() => import("./pages/FutureScopes"));
+const BloodBankDashboard = lazy(() => import("./pages/BloodBankDashboard"));
 const EmergencyBloodDonationPortal = lazy(() =>
   import("./pages/EmergencyDashboard")
 );
@@ -76,6 +77,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["Admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/bloodbank"
+            element={
+              <ProtectedRoute allowedRoles={["BloodBank"]}>
+                <BloodBankDashboard />
               </ProtectedRoute>
             }
           />

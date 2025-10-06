@@ -76,14 +76,13 @@ const Signup = () => {
 
   // Animation variants for questions
   const questionVariants = {
-    initial: { opacity: 0, x: 100, scale: 0.8 },
+    initial: { opacity: 0, scale: 0.95 },
     animate: {
       opacity: 1,
-      x: 0,
       scale: 1,
-      transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+      transition: { duration: 0.6, ease: "easeOut" },
     },
-    exit: { opacity: 0, x: -100, scale: 0.8, transition: { duration: 0.4 } },
+    exit: { opacity: 0, scale: 1.05, transition: { duration: 0.4 } },
   };
 
   // Animation variants for messages
@@ -106,6 +105,18 @@ const Signup = () => {
       }));
       if (errors[`questionnaire.${field}`]) {
         setErrors((prev) => ({ ...prev, [`questionnaire.${field}`]: "" }));
+      }
+      if (field === "donationCount" && value === "0") {
+        setFormData((prev) => ({
+          ...prev,
+          questionnaire: {
+            ...prev.questionnaire,
+            lastDonationDate: "Never",
+          },
+        }));
+        setTimeout(() => {
+          handleNextQuestion();
+        }, 500);
       }
     } else {
       setFormData((prev) => ({
@@ -153,7 +164,11 @@ const Signup = () => {
         } else if (subStep === 2 && !formData.questionnaire.donationCount) {
           newErrors["questionnaire.donationCount"] =
             "Donation count is required";
-        } else if (subStep === 3 && !formData.questionnaire.lastDonationDate) {
+        } else if (
+          subStep === 3 &&
+          formData.questionnaire.donationCount !== "0" &&
+          !formData.questionnaire.lastDonationDate
+        ) {
           newErrors["questionnaire.lastDonationDate"] =
             "Last donation date is required";
         } else if (subStep === 4 && !formData.questionnaire.medicalConditions) {
@@ -271,7 +286,10 @@ const Signup = () => {
           questionnaireData = {
             bloodGroup: formData.questionnaire.bloodGroup,
             donationCount: formData.questionnaire.donationCount,
-            lastDonationDate: formData.questionnaire.lastDonationDate,
+            lastDonationDate:
+              formData.questionnaire.donationCount === "0"
+                ? null
+                : formData.questionnaire.lastDonationDate,
             medicalConditions: formData.questionnaire.medicalConditions,
           };
         } else if (formData.role === "Hospital") {
@@ -406,7 +424,12 @@ const Signup = () => {
                     )
                   )}
                 </select>
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.bloodGroup ? "-0.5rem" : "50%",
+                  }}
+                >
                   Blood Group
                 </label>
                 {errors["questionnaire.bloodGroup"] && (
@@ -450,7 +473,14 @@ const Signup = () => {
                   aria-label="Donation Count"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.donationCount
+                      ? "-0.5rem"
+                      : "50%",
+                  }}
+                >
                   Number of Donations
                 </label>
                 {errors["questionnaire.donationCount"] && (
@@ -463,6 +493,9 @@ const Signup = () => {
             </motion.div>
           );
         case 3:
+          if (formData.questionnaire.donationCount === "0") {
+            return null; // Skip this step, but since we auto-advance, it's handled in handleInputChange
+          }
           return (
             <motion.div
               key="lastDonationDate"
@@ -496,7 +529,14 @@ const Signup = () => {
                   aria-label="Last Donation Date"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.lastDonationDate
+                      ? "-0.5rem"
+                      : "50%",
+                  }}
+                >
                   Last Donation Date
                 </label>
                 {errors["questionnaire.lastDonationDate"] && (
@@ -541,7 +581,14 @@ const Signup = () => {
                   aria-label="Medical Conditions"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.medicalConditions
+                      ? "-0.5rem"
+                      : "50%",
+                  }}
+                >
                   Medical Conditions
                 </label>
                 {errors["questionnaire.medicalConditions"] && (
@@ -588,7 +635,14 @@ const Signup = () => {
                   aria-label="Hospital Name"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.hospitalName
+                      ? "-0.5rem"
+                      : "50%",
+                  }}
+                >
                   Hospital Name
                 </label>
                 {errors["questionnaire.hospitalName"] && (
@@ -632,7 +686,14 @@ const Signup = () => {
                   aria-label="Location"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.hospitalLocation
+                      ? "-0.5rem"
+                      : "50%",
+                  }}
+                >
                   Location
                 </label>
                 {errors["questionnaire.hospitalLocation"] && (
@@ -674,7 +735,12 @@ const Signup = () => {
                   aria-label="Bed Count"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.bedCount ? "-0.5rem" : "50%",
+                  }}
+                >
                   Bed Count
                 </label>
                 {errors["questionnaire.bedCount"] && (
@@ -718,7 +784,14 @@ const Signup = () => {
                   aria-label="Contact Number"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.hospitalContactNumber
+                      ? "-0.5rem"
+                      : "50%",
+                  }}
+                >
                   Contact Number
                 </label>
                 {errors["questionnaire.hospitalContactNumber"] && (
@@ -767,7 +840,12 @@ const Signup = () => {
                   aria-label="Blood Bank Name"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.name ? "-0.5rem" : "50%",
+                  }}
+                >
                   Blood Bank Name
                 </label>
                 {errors["questionnaire.name"] && (
@@ -809,7 +887,12 @@ const Signup = () => {
                   aria-label="Location"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.location ? "-0.5rem" : "50%",
+                  }}
+                >
                   Location
                 </label>
                 {errors["questionnaire.location"] && (
@@ -855,7 +938,14 @@ const Signup = () => {
                   aria-label="Blood Storage Capacity"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.bloodStorageCapacity
+                      ? "-0.5rem"
+                      : "50%",
+                  }}
+                >
                   Blood Storage Capacity (units)
                 </label>
                 {errors["questionnaire.bloodStorageCapacity"] && (
@@ -899,7 +989,14 @@ const Signup = () => {
                   aria-label="Contact Number"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{
+                    top: formData.questionnaire.contactNumber
+                      ? "-0.5rem"
+                      : "50%",
+                  }}
+                >
                   Contact Number
                 </label>
                 {errors["questionnaire.contactNumber"] && (
@@ -958,36 +1055,13 @@ const Signup = () => {
               background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M50 10C50 10 40 20 40 30C40 40 50 50 50 50C50 50 60 40 60 30C60 20 50 10 50 10Z' fill='%23f87171' fill-opacity='0.05'/%3E%3C/svg%3E");
             }
             @media (max-width: 768px) { .parallax-bg { background-attachment: scroll; } }
-            .floating-label {
-              top: 50%;
-              transform: translateY(-50%);
-              transition: all 0.3s ease;
-              pointer-events: none;
-            }
-            input:focus ~ .floating-label,
-            input:not(:placeholder-shown) ~ .floating-label,
-            select:focus ~ .floating-label,
-            select:not([value=""]) ~ .floating-label,
-            textarea:focus ~ .floating-label,
-            textarea:not(:placeholder-shown) ~ .floating-label {
-              top: -8px;
-              transform: translateY(0);
-              font-size: 0.75rem;
-              color: #f87171;
-              background: linear-gradient(to bottom, #ffffff, #fef2f2);
-              padding: 0 4px;
-            }
-            .progress-bar {
-              width: ${(step < 4 ? step / 4 : subStep / 4) * 100}%;
-              background: linear-gradient(to right, #ef4444, #f472b6);
-            }
-            .message-container {
-              position: fixed;
-              top: 1rem;
-              right: 1rem;
-              z-index: 1000;
-              max-width: 300px;
-            }
+            .floating-label-container { position: relative; }
+            .floating-label { position: absolute; top: -0.5rem; left: 0.75rem; font-size: 0.75rem; color: #4b5563; background: #fff; padding: 0 0.25rem; transition: all 0.2s ease; pointer-events: none; }
+            input:focus, select:focus, textarea:focus { border-color: #f87171; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+            .progress-bar { width: ${
+              (step < 4 ? step / 4 : subStep / 4) * 100
+            }%; background: linear-gradient(to right, #ef4444, #f472b6); }
+            .message-container { position: fixed; top: 1rem; right: 1rem; z-index: 1000; max-width: 300px; }
           `}
         </style>
       </div>
@@ -1083,7 +1157,10 @@ const Signup = () => {
                     <option value="Hospital">Hospital</option>
                     <option value="BloodBank">Blood Bank</option>
                   </select>
-                  <label className="absolute left-4 floating-label text-gray-500">
+                  <label
+                    className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                    style={{ top: formData.role ? "-0.5rem" : "50%" }}
+                  >
                     Role
                   </label>
                   {errors.role && (
@@ -1109,7 +1186,10 @@ const Signup = () => {
                         aria-label="First Name"
                         required
                       />
-                      <label className="absolute left-10 floating-label text-gray-500">
+                      <label
+                        className="absolute left-10 floating-label text-gray-500 transition-all duration-300"
+                        style={{ top: formData.firstName ? "-0.5rem" : "50%" }}
+                      >
                         First Name
                       </label>
                       {errors.firstName && (
@@ -1133,7 +1213,10 @@ const Signup = () => {
                         aria-label="Last Name"
                         required
                       />
-                      <label className="absolute left-10 floating-label text-gray-500">
+                      <label
+                        className="absolute left-10 floating-label text-gray-500 transition-all duration-300"
+                        style={{ top: formData.lastName ? "-0.5rem" : "50%" }}
+                      >
                         Last Name
                       </label>
                       {errors.lastName && (
@@ -1159,7 +1242,10 @@ const Signup = () => {
                     aria-label="Email"
                     required
                   />
-                  <label className="absolute left-10 floating-label text-gray-500">
+                  <label
+                    className="absolute left-10 floating-label text-gray-500 transition-all duration-300"
+                    style={{ top: formData.email ? "-0.5rem" : "50%" }}
+                  >
                     Email Address
                   </label>
                   {errors.email && (
@@ -1185,7 +1271,10 @@ const Signup = () => {
                   aria-label="OTP"
                   required
                 />
-                <label className="absolute left-4 floating-label text-gray-500">
+                <label
+                  className="absolute left-4 floating-label text-gray-500 transition-all duration-300"
+                  style={{ top: formData.otp ? "-0.5rem" : "50%" }}
+                >
                   Enter 6-digit OTP
                 </label>
                 {errors.otp && (
@@ -1216,7 +1305,10 @@ const Signup = () => {
                     aria-label="Password"
                     required
                   />
-                  <label className="absolute left-10 floating-label text-gray-500">
+                  <label
+                    className="absolute left-10 floating-label text-gray-500 transition-all duration-300"
+                    style={{ top: formData.password ? "-0.5rem" : "50%" }}
+                  >
                     Password
                   </label>
                   <button
@@ -1254,7 +1346,12 @@ const Signup = () => {
                     aria-label="Confirm Password"
                     required
                   />
-                  <label className="absolute left-10 floating-label text-gray-500">
+                  <label
+                    className="absolute left-10 floating-label text-gray-500 transition-all duration-300"
+                    style={{
+                      top: formData.confirmPassword ? "-0.5rem" : "50%",
+                    }}
+                  >
                     Confirm Password
                   </label>
                   <button
