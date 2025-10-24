@@ -7,8 +7,14 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const path = require("path");
 const crypto = require("crypto");
+const { ethers } = require("ethers");
+require("dotenv").config();
+const BloodChainABI = require("./BloodChain.json").abi;
+const { z } = require("zod");
+const { calculateRewards } = require("../utils/rewards");
 
-dotenv.config();
+const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 const app = express();
 
@@ -22,6 +28,14 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+const getContract = (wallet) => {
+  return new ethers.Contract(
+    "0x5FbDB2315678afecb367f032d93F642f64180aa3", // deployed address
+    BloodChainABI,
+    wallet
+  );
+};
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -221,6 +235,14 @@ const Transaction = mongoose.model("Transaction", transactionSchema);
 const Campaign = mongoose.model("Campaign", campaignSchema);
 const Commitment = mongoose.model("Commitment", commitmentSchema);
 const Event = mongoose.model("Event", eventSchema);
+
+// Validation schema
+const RecordDonationSchema = z.object({
+  donorId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid donor ID"),
+  bloodType: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]),
+  units: z.number().int().positive().max(10), // max 10 units per donation
+  ipfsHash: z.string().optional(), // optional photo
+});
 
 // Nodemailer Setup
 const transporter = nodemailer.createTransport({
@@ -882,90 +904,149 @@ app.get("/api/bloodbank/registered", authMiddleware, async (req, res) => {
   }
 });
 
+// Improved endpoint
 app.post("/api/bloodbank/record-donation", authMiddleware, async (req, res) => {
-  const { donorId, bloodType, units } = req.body;
-  if (!donorId || !bloodType || !units) {
-    return res
-      .status(400)
-      .json({ error: "Donor ID, blood type, and units are required" });
+  // 1. Validate role
+  if (req.userRole !== "BloodBank") {
+    return res.status(403).json({ error: "Access denied: BloodBank role required" });
   }
-  if (!["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(bloodType)) {
-    return res.status(400).json({ error: "Invalid blood type" });
-  }
-  if (!Number.isInteger(units) || units < 1) {
-    return res.status(400).json({ error: "Units must be a positive integer" });
-  }
-  try {
-    if (req.userRole !== "BloodBank") {
-      return res.status(403).json({ error: "Access denied" });
-    }
-    const donor = await User.findById(donorId);
-    if (!donor || donor.role !== "Donor") {
-      return res.status(400).json({ error: "Invalid donor" });
-    }
-    donor.donorInfo.donationCount += 1;
-    donor.donorInfo.lastDonationDate = new Date();
-    donor.donorInfo.rewards.points += units * 10;
-    if (
-      donor.donorInfo.rewards.points >= 50 &&
-      !donor.donorInfo.rewards.badges.includes("Gold Donor")
-    ) {
-      donor.donorInfo.rewards.badges.push("Gold Donor");
-    } else if (
-      donor.donorInfo.rewards.points >= 10 &&
-      !donor.donorInfo.rewards.badges.includes("Silver Donor")
-    ) {
-      donor.donorInfo.rewards.badges.push("Silver Donor");
-    }
-    await donor.save();
-    let inventory = await BloodInventory.findOne({
-      bloodBankId: req.userId,
-      bloodType,
+
+  // 2. Validate input
+  const parseResult = RecordDonationSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({
+      error: "Validation failed",
+      details: parseResult.error.format(),
     });
-    if (inventory) {
-      inventory.units += units;
-      inventory.expiryDate = new Date(Date.now() + 42 * 24 * 60 * 60 * 1000);
-      inventory.demand =
-        inventory.units < 10
-          ? "Critical"
-          : inventory.units < 20
-          ? "High"
-          : inventory.units < 50
-          ? "Medium"
-          : "Low";
-    } else {
-      inventory = new BloodInventory({
+  }
+
+  const { donorId, bloodType, units, ipfsHash = "" } = parseResult.data;
+
+  let transaction, receipt;
+  const session = await mongoose.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      // --- 1. Validate donor ---
+      const donor = await User.findById(donorId).session(session);
+      if (!donor || donor.role !== "Donor") {
+        throw new Error("Invalid donor");
+      }
+      if (!donor.walletAddress) {
+        throw new Error("Donor wallet not connected");
+      }
+
+      // --- 2. Update donor rewards ---
+      const { newPoints, newBadges } = calculateRewards(
+        donor.donorInfo.rewards.points,
+        units * 10,
+        donor.donorInfo.rewards.badges
+      );
+
+      donor.donorInfo.donationCount += 1;
+      donor.donorInfo.lastDonationDate = new Date();
+      donor.donorInfo.rewards.points = newPoints;
+      donor.donorInfo.rewards.badges = newBadges;
+      await donor.save({ session });
+
+      // --- 3. Update inventory ---
+      let inventory = await BloodInventory.findOne({
         bloodBankId: req.userId,
         bloodType,
+      }).session(session);
+
+      const expiryDate = new Date(Date.now() + 42 * 24 * 60 * 60 * 1000); // 42 days
+
+      if (inventory) {
+        inventory.units += units;
+        inventory.expiryDate = expiryDate;
+      } else {
+        inventory = new BloodInventory({
+          bloodBankId: req.userId,
+          bloodType,
+          units,
+          expiryDate,
+          demand: "Low",
+        });
+      }
+
+      // Update demand level
+      inventory.demand =
+        inventory.units < 10 ? "Critical" :
+        inventory.units < 20 ? "High" :
+        inventory.units < 50 ? "Medium" : "Low";
+
+      await inventory.save({ session });
+
+      // --- 4. Call Blockchain ---
+      const bloodBankWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+      const contract = new ethers.Contract(
+        process.env.CONTRACT_ADDRESS,
+        BloodChainABI,
+        bloodBankWallet
+      );
+
+      const tx = await contract.recordDonation(
+        donor.walletAddress,
+        bloodType,
         units,
-        expiryDate: new Date(Date.now() + 42 * 24 * 60 * 60 * 1000),
-        demand:
-          units < 10
-            ? "Critical"
-            : units < 20
-            ? "High"
-            : units < 50
-            ? "Medium"
-            : "Low",
+        ipfsHash,
+        42, // shelf life in days
+        { gasLimit: 500000 }
+      );
+
+      receipt = await tx.wait();
+      if (receipt.status !== 1) {
+        throw new Error("Blockchain transaction failed");
+      }
+
+      // --- 5. Save transaction ---
+      transaction = new Transaction({
+        type: "Donation",
+        donorId,
+        bloodBankId: req.userId,
+        bloodType,
+        quantity: units,
+        status: "Confirmed",
+        txHash: receipt.transactionHash,
+        blockchainId: receipt.transactionHash,
+        ipfsHash,
+        unitId: null, // will be filled by event listener or contract call
       });
-    }
-    await inventory.save();
-    const transaction = new Transaction({
-      type: "Donation",
-      donorId,
-      bloodBankId: req.userId,
-      bloodType,
-      quantity: units,
-      status: "Confirmed",
-      txHash: `0x${crypto.randomBytes(32).toString("hex")}`,
+      await transaction.save({ session });
+
+      // --- 6. Emit real-time event (optional) ---
+      // io.to(`bloodbank_${req.userId}`).emit("donationRecorded", { transaction });
     });
-    await transaction.save();
-    res
-      .status(200)
-      .json({ message: "Donation recorded successfully", transaction });
+
+    // --- Success Response ---
+    res.status(200).json({
+      message: "Donation recorded successfully on blockchain and database",
+      data: {
+        transactionId: transaction._id,
+        txHash: receipt.transactionHash,
+        unitId: transaction.unitId,
+        donor: {
+          name: `${donor.firstName} ${donor.lastName}`,
+          wallet: donor.walletAddress,
+          newPoints: donor.donorInfo.rewards.points,
+          newBadges: donor.donorInfo.rewards.badges,
+        },
+        inventory: {
+          bloodType,
+          units: inventory.units,
+          demand: inventory.demand,
+        },
+      },
+    });
   } catch (error) {
-    console.error("Record donation error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("Record donation error:", error.message);
+    res.status(500).json({
+      error: "Failed to record donation",
+      details: error.message,
+    });
+  } finally {
+    session.endSession();
   }
 });
 
