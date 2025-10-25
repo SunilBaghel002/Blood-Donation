@@ -11,7 +11,7 @@ const { ethers } = require("ethers");
 require("dotenv").config();
 const BloodChainABI = require("./BloodChain.json").abi;
 const { z } = require("zod");
-const { calculateRewards } = require("./utils/reward");
+const { calculateRewards } = require("./utils/rewards");
 
 const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
