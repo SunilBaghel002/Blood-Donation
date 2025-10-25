@@ -124,7 +124,8 @@ const Login = () => {
       }
 
       setTimeout(() => {
-        navigate(`/dashboard/${data.user.role.toLowerCase()}`);
+        // FIXED: Use correct route path from App.jsx (e.g., "/donor-dashboard" not "/dashboard/donor")
+        navigate(`/${data.user.role.toLowerCase()}-dashboard`);
       }, 1500);
     } catch (error) {
       setErrors({ general: error.message });

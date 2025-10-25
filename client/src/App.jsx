@@ -1,4 +1,5 @@
-// src/App.jsx (Updated - add wallet check)
+// src/App.jsx (Updated with /connect-wallet)
+
 import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
@@ -6,9 +7,9 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useWeb3 } from "./contexts/Web3Context.jsx"; // New
+import { useWeb3 } from "./contexts/Web3Context.jsx";
 
-// Lazy components (unchanged)
+// Lazy load components
 const BloodChainLanding = lazy(() => import("./pages/landing"));
 const DonorDashboard = lazy(() => import("./pages/DonorDashboard"));
 const HospitalDashboard = lazy(() => import("./pages/HospitalDashboard"));
@@ -24,20 +25,20 @@ const HospitalEmergencyDashboard = lazy(() =>
   import("./pages/HospitalEmergencyDashboard")
 );
 const Profile = lazy(() => import("./pages/Profile"));
+const ConnectWallet = lazy(() => import("./pages/ConnectWallet")); // NEW
 
-// Updated ProtectedRoute with wallet check
+// Protected Route
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
-  const { isConnected } = useWeb3(); // New: Check wallet
+  const { isConnected } = useWeb3();
 
   if (!token) return <Navigate to="/login" />;
   if (allowedRoles && !allowedRoles.includes(role))
     return <Navigate to="/unauthorized" />;
 
-  // For blockchain roles (Donor, BloodBank, etc.), require wallet
   if (["Donor", "BloodBank", "Hospital"].includes(role) && !isConnected) {
-    return <Navigate to="/connect-wallet" />; // New route for wallet connect
+    return <Navigate to="/connect-wallet" replace />;
   }
 
   return children;
@@ -60,11 +61,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/future-scopes" element={<FutureScopes />} />
-        
+
+        {/* NEW: Wallet Connect Page */}
+        <Route path="/connect-wallet" element={<ConnectWallet />} />
 
         {/* Protected Routes */}
         <Route
-          path="/dashboard/donor"
+          path="/donor-dashboard"
           element={
             <ProtectedRoute allowedRoles={["Donor"]}>
               <DonorDashboard />
@@ -72,7 +75,7 @@ function App() {
           }
         />
         <Route
-          path="/dashboard/hospital"
+          path="/hospital-dashboard"
           element={
             <ProtectedRoute allowedRoles={["Hospital"]}>
               <HospitalDashboard />
@@ -80,7 +83,7 @@ function App() {
           }
         />
         <Route
-          path="/dashboard/admin"
+          path="/admin-dashboard"
           element={
             <ProtectedRoute allowedRoles={["Admin"]}>
               <AdminDashboard />
@@ -88,7 +91,7 @@ function App() {
           }
         />
         <Route
-          path="/dashboard/bloodbank"
+          path="/bloodbank-dashboard"
           element={
             <ProtectedRoute allowedRoles={["BloodBank"]}>
               <BloodBankDashboard />
