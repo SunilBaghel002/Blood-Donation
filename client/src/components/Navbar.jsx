@@ -1,118 +1,95 @@
-import React, { useState } from "react";
-import { Heart, Menu, X } from "lucide-react";
+// src/components/Navbar.jsx (Updated - add wallet section)
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useWeb3 } from "../contexts/Web3Context.jsx"; // New
+import { Heart, LogOut, Wallet } from "lucide-react"; // Assuming icons
 
-const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+const Navbar = ({ role }) => {
+  const {
+    account,
+    balance,
+    connectWallet,
+    disconnectWallet,
+    isConnected,
+    isLoading,
+  } = useWeb3();
+  const navigate = useNavigate();
 
-  const navItems = ["Home", "About", "Features", "Future Scopes", "Contact"];
+  const handleLogout = () => {
+    localStorage.clear();
+    disconnectWallet();
+    navigate("/login");
+  };
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-sm shadow-md transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
-        <div className="flex items-center space-x-3">
-          <Heart className="w-7 h-7 text-red-600" />
-          <span className="text-2xl font-bold text-red-600 tracking-tight">
-            BloodChain
-          </span>
-        </div>
-        <div className="hidden md:flex space-x-8 items-center">
-          {navItems.map((item) => (
-            <a
-              key={item}
-              href={
-                item === "Home"
-                  ? "/"
-                  : item === "Future Scopes"
-                  ? "/future-scopes"
-                  : `#${item.toLowerCase().replace(" ", "-")}`
-              }
-              className="text-base font-medium text-gray-800 hover:text-red-600 hover:underline underline-offset-4 transition-all duration-200"
-              aria-current={
-                window.location.pathname ===
-                (item === "Home"
-                  ? "/"
-                  : item === "Future Scopes"
-                  ? "/future-scopes"
-                  : `#${item.toLowerCase().replace(" ", "-")}`)
-                  ? "page"
-                  : undefined
-              }
-            >
-              {item}
-            </a>
-          ))}
-          <a
-            href="/signup"
-            className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-red-800 transition-all duration-200 hover:scale-105"
+    <nav className="bg-gradient-to-r from-red-600 to-pink-600 shadow-lg">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex justify-between items-center py-4">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="text-white font-bold text-xl flex items-center"
           >
-            Join Now
-          </a>
-        </div>
-        <button
-          className="md:hidden text-gray-800 p-2"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-        >
-          {isMenuOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <Menu className="w-6 h-6" />
-          )}
-        </button>
-      </div>
-      {isMenuOpen && (
-        <div className="md:hidden bg-white/95 shadow-lg animate-slide-in">
-          <div className="flex flex-col items-center space-y-3 py-6 px-6">
-            {navItems.map((item) => (
-              <a
-                key={item}
-                href={
-                  item === "Home"
-                    ? "/"
-                    : item === "Future Scopes"
-                    ? "/future-scopes"
-                    : `#${item.toLowerCase().replace(" ", "-")}`
-                }
-                className="text-base font-medium text-gray-800 hover:text-red-600 hover:underline underline-offset-4 transition-all duration-200"
-                onClick={() => setIsMenuOpen(false)}
-                aria-current={
-                  window.location.pathname ===
-                  (item === "Home"
-                    ? "/"
-                    : item === "Future Scopes"
-                    ? "/future-scopes"
-                    : `#${item.toLowerCase().replace(" ", "-")}`)
-                    ? "page"
-                    : undefined
-                }
+            <Heart className="mr-2" /> BloodChain
+          </Link>
+
+          {/* Nav Links */}
+          <div className="hidden md:flex space-x-6">
+            {role === "Donor" && (
+              <Link
+                to="/donor-dashboard"
+                className="text-white hover:underline"
               >
-                {item}
-              </a>
-            ))}
-            <a
-              href="/signup"
-              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-2 rounded-full font-semibold text-center hover:from-red-700 hover:to-red-800 transition-all duration-200"
+                Dashboard
+              </Link>
+            )}
+            {role === "Hospital" && (
+              <Link
+                to="/hospital-dashboard"
+                className="text-white hover:underline"
+              >
+                Dashboard
+              </Link>
+            )}
+            {/* Add more role-based links */}
+            <Link to="/profile" className="text-white hover:underline">
+              Profile
+            </Link>
+          </div>
+
+          {/* Wallet Section */}
+          <div className="flex items-center space-x-4">
+            {isConnected ? (
+              <>
+                <div className="text-white text-sm">
+                  {account?.slice(0, 6)}...{account?.slice(-4)} | {balance} ETH
+                </div>
+                <button
+                  onClick={disconnectWallet}
+                  className="text-white hover:text-gray-200"
+                >
+                  <LogOut size={20} />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={connectWallet}
+                disabled={isLoading}
+                className="bg-white text-red-600 px-4 py-2 rounded-md font-semibold hover:bg-gray-100 disabled:opacity-50"
+              >
+                {isLoading ? "Connecting..." : "Connect Wallet"}
+                <Wallet size={18} className="ml-2 inline" />
+              </button>
+            )}
+            <button
+              onClick={handleLogout}
+              className="text-white hover:text-gray-200"
             >
-              Join Now
-            </a>
+              <LogOut size={20} />
+            </button>
           </div>
         </div>
-      )}
-      <style jsx>{`
-        @keyframes slide-in {
-          from {
-            transform: translateY(-10px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out forwards;
-        }
-      `}</style>
+      </div>
     </nav>
   );
 };

@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@metamask/detect-provider": "^2.0.0",
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.12.2",
     "chart.js": "^4.5.0",
+    "ethers": "^6.15.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.539.0",
     "react": "^19.1.1",

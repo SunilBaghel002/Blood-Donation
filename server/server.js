@@ -14,7 +14,7 @@ const BloodChainABI = require("./BloodChain.json").abi;
 const { z } = require("zod");
 const { calculateRewards } = require("./utils/rewards"); // Fixed path
 
-const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545").then(() => console.log("Web3 connected!!"))
+const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545")
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 const app = express();

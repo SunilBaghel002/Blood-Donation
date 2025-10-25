@@ -1,3 +1,4 @@
+// src/App.jsx (Updated - add wallet check)
 import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
@@ -5,8 +6,9 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { useWeb3 } from "./contexts/Web3Context.jsx"; // New
 
-// Lazy load components
+// Lazy components (unchanged)
 const BloodChainLanding = lazy(() => import("./pages/landing"));
 const DonorDashboard = lazy(() => import("./pages/DonorDashboard"));
 const HospitalDashboard = lazy(() => import("./pages/HospitalDashboard"));
@@ -21,21 +23,21 @@ const EmergencyBloodDonationPortal = lazy(() =>
 const HospitalEmergencyDashboard = lazy(() =>
   import("./pages/HospitalEmergencyDashboard")
 );
-const Profile = lazy(() =>
-  import("./pages/Profile")
-);
+const Profile = lazy(() => import("./pages/Profile"));
 
-// Protected Route component to handle authentication and role-based access
+// Updated ProtectedRoute with wallet check
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
+  const { isConnected } = useWeb3(); // New: Check wallet
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!token) return <Navigate to="/login" />;
+  if (allowedRoles && !allowedRoles.includes(role))
+    return <Navigate to="/unauthorized" />;
 
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/" replace />;
+  // For blockchain roles (Donor, BloodBank, etc.), require wallet
+  if (["Donor", "BloodBank", "Hospital"].includes(role) && !isConnected) {
+    return <Navigate to="/connect-wallet" />; // New route for wallet connect
   }
 
   return children;
@@ -43,80 +45,65 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
 function App() {
   return (
-    <Router>
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
-            <div className="flex items-center space-x-2 text-gray-600">
-              <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-              <span>Loading...</span>
-            </div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
+          <div className="flex items-center space-x-2 text-gray-600">
+            <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+            <span>Loading...</span>
           </div>
-        }
-      >
-        <Routes>
-          <Route path="/" element={<BloodChainLanding />} />
-          <Route
-            path="/dashboard/donor"
-            element={
-              <ProtectedRoute allowedRoles={["Donor"]}>
-                <DonorDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/hospital"
-            element={
-              <ProtectedRoute allowedRoles={["Hospital"]}>
-                <HospitalDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/admin"
-            element={
-              <ProtectedRoute allowedRoles={["Admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/bloodbank"
-            element={
-              <ProtectedRoute allowedRoles={["BloodBank"]}>
-                <BloodBankDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/future-scopes" element={<FutureScopes />} />
-          <Route
-            path="/EmergencyBloodDonationPortal"
-            element={
-              <ProtectedRoute allowedRoles={["Donor"]}>
-                <EmergencyBloodDonationPortal />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/HospitalEmergencyDashboard"
-            element={
-              <ProtectedRoute allowedRoles={["Hospital"]}>
-                <HospitalEmergencyDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Profile"
-            element={
-                <Profile />
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </Router>
+        </div>
+      }
+    >
+      <Routes>
+        <Route path="/" element={<BloodChainLanding />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/future-scopes" element={<FutureScopes />} />
+        
+
+        {/* Protected Routes */}
+        <Route
+          path="/donor-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["Donor"]}>
+              <DonorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hospital-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["Hospital"]}>
+              <HospitalDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bloodbank-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["BloodBank"]}>
+              <BloodBankDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/emergency" element={<EmergencyBloodDonationPortal />} />
+        <Route
+          path="/hospital-emergency"
+          element={<HospitalEmergencyDashboard />}
+        />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Suspense>
   );
 }
 
