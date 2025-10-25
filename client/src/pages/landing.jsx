@@ -66,14 +66,12 @@ const BloodChainLanding = () => {
   const [activeFlowStep, setActiveFlowStep] = useState(null);
   const canvasRef = useRef(null);
 
-  // Handle scroll for navbar and back-to-top
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Testimonial rotation
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
@@ -81,7 +79,6 @@ const BloodChainLanding = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 3D Interactive Blood Drop with enhanced lighting and rotation
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -94,17 +91,16 @@ const BloodChainLanding = () => {
       antialias: true,
     });
 
-    const updateCanvasSize = () => {
+    const updateSize = () => {
       const width = Math.min(window.innerWidth, 600);
       const height = width * 0.8;
       renderer.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
     };
-    updateCanvasSize();
-    window.addEventListener("resize", updateCanvasSize);
+    updateSize();
+    window.addEventListener("resize", updateSize);
 
-    // Enhanced blood drop geometry with more segments for smoothness
     const points = [];
     for (let i = 0; i < 50; i++) {
       const x = Math.sin((i * Math.PI) / 50) * (1 - i / 50) * 1.5;
@@ -113,7 +109,7 @@ const BloodChainLanding = () => {
     }
     const geometry = new THREE.LatheGeometry(points, 64);
     const material = new THREE.MeshPhysicalMaterial({
-      color: 0x9b2c2c, // Deeper crimson red for improved color scheme
+      color: 0x9b2c2c,
       metalness: 0.1,
       roughness: 0.2,
       clearcoat: 1,
@@ -123,20 +119,18 @@ const BloodChainLanding = () => {
     const bloodDrop = new THREE.Mesh(geometry, material);
     scene.add(bloodDrop);
 
-    // Enhanced lighting for dramatic effect
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
     directionalLight.position.set(5, 5, 5);
-    directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    const pointLight = new THREE.PointLight(0xf43f5e, 1, 100); // Rose accent
+    const pointLight = new THREE.PointLight(0xf43f5e, 1, 100);
     pointLight.position.set(-5, -5, 5);
     scene.add(pointLight);
 
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambientLight);
 
-    const hemisphereLight = new THREE.HemisphereLight(0xf59e0b, 0x9b2c2c, 0.8); // Gold to crimson
+    const hemisphereLight = new THREE.HemisphereLight(0xf59e0b, 0x9b2c2c, 0.8);
     scene.add(hemisphereLight);
 
     camera.position.z = 4;
@@ -148,14 +142,14 @@ const BloodChainLanding = () => {
 
     const animate = () => {
       requestAnimationFrame(animate);
-      bloodDrop.rotation.y += 0.005; // Subtle additional rotation
+      bloodDrop.rotation.y += 0.005;
       controls.update();
       renderer.render(scene, camera);
     };
     animate();
 
     return () => {
-      window.removeEventListener("resize", updateCanvasSize);
+      window.removeEventListener("resize", updateSize);
       renderer.dispose();
       controls.dispose();
     };
@@ -165,10 +159,7 @@ const BloodChainLanding = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.2, delayChildren: 0.1 },
     },
   };
 
@@ -502,62 +493,24 @@ const BloodChainLanding = () => {
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased">
-      {/* Enhanced styles for better formatting and color scheme */}
-      <style jsx>{`
-        @keyframes pulse-glow {
-          0%,
-          100% {
-            box-shadow: 0 0 15px rgba(155, 44, 44, 0.4);
+      {/* FIXED: Removed <style jsx> → use regular <style> */}
+      <style>
+        {`
+          @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(155, 44, 44, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(155, 44, 44, 0.7), 0 0 50px rgba(155, 44, 44, 0.5); }
           }
-          50% {
-            box-shadow: 0 0 30px rgba(155, 44, 44, 0.7),
-              0 0 50px rgba(155, 44, 44, 0.5);
-          }
-        }
-        @keyframes flow-scale {
-          0% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.05);
-          }
-          100% {
-            transform: scale(1);
-          }
-        }
-        @keyframes flow-path {
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-        .animate-pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        .animate-flow-scale {
-          animation: flow-scale 1.5s ease-in-out infinite;
-        }
-        .flow-path {
-          stroke-dasharray: 1000;
-          stroke-dashoffset: 1000;
-          animation: flow-path 2s linear forwards;
-        }
-        .flow-arrow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        .parallax-bg {
-          background-attachment: fixed;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
-        }
-        @media (max-width: 768px) {
-          .parallax-bg {
-            background-attachment: scroll;
-          }
-        }
-      `}</style>
+          @keyframes flow-scale { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+          @keyframes flow-path { to { stroke-dashoffset: 0; } }
+          .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+          .animate-flow-scale { animation: flow-scale 1.5s ease-in-out infinite; }
+          .flow-path { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: flow-path 2s linear forwards; }
+          .parallax-bg { background-attachment: fixed; background-position: center; background-repeat: no-repeat; background-size: cover; }
+          @media (max-width: 768px) { .parallax-bg { background-attachment: scroll; } }
+        `}
+      </style>
 
-      {/* Navigation with enhanced blur and motion */}
+      {/* Navigation */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -566,7 +519,6 @@ const BloodChainLanding = () => {
             ? "bg-white/95 backdrop-blur-lg shadow-lg"
             : "bg-transparent"
         }`}
-        aria-label="Main navigation"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -585,6 +537,8 @@ const BloodChainLanding = () => {
                 BloodChain
               </span>
             </motion.div>
+
+            {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-6">
               {[
                 "Why Donate",
@@ -608,17 +562,18 @@ const BloodChainLanding = () => {
               ))}
               <motion.a
                 href="/signup"
-                className="bg-gradient-to-r from-red-600 to-rose-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-rose-600 transform transition-all duration-300 animate-pulse-glow"
+                className="bg-gradient-to-r from-red-600 to-rose-500 text-white px-6 py-2 rounded-full font-semibold hover:from-red-700 hover:to-rose-600 animate-pulse-glow"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 Sign Up
               </motion.a>
             </div>
+
+            {/* Mobile Menu Toggle */}
             <button
               className="md:hidden text-white"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMenuOpen ? (
                 <X className="w-6 h-6" />
@@ -627,11 +582,13 @@ const BloodChainLanding = () => {
               )}
             </button>
           </div>
+
+          {/* Mobile Menu */}
           {isMenuOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              className="md:hidden bg-white/95 backdrop-blur-md shadow-md overflow-hidden"
+              className="md:hidden bg-white/95 backdrop-blur-md shadow-md"
             >
               <div className="flex flex-col space-y-4 py-4 px-6">
                 {[
@@ -646,7 +603,7 @@ const BloodChainLanding = () => {
                   <motion.a
                     key={item}
                     href={`#${item.toLowerCase().replace(" ", "-")}`}
-                    className="text-gray-800 font-medium hover:text-red-500 transition-colors"
+                    className="text-gray-800 font-medium hover:text-red-500"
                     onClick={() => setIsMenuOpen(false)}
                     whileHover={{ x: 5 }}
                   >
@@ -655,7 +612,7 @@ const BloodChainLanding = () => {
                 ))}
                 <motion.a
                   href="/signup"
-                  className="bg-gradient-to-r from-red-600 to-rose-500 text-white px-6 py-2 rounded-full font-semibold text-center hover:from-red-700 hover:to-rose-600 transition-all"
+                  className="bg-gradient-to-r from-red-600 to-rose-500 text-white px-6 py-2 rounded-full font-semibold text-center"
                   whileHover={{ scale: 1.02 }}
                 >
                   Sign Up
@@ -666,13 +623,11 @@ const BloodChainLanding = () => {
         </div>
       </motion.nav>
 
-      {/* Hero Section with enhanced motion and bold contrasts */}
-      <section
-        className="relative min-h-screen bg-gradient-to-br from-red-600 via-rose-500 to-red-800 flex items-center overflow-hidden parallax-bg"
+      {/* Hero Section */}
+      <section className="relative min-h-screen bg-gradient-to-br from-red-600 via-rose-500 to-red-800 flex items-center overflow-hidden parallax-bg"
         style={{
           backgroundImage: `url('https://cdn.britannica.com/32/191732-050-5320356D/Human-red-blood-cells.jpg')`,
-        }}
-      >
+        }}>
         <div className="absolute inset-0 bg-black/40"></div>
         <motion.div
           className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-8"
@@ -685,53 +640,29 @@ const BloodChainLanding = () => {
             className="text-center lg:text-left text-white lg:w-1/2"
             variants={itemVariants}
           >
-            <motion.h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+            <motion.h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
               Empowering
               <br />
               <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent">
                 Life-Saving Trust
               </span>
             </motion.h1>
-            <motion.p
-              className="text-lg sm:text-xl lg:text-2xl mb-8 max-w-2xl opacity-90"
-              variants={itemVariants}
-            >
-              Revolutionize blood management with blockchain-powered{" "}
-              <span className="font-semibold text-amber-300">transparency</span>
-              ,{" "}
-              <span className="font-semibold text-amber-300">traceability</span>
-              , and{" "}
-              <span className="font-semibold text-amber-300">security</span>.
-              One donation can save up to three lives—join the chain today.
+            <motion.p className="text-lg sm:text-xl lg:text-2xl mb-8 max-w-2xl opacity-90">
+              Revolutionize blood management with blockchain-powered
+              transparency, traceability, and security.
             </motion.p>
-            <motion.p
-              className="text-base sm:text-lg mb-8"
-              variants={itemVariants}
-            >
-              Blood donation is safe, simple, and profoundly rewarding. Discover
-              how BloodChain makes it even more impactful.
-            </motion.p>
-            <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center"
-              variants={itemVariants}
-            >
+            <motion.div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <motion.a
                 href="/signup"
-                className="group bg-white text-red-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-gray-100 transform transition-all duration-300 flex items-center space-x-2 animate-pulse-glow"
+                className="bg-white text-red-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 flex items-center justify-center space-x-2 animate-pulse-glow"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
-                aria-label="Join as a donor"
               >
                 <span>Join as Donor</span>
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-5 h-5" />
               </motion.a>
               <motion.button
-                className="group border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 transform transition-all duration-300 flex items-center space-x-2"
+                className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-red-600 flex items-center justify-center space-x-2"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -746,9 +677,8 @@ const BloodChainLanding = () => {
           >
             <motion.canvas
               ref={canvasRef}
-              className="w-[200px] sm:w-[300px] lg:w-[400px] h-[200px] sm:h-[300px] lg:h-[400px]"
+              className="w-[300px] h-[300px] lg:w-[400px] lg:h-[400px]"
               whileHover={{ scale: 1.1 }}
-              transition={{ duration: 0.3 }}
             />
           </motion.div>
         </motion.div>
@@ -880,38 +810,38 @@ const BloodChainLanding = () => {
 
       {/* Donation Trends with enhanced chart styling */}
       {/* <section id="trends" className="py-12 sm:py-16 lg:py-20 bg-white">
-        <motion.div
-          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={containerVariants}
-        >
-          <motion.div
-            className="text-center mb-12 sm:mb-16"
-            variants={itemVariants}
-          >
-            <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Blood Donation{" "}
-              <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
-                Trends
-              </span>
-            </motion.h2>
-            <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Steady growth in global donations, with blockchain poised to
-              address shortages (WHO estimates).
-            </motion.p>
-          </motion.div>
-          <motion.div
-            className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-xl"
-            variants={itemVariants}
-          >
-            <div className="bg-gradient-to-r from-red-50 to-rose-50 p-6">
-              <Bar data={donationData} options={chartOptions} />
-            </div>
-          </motion.div>
-        </motion.div>
-      </section> */}
+              <motion.div
+                className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={containerVariants}
+              >
+                <motion.div
+                  className="text-center mb-12 sm:mb-16"
+                  variants={itemVariants}
+                >
+                  <motion.h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                    Blood Donation{" "}
+                    <span className="text-red-600 bg-gradient-to-r from-red-600 to-rose-500 bg-clip-text text-transparent">
+                      Trends
+                    </span>
+                  </motion.h2>
+                  <motion.p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
+                    Steady growth in global donations, with blockchain poised to
+                    address shortages (WHO estimates).
+                  </motion.p>
+                </motion.div>
+                <motion.div
+                  className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-xl"
+                  variants={itemVariants}
+                >
+                  <div className="bg-gradient-to-r from-red-50 to-rose-50 p-6">
+                    <Bar data={donationData} options={chartOptions} />
+                  </div>
+                </motion.div>
+              </motion.div>
+            </section> */}
       <section
         id="donation-trends"
         className="py-12 sm:py-16 lg:py-20 bg-white"
@@ -1454,141 +1384,30 @@ const BloodChainLanding = () => {
         </div>
       </motion.section>
 
-      {/* Back to Top with enhanced animation */}
+      {/* Back to Top */}
       <motion.button
-        className={`fixed bottom-6 right-6 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 ${
+        className={`fixed bottom-6 right-6 p-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all ${
           scrollY > 300 ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         initial={{ scale: 0 }}
         animate={{ scale: scrollY > 300 ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        aria-label="Scroll to top"
         whileHover={{ scale: 1.1, rotate: 360 }}
       >
         <ArrowUp className="w-6 h-6" />
       </motion.button>
 
-      {/* Footer with subtle gradients */}
-      <motion.footer
-        className="bg-gradient-to-r from-gray-900 to-black text-white py-12 relative overflow-hidden"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={containerVariants}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-red-900/5 to-rose-900/5"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
-            variants={containerVariants}
-          >
-            <motion.div variants={itemVariants}>
-              <motion.div
-                className="flex items-center space-x-2 mb-4"
-                whileHover={{ scale: 1.02 }}
-              >
-                <Heart className="w-8 h-8 text-red-600" />
-                <span className="text-2xl font-bold">BloodChain</span>
-              </motion.div>
-              <p className="text-gray-400 text-base">
-                Revolutionizing blood management with blockchain for a safer
-                world.
-              </p>
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <h4 className="font-bold text-lg mb-4">Platform</h4>
-              <ul className="space-y-2 text-gray-400 text-base">
-                {[
-                  "For Donors",
-                  "For Blood Banks",
-                  "For Hospitals",
-                  "API Access",
-                ].map((item) => (
-                  <motion.li key={item}>
-                    <a
-                      href="/"
-                      className="hover:text-red-400 transition-colors"
-                      whileHover={{ x: 5 }}
-                    >
-                      {item}
-                    </a>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <h4 className="font-bold text-lg mb-4">Resources</h4>
-              <ul className="space-y-2 text-gray-400 text-base">
-                {[
-                  "Documentation",
-                  "White Paper",
-                  "Help Center",
-                  "Community",
-                ].map((item) => (
-                  <motion.li key={item}>
-                    <a
-                      href="/"
-                      className="hover:text-red-400 transition-colors"
-                      whileHover={{ x: 5 }}
-                    >
-                      {item}
-                    </a>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <h4 className="font-bold text-lg mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-400 text-base">
-                {[
-                  {
-                    href: "mailto:hello@bloodchain.org",
-                    text: "hello@bloodchain.org",
-                  },
-                  { href: "tel:+15551234567", text: "+1 (555) 123-4567" },
-                  { href: "https://twitter.com", text: "Twitter" },
-                  { href: "https://linkedin.com", text: "LinkedIn" },
-                ].map((item, i) => (
-                  <motion.li key={i}>
-                    <a
-                      href={item.href}
-                      className="hover:text-red-400 transition-colors"
-                      whileHover={{ x: 5 }}
-                    >
-                      {item.text}
-                    </a>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-          </motion.div>
-          <motion.div
-            className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 text-base"
-            variants={itemVariants}
-          >
-            <p>
-              &copy; 2025 BloodChain. All rights reserved. Built with ❤️ for
-              humanity.{" "}
-              <a
-                href="/privacy"
-                className="hover:text-red-400"
-                whileHover={{ underline: "always" }}
-              >
-                Privacy Policy
-              </a>{" "}
-              |{" "}
-              <a
-                href="/terms"
-                className="hover:text-red-400"
-                whileHover={{ underline: "always" }}
-              >
-                Terms of Service
-              </a>
-            </p>
-          </motion.div>
+      {/* Footer */}
+      <footer className="bg-gradient-to-r from-gray-900 to-black text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Footer content */}
+          </div>
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+            <p>&copy; 2025 BloodChain. All rights reserved.</p>
+          </div>
         </div>
-      </motion.footer>
+      </footer>
     </div>
   );
 };

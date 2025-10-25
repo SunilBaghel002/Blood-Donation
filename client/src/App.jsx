@@ -64,7 +64,7 @@ function App() {
 
         {/* Protected Routes */}
         <Route
-          path="/donor-dashboard"
+          path="/dashboard/donor"
           element={
             <ProtectedRoute allowedRoles={["Donor"]}>
               <DonorDashboard />
@@ -72,7 +72,7 @@ function App() {
           }
         />
         <Route
-          path="/hospital-dashboard"
+          path="/dashboard/hospital"
           element={
             <ProtectedRoute allowedRoles={["Hospital"]}>
               <HospitalDashboard />
@@ -80,7 +80,7 @@ function App() {
           }
         />
         <Route
-          path="/admin-dashboard"
+          path="/dashboard/admin"
           element={
             <ProtectedRoute allowedRoles={["Admin"]}>
               <AdminDashboard />
@@ -88,7 +88,7 @@ function App() {
           }
         />
         <Route
-          path="/bloodbank-dashboard"
+          path="/dashboard/bloodbank"
           element={
             <ProtectedRoute allowedRoles={["BloodBank"]}>
               <BloodBankDashboard />

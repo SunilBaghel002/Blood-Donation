@@ -24,7 +24,6 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    walletAddress: "",
   });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
@@ -95,9 +94,13 @@ const Login = () => {
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.error || "Invalid email or password");
+
       setSuccess(data.message);
       localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.user._id);
       localStorage.setItem("role", data.user.role);
+
+      // Store role-specific info
       if (data.user.role === "Donor") {
         localStorage.setItem(
           "donorInfo",
@@ -119,10 +122,10 @@ const Login = () => {
           JSON.stringify(data.user.adminInfo || {})
         );
       }
-      setTimeout(
-        () => navigate("/dashboard/" + data.user.role.toLowerCase()),
-        1500
-      );
+
+      setTimeout(() => {
+        navigate(`/dashboard/${data.user.role.toLowerCase()}`);
+      }, 1500);
     } catch (error) {
       setErrors({ general: error.message });
     } finally {
@@ -130,32 +133,9 @@ const Login = () => {
     }
   };
 
-  const connectWallet = async () => {
-    setIsLoading(true);
-    try {
-      const walletAddress = "0x742d35Cc6565C42c42...";
-      const response = await fetch(
-        "http://localhost:5000/api/auth/connect-wallet",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: formData.email, walletAddress }),
-        }
-      );
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Failed to connect wallet");
-      setFormData((prev) => ({ ...prev, walletAddress }));
-      setSuccess(data.message);
-    } catch (error) {
-      setErrors({ general: error.message });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Blood Droplet (Motion SVG)
   const BloodDroplet = ({ particle }) => (
-    <motion.svg
+    <motion.div
       className="absolute"
       style={{
         left: `${particle.x}%`,
@@ -170,19 +150,19 @@ const Login = () => {
         repeat: Infinity,
         ease: "easeInOut",
       }}
-      viewBox="0 0 24 24"
-      fill="none"
     >
-      <path
-        d="M12 3C12 3 8 8 8 12C8 16 12 21 12 21C12 21 16 16 16 12C16 8 12 3 12 3Z"
-        fill="#f87171"
-        fillOpacity="0.5"
-      />
-    </motion.svg>
+      <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
+        <path
+          d="M12 3C12 3 8 8 8 12C8 16 12 21 12 21C12 21 16 16 16 12C16 8 12 3 12 3Z"
+          fill="#f87171"
+          fillOpacity="0.5"
+        />
+      </svg>
+    </motion.div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 font-inter">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 font-inter relative overflow-hidden">
       <style>
         {`
           @keyframes float { 0%, 100% { transform: translateY(0px) scale(1); opacity: 0.3; } 50% { transform: translateY(-60px) scale(1.1); opacity: 0.6; } }
@@ -195,6 +175,13 @@ const Login = () => {
           input:focus, select:focus { border-color: #f87171; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
         `}
       </style>
+
+      {/* Particles */}
+      {particles.map((particle) => (
+        <BloodDroplet key={particle.id} particle={particle} />
+      ))}
+
+      {/* Toast Messages */}
       <div className="fixed top-4 right-4 z-50 max-w-xs w-full">
         <AnimatePresence>
           {errors.general && (
@@ -229,19 +216,20 @@ const Login = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Back Button */}
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         onClick={() => navigate("/")}
-        className="absolute top-4 left-4 flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors"
+        className="absolute top-4 left-4 flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors z-10"
       >
         <ArrowLeft className="w-5 h-5" />
         <span className="text-sm font-medium">Back to Home</span>
       </motion.button>
-      <section className="min-h-screen flex items-center justify-center parallax-bg relative overflow-hidden">
-        {particles.map((particle) => (
-          <BloodDroplet key={particle.id} particle={particle} />
-        ))}
+
+      {/* Login Form */}
+      <section className="min-h-screen flex items-center justify-center relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -253,7 +241,9 @@ const Login = () => {
               Sign In to BloodChain
             </h2>
           </div>
-          <div className="space-y-6">
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email */}
             <div className="relative floating-label-container">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -261,9 +251,10 @@ const Login = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none ${
-                  errors.email ? "border-red-500" : ""
-                }`}
+                className={`w-full pl-10 pr-4 py-3 bg-red-50 border ${
+                  errors.email ? "border-red-500" : "border-red-200"
+                } rounded-lg focus:ring-2 focus:ring-red-400 outline-none`}
+                placeholder=" "
                 required
               />
               <label className="floating-label">Email Address</label>
@@ -274,6 +265,8 @@ const Login = () => {
                 </p>
               )}
             </div>
+
+            {/* Password */}
             <div className="relative floating-label-container">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -281,9 +274,10 @@ const Login = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-12 py-3 bg-red-50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none ${
-                  errors.password ? "border-red-500" : ""
-                }`}
+                className={`w-full pl-10 pr-12 py-3 bg-red-50 border ${
+                  errors.password ? "border-red-500" : "border-red-200"
+                } rounded-lg focus:ring-2 focus:ring-red-400 outline-none`}
+                placeholder=" "
                 required
               />
               <label className="floating-label">Password</label>
@@ -305,6 +299,7 @@ const Login = () => {
                 </p>
               )}
             </div>
+
             <div className="flex items-center justify-between">
               <label className="flex items-center">
                 <input
@@ -320,10 +315,12 @@ const Login = () => {
                 Forgot password?
               </a>
             </div>
+
+            {/* Submit Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleSubmit}
+              type="submit"
               disabled={isLoading}
               className="w-full bg-gradient-to-r from-red-500 to-pink-400 text-white py-3 rounded-lg font-medium flex items-center justify-center space-x-2"
             >
@@ -336,44 +333,47 @@ const Login = () => {
                 </>
               )}
             </motion.button>
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-red-100" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white/80 text-gray-500">
-                  Or continue with
-                </span>
-              </div>
+          </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-red-100" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={connectWallet}
-                disabled={isLoading}
-                className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600"
-              >
-                <Fingerprint className="w-4 h-4 mr-2" />
-                Connect Wallet
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                disabled
-                className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 opacity-50"
-              >
-                <Smartphone className="w-4 h-4 mr-2" />
-                Biometric
-              </motion.button>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white/80 text-gray-500">
+                Or continue with
+              </span>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => alert("Wallet connect coming soon!")}
+              className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600"
+            >
+              <Fingerprint className="w-4 h-4 mr-2" />
+              Connect Wallet
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              disabled
+              className="flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 rounded-lg text-sm font-medium text-gray-600 opacity-50"
+            >
+              <Smartphone className="w-4 h-4 mr-2" />
+              Biometric
+            </motion.button>
+          </div>
+
           <p className="text-center mt-6 text-sm text-gray-500">
             New here?{" "}
             <a href="/signup" className="text-red-500 hover:text-red-600">
               Sign up
             </a>
           </p>
+
           <div className="mt-8 grid grid-cols-3 gap-3 text-center">
             <div className="bg-red-50 rounded-lg p-3 border border-red-100">
               <Shield className="w-6 h-6 text-green-600 mx-auto mb-2" />
@@ -395,5 +395,3 @@ const Login = () => {
 };
 
 export default Login;
-
-console.log("Sunil is writing!!")
