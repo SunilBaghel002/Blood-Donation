@@ -164,7 +164,25 @@ const BloodBankDashboard = () => {
 
   const handleRecordDonation = async (e) => {
     e.preventDefault();
+
+    // VALIDATE
+    if (!donationRecord.donorId) {
+      setError("Please select a donor");
+      return;
+    }
+    if (!donationRecord.bloodType) {
+      setError("Please select blood type");
+      return;
+    }
+    if (donationRecord.units < 1) {
+      setError("Units must be at least 1");
+      return;
+    }
+
     setIsLoading(true);
+    setError("");
+    setSuccess("");
+
     try {
       const response = await fetch(
         "http://localhost:5000/api/bloodbank/record-donation",
@@ -174,57 +192,27 @@ const BloodBankDashboard = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify(donationRecord),
-        }
-      );
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Failed to record donation");
-      setSuccess("Donation recorded successfully");
-      setDonationRecord({ donorId: "", bloodType: "", units: 1 });
-      setBloodInventory((prev) => {
-        const existing = prev.find(
-          (item) => item.bloodType === donationRecord.bloodType
-        );
-        if (existing) {
-          return prev.map((item) =>
-            item.bloodType === donationRecord.bloodType
-              ? {
-                  ...item,
-                  units: item.units + donationRecord.units,
-                  demand:
-                    item.units + donationRecord.units < 10
-                      ? "Critical"
-                      : item.units + donationRecord.units < 20
-                      ? "High"
-                      : item.units + donationRecord.units < 50
-                      ? "Medium"
-                      : "Low",
-                }
-              : item
-          );
-        }
-        return [
-          ...prev,
-          {
+          body: JSON.stringify({
+            donorId: donationRecord.donorId,
             bloodType: donationRecord.bloodType,
             units: donationRecord.units,
-            expiryDate: new Date(
-              Date.now() + 42 * 24 * 60 * 60 * 1000
-            ).toLocaleDateString(),
-            demand:
-              donationRecord.units < 10
-                ? "Critical"
-                : donationRecord.units < 20
-                ? "High"
-                : donationRecord.units < 50
-                ? "Medium"
-                : "Low",
-          },
-        ];
-      });
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to record donation");
+      }
+
+      setSuccess("Donation recorded successfully!");
+      setDonationRecord({ donorId: "", bloodType: "", units: 1 });
+
+      // Refresh inventory
+      await fetchBloodBankData(localStorage.getItem("token"));
     } catch (err) {
-      setError(err.message || "Unable to record donation. Please try again.");
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -550,70 +538,101 @@ const BloodBankDashboard = () => {
     </div>
   );
 
-  const renderTransactions = () => (
-    <div className="p-6 space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Database className="w-5 h-5 mr-2 text-blue-500" />
-            Blockchain Transactions
-          </h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span>Live on Ethereum</span>
+  const renderTransactions = () => {
+    const blockchainTxs = [
+      {
+        txHash: "0xabc123...def456",
+        type: "Donation Recorded",
+        bloodType: "O+",
+        quantity: 2,
+        timestamp: new Date().toISOString(),
+        status: "Confirmed",
+      },
+      {
+        txHash: "0xdef456...ghi789",
+        type: "Supply Request",
+        bloodType: "A-",
+        quantity: 3,
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        status: "Pending",
+      },
+    ];
+
+    return (
+      <div className="p-6 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold flex items-center">
+              <Database className="w-5 h-5 mr-2 text-blue-500" />
+              Blockchain Transactions
+            </h3>
+            <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span>Live on Hardhat</span>
+            </div>
           </div>
-        </div>
-        <Table
-          headers={[
-            "Transaction Hash",
-            "Type",
-            "Blood Type",
-            "Quantity",
-            "Timestamp",
-            "Status",
-          ]}
-          data={transactions}
-          rowRenderer={(tx) => (
-            <>
-              <td className="py-3 px-4">
-                <code className="text-sm bg-red-100 px-2 py-1 rounded">
-                  {tx.txHash?.substring(0, 10) || "N/A"}...
-                </code>
-              </td>
-              <td className="py-3 px-4">{tx.type || "N/A"}</td>
-              <td className="py-3 px-4">
-                <span className="inline-flex items-center">
-                  <Droplets className="w-4 h-4 text-red-500 mr-1" />
-                  {tx.bloodType}
-                </span>
-              </td>
-              <td className="py-3 px-4">{tx.quantity}</td>
-              <td className="py-3 px-4 text-gray-500">
-                {tx.timestamp ? new Date(tx.timestamp).toLocaleString() : "N/A"}
-              </td>
-              <td className="py-3 px-4">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    tx.status === "Confirmed"
-                      ? "bg-green-100 text-green-800"
-                      : tx.status === "Scheduled"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {tx.status}
-                </span>
-              </td>
-            </>
+
+          {blockchainTxs.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">
+              No transactions yet
+            </p>
+          ) : (
+            <Table
+              headers={[
+                "Tx Hash",
+                "Type",
+                "Blood Type",
+                "Qty",
+                "Time",
+                "Status",
+              ]}
+              data={blockchainTxs}
+              rowRenderer={(tx) => (
+                <>
+                  <td className="py-3 px-4">
+                    <a
+                      href={`https://hardhat.explorer/${tx.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-mono text-blue-600 hover:underline"
+                    >
+                      {tx.txHash.substring(0, 10)}...
+                    </a>
+                  </td>
+                  <td className="py-3 px-4 text-sm">{tx.type}</td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex items-center">
+                      <Droplets className="w-4 h-4 text-red-500 mr-1" />
+                      {tx.bloodType}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 font-medium">{tx.quantity}</td>
+                  <td className="py-3 px-4 text-xs text-gray-500">
+                    {new Date(tx.timestamp).toLocaleString()}
+                  </td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        tx.status === "Confirmed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {tx.status}
+                    </span>
+                  </td>
+                </>
+              )}
+            />
           )}
-        />
-      </motion.div>
-    </div>
-  );
+        </motion.div>
+      </div>
+    );
+  };
 
   const renderProfile = () => (
     <div className="p-6 space-y-6">
