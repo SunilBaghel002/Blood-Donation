@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-import { useWeb3 } from "../../contexts/Web3Context.jsx";
+import { useWeb3 } from "../contexts/Web3Context.jsx";
 import Header from "../components/Header";
 import BloodDroplet from "../components/BloodDroplet";
 import NotificationMessage from "../components/NotificationMessage";

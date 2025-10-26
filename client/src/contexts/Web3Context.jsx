@@ -1,84 +1,190 @@
 // src/contexts/Web3Context.jsx
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { ethers } from "ethers";
-import { BloodChainABI, CONTRACT_ADDRESS } from "../config/contractABI";
-import detectEthereumProvider from "@metamask/detect-provider";
+import React, { createContext, useContext, useEffect, useRef } from "react";
+import {
+  createConfig,
+  WagmiProvider,
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useBalance,
+} from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createWeb3Modal } from "@web3modal/wagmi/react";
+import { http } from "viem";
+import { hardhat } from "wagmi/chains";
 
+import { BloodChainABI, CONTRACT_ADDRESS } from "../config/contractABI";
+import { NETWORK_CONFIG } from "../config/network.js";
+
+/* -------------------------------------------------
+   1. WalletConnect Project ID
+   ------------------------------------------------- */
+const PROJECT_ID = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
+
+if (!PROJECT_ID) {
+  console.warn(
+    "VITE_WALLET_CONNECT_PROJECT_ID is missing! WalletConnect disabled."
+  );
+}
+
+/* -------------------------------------------------
+   2. Chain config (Hardhat: 31337)
+   ------------------------------------------------- */
+const config = createConfig({
+  chains: [hardhat],
+  transports: {
+    [hardhat.id]: http(),
+  },
+});
+
+/* -------------------------------------------------
+   3. Web3Modal
+   ------------------------------------------------- */
+const modal = createWeb3Modal({
+  wagmiConfig: config,
+  projectId: PROJECT_ID,
+  themeMode: "light",
+  metadata: {
+    name: "BloodChain",
+    description: "Blockchain blood donation platform",
+    url: import.meta.env.VITE_APP_URL || "http://localhost:5173",
+    icons: ["https://avatars.githubusercontent.com/u/37784886"],
+  },
+});
+
+/* -------------------------------------------------
+   4. Context
+   ------------------------------------------------- */
 const Web3Context = createContext();
 
 export const useWeb3 = () => useContext(Web3Context);
 
+/* -------------------------------------------------
+   5. Backend sync
+   ------------------------------------------------- */
+const syncBackend = async (address) => {
+  const token = localStorage.getItem("token");
+  if (!token || !address) return;
+
+  try {
+    await fetch("http://localhost:5000/api/auth/connect-wallet", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        email: localStorage.getItem("email"),
+        walletAddress: address,
+      }),
+    });
+  } catch (error) {
+    console.error("Backend sync failed:", error);
+  }
+};
+
+/* -------------------------------------------------
+   6. Web3Provider
+   ------------------------------------------------- */
 export const Web3Provider = ({ children }) => {
-  const [provider, setProvider] = useState(null);
-  const [signer, setSigner] = useState(null);
-  const [account, setAccount] = useState(null);
-  const [contract, setContract] = useState(null);
-  const [balance, setBalance] = useState("0");
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useRef(new QueryClient()).current;
 
-  const connectWallet = async () => {
-    setIsLoading(true);
-    try {
-      const ethProvider = await detectEthereumProvider();
-      if (!ethProvider) {
-        alert("MetaMask not found! Install it.");
-        return;
+  const InnerProvider = () => {
+    const { address, isConnected } = useAccount();
+    const { connect, connectors, isPending } = useConnect();
+    const { disconnect } = useDisconnect();
+    const { data: balanceData } = useBalance({ address });
+
+    const contract = {
+      address: CONTRACT_ADDRESS,
+      abi: BloodChainABI,
+    };
+
+    // Auto-sync
+    useEffect(() => {
+      if (isConnected && address) {
+        localStorage.setItem("walletAddress", address);
+        syncBackend(address);
       }
+    }, [isConnected, address]);
 
-      const accounts = await ethProvider.request({ method: "eth_requestAccounts" });
-      const browserProvider = new ethers.BrowserProvider(ethProvider);
-      const signer = await browserProvider.getSigner();
-      const address = await signer.getAddress();
-      const balance = await browserProvider.getBalance(address);
-
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, BloodChainABI, signer);
-
-      setProvider(browserProvider);
-      setSigner(signer);
-      setAccount(address);
-      setBalance(ethers.formatEther(balance));
-      setContract(contract);
-      setIsConnected(true);
-
-      // Save to localStorage (for persistence)
-      localStorage.setItem("walletAddress", address);
-
-      // Call backend to link wallet
-      const token = localStorage.getItem("token");
-      if (token) {
-        await fetch("/api/auth/connect-wallet", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ email: localStorage.getItem("email"), walletAddress: address }),
-        });
+    // Auto-reconnect
+    useEffect(() => {
+      const saved = localStorage.getItem("walletAddress");
+      if (saved && !isConnected) {
+        const injected = connectors.find((c) => c.id === "injected");
+        if (injected) connect({ connector: injected });
       }
-    } catch (error) {
-      console.error("Connection failed:", error);
-      alert("Failed to connect wallet");
-    }
-    setIsLoading(false);
-  };
+    }, [connectors, connect, isConnected]);
 
-  const disconnectWallet = () => {
-    setProvider(null);
-    setSigner(null);
-    setAccount(null);
-    setContract(null);
-    setBalance("0");
-    setIsConnected(false);
-    localStorage.removeItem("walletAddress");
-  };
+    // Public API
+    const value = {
+      connectMetaMask: async () => {
+        const injected = connectors.find((c) => c.id === "injected");
+        if (!injected) return;
 
-  // Auto-connect if previously connected
-  useEffect(() => {
-    const savedAddress = localStorage.getItem("walletAddress");
-    if (savedAddress && window.ethereum) connectWallet();
-  }, []);
+        try {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [NETWORK_CONFIG],
+          });
+        } catch (err) {
+          if (err.code !== 4001)
+            console.warn("Chain already added or user skipped");
+        }
+
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: NETWORK_CONFIG.chainId }],
+          });
+        } catch (err) {
+          if (err.code === 4902) {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [NETWORK_CONFIG],
+            });
+          }
+        }
+
+        connect({ connector: injected });
+      },
+      connectWalletConnect: () => {
+        if (PROJECT_ID) modal.open();
+      },
+      disconnectWallet: () => disconnect(),
+      account: address,
+      balance: balanceData ? balanceData.formatted : "0",
+      contract,
+      isConnected,
+      isLoading: isPending,
+
+      connectWallet: async () => {
+        const injected = connectors.find((c) => c.id === "injected");
+        if (injected) {
+          try {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [NETWORK_CONFIG],
+            });
+          } catch (err) {
+            console.log("Chain already exists:", err);
+          }
+          connect({ connector: injected });
+        }
+      },
+    };
+
+    return (
+      <Web3Context.Provider value={value}>{children}</Web3Context.Provider>
+    );
+  };
 
   return (
-    <Web3Context.Provider value={{ connectWallet, disconnectWallet, account, balance, contract, isConnected, isLoading }}>
-      {children}
-    </Web3Context.Provider>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <InnerProvider />
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 };

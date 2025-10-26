@@ -1,5 +1,4 @@
-// src/App.jsx (Updated with /connect-wallet)
-
+// src/App.jsx
 import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
@@ -7,9 +6,9 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useWeb3 } from "./contexts/Web3Context.jsx";
+import { Web3Provider, useWeb3 } from "./contexts/Web3Context.jsx"; // ADDED useWeb3
 
-// Lazy load components
+// Lazy components
 const BloodChainLanding = lazy(() => import("./pages/landing"));
 const DonorDashboard = lazy(() => import("./pages/DonorDashboard"));
 const HospitalDashboard = lazy(() => import("./pages/HospitalDashboard"));
@@ -25,13 +24,12 @@ const HospitalEmergencyDashboard = lazy(() =>
   import("./pages/HospitalEmergencyDashboard")
 );
 const Profile = lazy(() => import("./pages/Profile"));
-const ConnectWallet = lazy(() => import("./pages/ConnectWallet")); // NEW
+const ConnectWallet = lazy(() => import("./pages/ConnectWallet"));
 
-// Protected Route
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
-  const { isConnected } = useWeb3();
+  const { isConnected } = useWeb3(); // NOW IT WORKS
 
   if (!token) return <Navigate to="/login" />;
   if (allowedRoles && !allowedRoles.includes(role))
@@ -46,67 +44,68 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
 function App() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
-          <div className="flex items-center space-x-2 text-gray-600">
-            <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading...</span>
+    <Web3Provider>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-screen">
+            Loading...
           </div>
-        </div>
-      }
-    >
-      <Routes>
-        <Route path="/" element={<BloodChainLanding />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/future-scopes" element={<FutureScopes />} />
+        }
+      >
+        <Router>
+          <Routes>
+            <Route path="/" element={<BloodChainLanding />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/future-scopes" element={<FutureScopes />} />
+            <Route path="/connect-wallet" element={<ConnectWallet />} />
 
-        {/* NEW: Wallet Connect Page */}
-        <Route path="/connect-wallet" element={<ConnectWallet />} />
-
-        {/* Protected Routes */}
-        <Route
-          path="/donor-dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["Donor"]}>
-              <DonorDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hospital-dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["Hospital"]}>
-              <HospitalDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bloodbank-dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["BloodBank"]}>
-              <BloodBankDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/emergency" element={<EmergencyBloodDonationPortal />} />
-        <Route
-          path="/hospital-emergency"
-          element={<HospitalEmergencyDashboard />}
-        />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Suspense>
+            <Route
+              path="/donor-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["Donor"]}>
+                  <DonorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/hospital-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["Hospital"]}>
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["Admin"]}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bloodbank-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["BloodBank"]}>
+                  <BloodBankDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/emergency"
+              element={<EmergencyBloodDonationPortal />}
+            />
+            <Route
+              path="/hospital-emergency"
+              element={<HospitalEmergencyDashboard />}
+            />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+      </Suspense>
+    </Web3Provider>
   );
 }
 
