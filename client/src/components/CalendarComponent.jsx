@@ -1,4 +1,4 @@
-// components/CalendarComponent.jsx
+// src/components/CalendarComponent.jsx
 import React from "react";
 import { Calendar } from "@/components/ui/calendar";
 
