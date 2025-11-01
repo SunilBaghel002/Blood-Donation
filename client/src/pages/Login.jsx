@@ -37,11 +37,11 @@ const Login = () => {
     }
   }, [success, errors.general]);
 
-  /* ---------- Floating blood particles ---------- */
+  /* ---------- Floating blood particles (only on form side) ---------- */
   useEffect(() => {
-    const newParticles = Array.from({ length: 12 }, (_, i) => ({
+    const newParticles = Array.from({ length: 10 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
+      x: Math.random() * 40 + 5, // Keep particles on left side only
       y: Math.random() * 100,
       delay: Math.random() * 5,
       duration: 6 + Math.random() * 4,
@@ -164,8 +164,8 @@ const Login = () => {
         `}
       </style>
 
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50 overflow-hidden relative">
-        {/* Floating blood particles */}
+      <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden relative">
+        {/* Floating blood particles (only on left half) */}
         {particles.map((p) => (
           <BloodDroplet key={p.id} p={p} />
         ))}
@@ -211,29 +211,28 @@ const Login = () => {
           <span className="text-sm font-medium">Back to Home</span>
         </motion.button>
 
-        {/* Main split layout */}
-        <div className="min-h-screen flex flex-col lg:flex-row items-center justify-center px-4 gap-8 lg:gap-16">
-          {/* ---------- LEFT: LOGIN FORM ---------- */}
+        {/* LEFT HALF: Login Form (50vw) */}
+        <div className="w-full lg:w-1/2 min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-50 p-6">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-full max-w-md"
+            className="w-full max-w-md sm:scale-125 scale-100"
           >
-            <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-red-100">
+            <div className="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-red-100">
               {/* Logo */}
               <div className="flex justify-center mb-6">
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <Droplets className="w-10 h-10 text-red-600" />
+                  <Droplets className="w-12 h-12 text-red-600" />
                 </motion.div>
               </div>
 
               <h1 className="text-center text-2xl font-bold text-gray-800 mb-2">
                 Welcome back
               </h1>
-              <p className="text-center text-sm text-gray-600 mb-6">
+              <p className="text-center text-sm text-gray-600 mb-8">
                 Welcome back! Please enter your details.
               </p>
 
@@ -366,40 +365,42 @@ const Login = () => {
               </p>
             </div>
           </motion.div>
+        </div>
 
-          {/* ---------- RIGHT: BLOOD-DONATION IMAGE (lg+ only) ---------- */}
+        {/* RIGHT HALF: Full Image (50vw × 100vh) - Hidden on mobile */}
+        <div className="hidden lg:block w-1/2 h-screen relative overflow-hidden">
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="hidden lg:flex w-full max-w-lg justify-center"
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0"
           >
-            <div className="relative">
-              {/* Replace the src with your own high-quality image */}
-              <img
-                src="https://t3.ftcdn.net/jpg/03/73/15/18/360_F_373151842_vSb3llzX7fSStSTianXmmlOGt5VNbZaM.jpg"
-                alt="Blood donation – every drop counts"
-                className="rounded-2xl shadow-2xl object-cover w-full max-w-md"
-              />
-              {/* Optional overlay text */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-3xl font-bold text-white drop-shadow-lg"
-                >
-                  Every Drop Saves a Life
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="mt-2 text-lg text-white drop-shadow"
-                >
-                  Be a hero – donate today
-                </motion.p>
-              </div>
+            <img
+              src="https://t3.ftcdn.net/jpg/03/73/15/18/360_F_373151842_vSb3llzX7fSStSTianXmmlOGt5VNbZaM.jpg"
+              alt="Blood donation saves lives"
+              className="w-full h-full object-cover"
+            />
+            {/* Dark overlay for text readability */}
+            <div className="absolute inset-0 bg-black/40" />
+
+            {/* Centered text */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-8">
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-5xl md:text-6xl font-bold drop-shadow-2xl"
+              >
+                Every Drop Counts
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mt-4 text-xl md:text-2xl font-medium drop-shadow-lg"
+              >
+                Be a hero. Donate blood today.
+              </motion.p>
             </div>
           </motion.div>
         </div>
