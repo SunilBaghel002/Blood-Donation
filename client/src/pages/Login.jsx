@@ -26,18 +26,18 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
 
-  // Auto-dismiss messages
+  /* ---------- Auto-dismiss toast ---------- */
   useEffect(() => {
     if (success || errors.general) {
-      const timer = setTimeout(() => {
+      const t = setTimeout(() => {
         setSuccess("");
         setErrors((prev) => ({ ...prev, general: "" }));
       }, 5000);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(t);
     }
   }, [success, errors.general]);
 
-  // Generate floating blood particles
+  /* ---------- Floating blood particles ---------- */
   useEffect(() => {
     const newParticles = Array.from({ length: 12 }, (_, i) => ({
       id: i,
@@ -125,16 +125,12 @@ const Login = () => {
     }
   };
 
-  // Blood Droplet Particle
+  /* ---------- Blood droplet particle ---------- */
   const BloodDroplet = ({ p }) => (
     <motion.div
       className="absolute pointer-events-none"
       style={{ left: `${p.x}%`, top: `${p.y}%` }}
-      animate={{
-        y: [0, -80, 0],
-        scale: [1, 1.2, 1],
-        opacity: [0.4, 0.7, 0.4],
-      }}
+      animate={{ y: [0, -80, 0], scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
       transition={{
         duration: p.duration,
         delay: p.delay,
@@ -164,30 +160,17 @@ const Login = () => {
             transition: all 0.2s ease; pointer-events: none; 
           }
           input:focus ~ .floating-label, 
-          input:not(:placeholder-shown) ~ .floating-label {
-            color: #dc2626;
-          }
-          .blood-drop-path { 
-            fill: #dc2626; 
-            filter: drop-shadow(0 4px 6px rgba(220, 38, 38, 0.3));
-          }
-          .pulse-heart { 
-            animation: pulse 2s infinite; 
-          }
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-          }
+          input:not(:placeholder-shown) ~ .floating-label { color: #dc2626; }
         `}
       </style>
 
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50 overflow-hidden relative">
-        {/* Floating Blood Particles */}
+        {/* Floating blood particles */}
         {particles.map((p) => (
           <BloodDroplet key={p.id} p={p} />
         ))}
 
-        {/* Toast Messages */}
+        {/* Toast messages */}
         <div className="fixed top-4 right-4 z-50 space-y-2">
           <AnimatePresence>
             {errors.general && (
@@ -217,7 +200,7 @@ const Login = () => {
           </AnimatePresence>
         </div>
 
-        {/* Back Button */}
+        {/* Back button */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -228,26 +211,25 @@ const Login = () => {
           <span className="text-sm font-medium">Back to Home</span>
         </motion.button>
 
-        {/* Main Split Layout */}
+        {/* Main split layout */}
         <div className="min-h-screen flex flex-col lg:flex-row items-center justify-center px-4 gap-8 lg:gap-16">
-          {/* Left: Login Form */}
+          {/* ---------- LEFT: LOGIN FORM ---------- */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             className="w-full max-w-md"
           >
             <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-red-100">
-              {/* Logo & Title */}
-              <div className="flex items-center justify-center mb-6">
-                <div className="relative">
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Droplets className="w-10 h-10 text-red-600" />
-                  </motion.div>
-                </div>
+              {/* Logo */}
+              <div className="flex justify-center mb-6">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Droplets className="w-10 h-10 text-red-600" />
+                </motion.div>
               </div>
+
               <h1 className="text-center text-2xl font-bold text-gray-800 mb-2">
                 Welcome back
               </h1>
@@ -346,7 +328,7 @@ const Login = () => {
                   )}
                 </motion.button>
 
-                {/* Google Sign In */}
+                {/* Google */}
                 <button
                   type="button"
                   className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
@@ -385,97 +367,39 @@ const Login = () => {
             </div>
           </motion.div>
 
-          {/* Right: Blood Donation Illustration */}
+          {/* ---------- RIGHT: BLOOD-DONATION IMAGE (lg+ only) ---------- */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
-            className="hidden lg:block w-full max-w-lg"
+            transition={{ duration: 0.6 }}
+            className="hidden lg:flex w-full max-w-lg justify-center"
           >
             <div className="relative">
-              <svg
-                viewBox="0 0 500 500"
-                className="w-full h-auto drop-shadow-2xl"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Background Circle */}
-                <circle
-                  cx="250"
-                  cy="250"
-                  r="220"
-                  fill="#fee2e2"
-                  opacity="0.5"
-                />
-
-                {/* Pulsating Heart */}
-                <motion.g
-                  animate={{ scale: [1, 1.15, 1] }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                >
-                  <path
-                    d="M250 180C230 150 190 150 170 180C150 210 170 260 250 320C330 260 350 210 330 180C310 150 270 150 250 180Z"
-                    fill="#dc2626"
-                    className="pulse-heart"
-                  />
-                </motion.g>
-
-                {/* Blood Drop Falling */}
-                <motion.path
-                  d="M250 320C250 320 240 350 240 370C240 390 250 400 250 400C250 400 260 390 260 370C260 350 250 320 250 320Z"
-                  fill="#ef4444"
-                  initial={{ y: -50, opacity: 0 }}
-                  animate={{ y: 80, opacity: 1 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeIn" }}
-                />
-
-                {/* Lifeline ECG */}
-                <motion.path
-                  d="M100 400 L150 400 L170 380 L190 420 L210 380 L230 400 L250 400 L270 400 L290 380 L310 420 L330 380 L350 400 L400 400"
-                  stroke="#dc2626"
-                  strokeWidth="4"
-                  fill="none"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                />
-
-                {/* Text */}
-                <text
-                  x="250"
-                  y="450"
-                  textAnchor="middle"
-                  className="fill-red-700 font-bold text-lg"
+              {/* Replace the src with your own high-quality image */}
+              <img
+                src="https://t3.ftcdn.net/jpg/03/73/15/18/360_F_373151842_vSb3llzX7fSStSTianXmmlOGt5VNbZaM.jpg"
+                alt="Blood donation – every drop counts"
+                className="rounded-2xl shadow-2xl object-cover w-full max-w-md"
+              />
+              {/* Optional overlay text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-3xl font-bold text-white drop-shadow-lg"
                 >
                   Every Drop Saves a Life
-                </text>
-              </svg>
-
-              {/* Floating Blood Cells */}
-              {[1, 2, 3, 4].map((i) => (
-                <motion.div
-                  key={i}
-                  className="absolute"
-                  style={{
-                    top: `${20 + i * 15}%`,
-                    left: `${10 + i * 20}%`,
-                  }}
-                  animate={{
-                    y: [0, -30, 0],
-                    rotate: [0, 360],
-                    opacity: [0.6, 1, 0.6],
-                  }}
-                  transition={{
-                    duration: 4 + i,
-                    repeat: Infinity,
-                    delay: i * 0.5,
-                  }}
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-2 text-lg text-white drop-shadow"
                 >
-                  <div className="w-8 h-8 bg-red-500 rounded-full opacity-70" />
-                </motion.div>
-              ))}
+                  Be a hero – donate today
+                </motion.p>
+              </div>
             </div>
           </motion.div>
         </div>
