@@ -3,9 +3,8 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css"; // Import default styles
+import "react-day-picker/dist/style.css";
 
-// Simple Tailwind-like cn utility (no tailwind-merge needed)
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 export default function Calendar({
@@ -29,19 +28,13 @@ export default function Calendar({
         caption: "flex justify-center items-center h-10 font-medium",
         caption_label: "text-sm",
         nav: "flex items-center gap-1",
-        nav_button: cn(
-          "h-7 w-7 bg-transparent p-0 hover:bg-gray-100 rounded-md flex items-center justify-center"
-        ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
+        nav_button:
+          "h-7 w-7 bg-transparent p-0 hover:bg-gray-100 rounded-md flex items-center justify-center",
         table: "w-full border-collapse",
         head_row: "flex",
         head_cell: "text-gray-500 text-xs font-normal w-9 text-center",
         row: "flex w-full mt-2",
-        cell: cn(
-          "relative p-0 text-center text-sm focus-within:z-20",
-          "h-9 w-9"
-        ),
+        cell: "relative p-0 text-center text-sm h-9 w-9",
         day: cn(
           "h-9 w-9 p-0 font-normal rounded-md hover:bg-red-50 transition-colors",
           "aria-selected:bg-red-600 aria-selected:text-white"

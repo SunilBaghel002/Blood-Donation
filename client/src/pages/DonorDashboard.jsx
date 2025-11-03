@@ -33,7 +33,7 @@ import BloodDroplet from "../components/BloodDroplet";
 import NotificationMessage from "../components/NotificationMessage";
 import MetricCard from "../components/MetricCard";
 import Table from "../components/Table";
-import CalendarComponent from "../components/CalendarComponent.jsx";
+import CalendarComponent from "../components/CalendarComponent";
 
 ChartJS.register(
   CategoryScale,
@@ -567,15 +567,13 @@ const DonorDashboard = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 mt-6"
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
       >
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Calendar className="w-5 h-5 mr-2 text-red-500" /> Pick a Donation
-          Date
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-red-500" />
+          Schedule Your Donation
         </h3>
-        <div className="flex justify-center">
-          <CalendarComponent />
-        </div>
+        <CalendarComponent />
       </motion.div>
     </div>
   );
