@@ -1,20 +1,25 @@
-import React from "react";
+// src/components/MetricCard.jsx
 import { motion } from "framer-motion";
 
-const MetricCard = ({ label, value, icon: Icon, color, index }) => (
+const MetricCard = ({ label, value, icon: Icon, color, gradient, index }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
+    initial={{ y: 50, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
     transition={{ delay: index * 0.1 }}
-    className={`bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 border-l-4 ${color}`}
+    className={`relative overflow-hidden rounded-2xl p-6 text-white ${
+      gradient ? `bg-gradient-to-br ${color}` : "bg-white"
+    } shadow-xl`}
   >
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-gray-500 text-sm">{label}</p>
-        <p className="text-2xl font-semibold text-gray-800">{value}</p>
+        <p className="text-sm opacity-90">{label}</p>
+        <p className="text-4xl font-bold mt-2">{value}</p>
       </div>
-      <Icon className="w-8 h-8 text-gray-500" />
+      <div className="p-3 bg-white/20 rounded-xl backdrop-blur">
+        <Icon className="w-8 h-8" />
+      </div>
     </div>
+    {gradient && <div className="absolute inset-0 bg-black/10" />}
   </motion.div>
 );
 
