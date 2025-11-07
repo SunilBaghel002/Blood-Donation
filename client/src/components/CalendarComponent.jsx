@@ -1,24 +1,29 @@
 // src/components/CalendarComponent.jsx
 import React from "react";
-import Calendar from "@/components/ui/calendar";
+import Calendar from "./ui/calendar";
 
-export default function CalendarComponent() {
-  const [date, setDate] = React.useState(new Date());
+export default function CalendarComponent({ onDateSelect }) {
+  const [date, setDate] = React.useState(null);
+
+  const handleSelect = (selectedDate) => {
+    setDate(selectedDate);
+    if (selectedDate && onDateSelect) {
+      const formatted = selectedDate.toISOString().split("T")[0]; // YYYY-MM-DD
+      onDateSelect(formatted);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <h3 className="text-lg font-semibold mb-4 text-center text-red-700">
-        Select Donation Date
-      </h3>
+    <div className="bg-white rounded-xl shadow-lg p-4">
       <Calendar
         selected={date}
-        onSelect={setDate}
-        disabled={(date) => date < new Date().setHours(0, 0, 0, 0)} // No past dates
+        onSelect={handleSelect}
+        disabled={(d) => d < new Date().setHours(0, 0, 0, 0)}
         className="border rounded-md"
       />
       {date && (
-        <p className="text-center mt-4 text-sm text-gray-600">
-          Selected: <strong>{date.toLocaleDateString()}</strong>
+        <p className="text-center mt-3 text-sm font-medium text-red-600">
+          Selected: {date.toLocaleDateString()}
         </p>
       )}
     </div>

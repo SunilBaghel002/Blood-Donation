@@ -331,7 +331,7 @@ const Signup = () => {
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-full max-w-md sm:scale-125 scale-100"
+            className="w-full max-w-md sm:scale-115 scale-100"
           >
             <div className="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-red-100">
               <div className="flex justify-center mb-6">

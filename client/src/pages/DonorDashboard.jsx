@@ -453,73 +453,89 @@ const DonorDashboard = () => {
     </motion.div>
   );
 
-  const renderScheduleDonation = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
-    >
-      <h3 className="text-lg font-semibold mb-4 flex items-center">
-        <Calendar className="w-5 h-5 mr-2 text-red-500" /> Schedule Donation
-      </h3>
-      <form
-        onSubmit={handleScheduleDonation}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+  const renderScheduleDonation = () => {
+    const handleDateSelect = (date) => {
+      setScheduleData((prev) => ({ ...prev, date }));
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
       >
-        <select
-          value={scheduleData.bloodBankId}
-          onChange={(e) =>
-            setScheduleData({ ...scheduleData, bloodBankId: e.target.value })
-          }
-          className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
-          required
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <Calendar className="w-5 h-5 mr-2 text-red-500" /> Schedule Donation
+        </h3>
+        <form
+          onSubmit={handleScheduleDonation}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          <option value="">Select Blood Bank</option>
-          {bloodBanks.map((b) => (
-            <option key={b._id} value={b._id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={scheduleData.date}
-          onChange={(e) =>
-            setScheduleData({ ...scheduleData, date: e.target.value })
-          }
-          className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
-          required
-        />
-        <input
-          type="time"
-          value={scheduleData.time}
-          onChange={(e) =>
-            setScheduleData({ ...scheduleData, time: e.target.value })
-          }
-          className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
-          required
-        />
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          type="submit"
-          disabled={isLoading}
-          className="col-span-3 bg-gradient-to-r from-red-500 to-pink-400 text-white py-2 rounded-lg font-medium flex items-center justify-center space-x-2"
-        >
-          {isLoading ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <>
-              {" "}
-              <span>
-                Schedule Donation
-              </span> <Calendar className="w-4 h-4" />{" "}
-            </>
-          )}
-        </motion.button>
-      </form>
-    </motion.div>
-  );
+          {/* Blood Bank */}
+          <select
+            value={scheduleData.bloodBankId}
+            onChange={(e) =>
+              setScheduleData({ ...scheduleData, bloodBankId: e.target.value })
+            }
+            className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
+            required
+          >
+            <option value="">Select Blood Bank</option>
+            {bloodBanks.map((b) => (
+              <option key={b._id} value={b._id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Time */}
+          <input
+            type="time"
+            value={scheduleData.time}
+            onChange={(e) =>
+              setScheduleData({ ...scheduleData, time: e.target.value })
+            }
+            className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
+            required
+          />
+
+          {/* Calendar (Full Width on Mobile) */}
+          <div className="md:col-span-2">
+            <CalendarComponent onDateSelect={handleDateSelect} />
+            {/* {scheduleData.date && (
+              <p className="text-xs text-gray-600 mt-2 text-center">
+                Selected Date: <strong>{scheduleData.date}</strong>
+              </p>
+            )} */}
+          </div>
+          
+
+          {/* Submit Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            disabled={
+              isLoading ||
+              !scheduleData.date ||
+              !scheduleData.time ||
+              !scheduleData.bloodBankId
+            }
+            className="md:col-span-2 bg-gradient-to-r from-red-500 to-pink-400 text-white py-3 rounded-lg font-medium flex items-center justify-center space-x-2 disabled:opacity-50"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <span>Schedule Donation</span>
+                <Calendar className="w-5 h-5" />
+              </>
+            )}
+          </motion.button>
+        </form>
+      </motion.div>
+    );
+  };
 
   const renderDashboard = () => (
     <div className="p-6 space-y-6">
@@ -564,7 +580,7 @@ const DonorDashboard = () => {
 
       {renderDonationHistory()}
       {renderScheduleDonation()}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
@@ -574,7 +590,7 @@ const DonorDashboard = () => {
           Schedule Your Donation
         </h3>
         <CalendarComponent />
-      </motion.div>
+      </motion.div> */}
     </div>
   );
 
