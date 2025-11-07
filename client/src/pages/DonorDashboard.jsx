@@ -33,7 +33,9 @@ import BloodDroplet from "../components/BloodDroplet";
 import NotificationMessage from "../components/NotificationMessage";
 import MetricCard from "../components/MetricCard";
 import Table from "../components/Table";
-import CalendarComponent from "../components/CalendarComponent";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import ScheduleDonationForm from "../components/ScheduleDonationForm";
+
 
 ChartJS.register(
   CategoryScale,
@@ -453,89 +455,15 @@ const DonorDashboard = () => {
     </motion.div>
   );
 
-  const renderScheduleDonation = () => {
-    const handleDateSelect = (date) => {
-      setScheduleData((prev) => ({ ...prev, date }));
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
-      >
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Calendar className="w-5 h-5 mr-2 text-red-500" /> Schedule Donation
-        </h3>
-        <form
-          onSubmit={handleScheduleDonation}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          {/* Blood Bank */}
-          <select
-            value={scheduleData.bloodBankId}
-            onChange={(e) =>
-              setScheduleData({ ...scheduleData, bloodBankId: e.target.value })
-            }
-            className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
-            required
-          >
-            <option value="">Select Blood Bank</option>
-            {bloodBanks.map((b) => (
-              <option key={b._id} value={b._id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Time */}
-          <input
-            type="time"
-            value={scheduleData.time}
-            onChange={(e) =>
-              setScheduleData({ ...scheduleData, time: e.target.value })
-            }
-            className="w-full bg-red-50 border border-red-200 rounded-lg px-3 py-3 focus:ring-2 focus:ring-red-400 outline-none"
-            required
-          />
-
-          {/* Calendar (Full Width on Mobile) */}
-          <div className="md:col-span-2">
-            <CalendarComponent onDateSelect={handleDateSelect} />
-            {/* {scheduleData.date && (
-              <p className="text-xs text-gray-600 mt-2 text-center">
-                Selected Date: <strong>{scheduleData.date}</strong>
-              </p>
-            )} */}
-          </div>
-          
-
-          {/* Submit Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            type="submit"
-            disabled={
-              isLoading ||
-              !scheduleData.date ||
-              !scheduleData.time ||
-              !scheduleData.bloodBankId
-            }
-            className="md:col-span-2 bg-gradient-to-r from-red-500 to-pink-400 text-white py-3 rounded-lg font-medium flex items-center justify-center space-x-2 disabled:opacity-50"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <span>Schedule Donation</span>
-                <Calendar className="w-5 h-5" />
-              </>
-            )}
-          </motion.button>
-        </form>
-      </motion.div>
-    );
-  };
+  const renderScheduleDonation = () => (
+  <ScheduleDonationForm
+    scheduleData={scheduleData}
+    setScheduleData={setScheduleData}
+    bloodBanks={bloodBanks}
+    isLoading={isLoading}
+    onSubmit={handleScheduleDonation}
+  />
+);
 
   const renderDashboard = () => (
     <div className="p-6 space-y-6">
@@ -601,31 +529,62 @@ const DonorDashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6"
       >
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <Users className="w-5 h-5 mr-2 text-blue-500" /> Profile
+        <h3 className="text-lg font-semibold mb-6 flex items-center">
+          <Users className="w-5 h-5 mr-2 text-blue-500" /> My Profile
         </h3>
-        {userData && (
-          <div className="space-y-2 text-gray-700">
-            <p>
-              <strong>Name:</strong> {userData.firstName} {userData.lastName}
-            </p>
-            <p>
-              <strong>Email:</strong> {userData.email}
-            </p>
-            <p>
-              <strong>Blood Group:</strong>{" "}
-              {userData.donorInfo?.bloodGroup || "—"}
-            </p>
-            <p>
-              <strong>Donations:</strong>{" "}
-              {userData.donorInfo?.donationCount || 0}
-            </p>
-            <p>
-              <strong>Points:</strong> {rewards.points} |{" "}
-              <strong>Badges:</strong> {rewards.badges.join(", ") || "None"}
-            </p>
+
+        <div className="flex items-center gap-4 mb-6">
+          <Avatar className="h-20 w-20 ring-4 ring-red-100">
+            <AvatarImage
+              src={
+                userData?.profileImage ||
+                `https://api.dicebear.com/7.x/initials/svg?seed=${userData?.firstName}+${userData?.lastName}`
+              }
+              alt={userData?.firstName}
+            />
+            <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-red-400 to-pink-400 text-white">
+              {userData?.firstName?.[0]}
+              {userData?.lastName?.[0]}
+            </AvatarFallback>
+          </Avatar>
+
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {userData?.firstName} {userData?.lastName}
+            </h2>
+            <p className="text-sm text-gray-600">{userData?.email}</p>
           </div>
-        )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+          <div className="flex items-center gap-2">
+            <Droplets className="w-5 h-5 text-red-500" />
+            <span>
+              <strong>Blood Group:</strong>{" "}
+              {userData?.donorInfo?.bloodGroup || "—"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Heart className="w-5 h-5 text-red-500" />
+            <span>
+              <strong>Donations:</strong>{" "}
+              {userData?.donorInfo?.donationCount || 0}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Gift className="w-5 h-5 text-green-500" />
+            <span>
+              <strong>Points:</strong> {rewards.points}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-blue-500" />
+            <span>
+              <strong>Badges:</strong>{" "}
+              {rewards.badges.length > 0 ? rewards.badges.join(", ") : "None"}
+            </span>
+          </div>
+        </div>
       </motion.div>
     </div>
   );
@@ -928,6 +887,7 @@ const DonorDashboard = () => {
         connectWallet={connectWallet}
         connectedWallet={isConnected}
         isLoading={web3Loading}
+        user={userData}
       />
 
       <NotificationMessage
