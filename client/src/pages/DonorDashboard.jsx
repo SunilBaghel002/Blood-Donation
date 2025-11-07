@@ -37,6 +37,7 @@ import MetricCard from "../components/MetricCard";
 import Table from "../components/Table";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import ScheduleDonationForm from "../components/ScheduleDonationForm";
+import confetti from 'canvas-confetti';
 
 ChartJS.register(
   CategoryScale,
@@ -219,6 +220,13 @@ const DonorDashboard = () => {
           8
         )}...`
       );
+      confetti({
+  particleCount: 100,
+  spread: 70,
+  origin: { y: 0.6 },
+  colors: ['#ef4444', '#ec4899', '#f43f5e'],
+  scalar: 1.2,
+});
       await fetchDonorMongo();
       await fetchOnChainDonations();
     } catch (err) {

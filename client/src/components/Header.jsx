@@ -13,9 +13,10 @@ const Header = ({
   connectedWallet,
   isLoading,
   user,
+  extraTabs = []
 }) => {
   const tabsByRole = {
-    Donor: ["dashboard", "profile", "education"],
+    Donor: ["dashboard", "profile", "education", ...extraTabs],
     BloodBank: ["dashboard", "inventory", "transactions", "profile"],
     Hospital: ["dashboard", "transactions", "profile"],
     Admin: ["dashboard", "profile"],
