@@ -1,3 +1,4 @@
+// DonorDashboard.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar } from "react-chartjs-2";
@@ -27,6 +28,10 @@ import {
   Award,
   Flame,
   Sun,
+  Trophy,
+  Map,
+  Globe,
+  TrendingUp,
 } from "lucide-react";
 
 import { useWeb3 } from "../contexts/Web3Context.jsx";
@@ -37,7 +42,7 @@ import MetricCard from "../components/MetricCard";
 import Table from "../components/Table";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import ScheduleDonationForm from "../components/ScheduleDonationForm";
-import confetti from 'canvas-confetti';
+import confetti from "canvas-confetti";
 
 ChartJS.register(
   CategoryScale,
@@ -49,6 +54,61 @@ ChartJS.register(
 );
 
 const EXPLORER_URL = "https://sepolia.etherscan.io/tx/";
+
+// Dummy live data (replace with API later)
+const liveDonations = [
+  {
+    id: 1,
+    location: "New York, USA",
+    type: "O+",
+    time: "2 mins ago",
+    lat: 40.7128,
+    lng: -74.006,
+  },
+  {
+    id: 2,
+    location: "Mumbai, India",
+    type: "A+",
+    time: "5 mins ago",
+    lat: 19.076,
+    lng: 72.8777,
+  },
+  {
+    id: 3,
+    location: "London, UK",
+    type: "B+",
+    time: "8 mins ago",
+    lat: 51.5074,
+    lng: -0.1278,
+  },
+  {
+    id: 4,
+    location: "Tokyo, Japan",
+    type: "AB+",
+    time: "12 mins ago",
+    lat: 35.6762,
+    lng: 139.6503,
+  },
+];
+
+const leaderboard = [
+  {
+    rank: 1,
+    name: "Sarah K.",
+    donations: 42,
+    points: 4200,
+    badge: "Platinum Donor",
+  },
+  { rank: 2, name: "Raj P.", donations: 38, points: 3800, badge: "Gold Donor" },
+  {
+    rank: 3,
+    name: "Emma L.",
+    donations: 35,
+    points: 3500,
+    badge: "Gold Donor",
+  },
+  { rank: 4, name: "You", donations: 0, points: 0, badge: "New Hero" },
+];
 
 const DonorDashboard = () => {
   const {
@@ -213,20 +273,16 @@ const DonorDashboard = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Donation failed");
 
-      showToast(
-        "success",
-        `Donated ${units} unit(s) of ${bloodType}! Tx: ${data.txHash.slice(
-          0,
-          8
-        )}...`
-      );
+      showToast("success", `Donated ${units} unit(s) of ${bloodType}!`);
       confetti({
-  particleCount: 100,
-  spread: 70,
-  origin: { y: 0.6 },
-  colors: ['#ef4444', '#ec4899', '#f43f5e'],
-  scalar: 1.2,
-});
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ["#ef4444", "#ec4899", "#f43f5e", "#f97316"],
+        scalar: 1.3,
+        ticks: 100,
+      });
+
       await fetchDonorMongo();
       await fetchOnChainDonations();
     } catch (err) {
@@ -494,6 +550,135 @@ const DonorDashboard = () => {
     </motion.div>
   );
 
+  const renderQuickDonate = () => (
+    <motion.div
+      variants={item}
+      className="bg-gradient-to-r from-red-600 to-pink-600 rounded-3xl p-8 shadow-2xl"
+    >
+      <h3 className="text-3xl font-bold text-white mb-6 text-center">
+        Quick Donate Now
+      </h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+        {["O+", "A+", "B+", "AB+"].map((bt) => (
+          <motion.div
+            key={bt}
+            whileHover={{ scale: 1.15, rotateY: 180 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleDonate(bt, 1)}
+            className="relative preserve-3d cursor-pointer h-32"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <div className="absolute inset-0 backface-hidden bg-white/20 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center justify-center text-white font-bold shadow-lg">
+              <Droplets className="w-12 h-12 mb-2" />
+              <span className="text-2xl">{bt}</span>
+            </div>
+            <div className="absolute inset-0 rotate-y-180 backface-hidden bg-gradient-to-br from-red-700 to-pink-700 rounded-2xl p-6 flex items-center justify-center">
+              <motion.div
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity }}
+              >
+                <Droplets className="w-16 h-16 text-white" />
+              </motion.div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+
+  const renderLiveMap = () => (
+    <motion.div
+      variants={item}
+      className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-red-100"
+    >
+      <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+        <Globe className="w-7 h-7 mr-3 text-blue-600" /> Live Donations
+        Worldwide
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6">
+          <div className="space-y-4">
+            {liveDonations.map((d) => (
+              <motion.div
+                key={d.id}
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: d.id * 0.1 }}
+                className="flex items-center justify-between bg-white/70 backdrop-blur rounded-xl p-4 shadow"
+              >
+                <div>
+                  <p className="font-semibold text-gray-800">{d.location}</p>
+                  <p className="text-sm text-gray-600">{d.time}</p>
+                </div>
+                <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full font-bold text-sm">
+                  {d.type}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 flex items-center justify-center">
+          <Map className="w-32 h-32 text-indigo-400 opacity-50" />
+          <p className="absolute text-lg font-bold text-indigo-600">
+            Interactive Map Coming Soon
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderLeaderboard = () => (
+    <motion.div
+      variants={item}
+      className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-red-100"
+    >
+      <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+        <Trophy className="w-7 h-7 mr-3 text-yellow-500" /> Top Donors
+      </h3>
+      <div className="space-y-4">
+        {leaderboard.map((entry, i) => (
+          <motion.div
+            key={i}
+            initial={{ x: i % 2 === 0 ? -50 : 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: i * 0.1 }}
+            className={`flex items-center justify-between p-4 rounded-xl ${
+              entry.name === "You"
+                ? "bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400"
+                : "bg-gray-50"
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                  i === 0
+                    ? "bg-yellow-500"
+                    : i === 1
+                    ? "bg-gray-400"
+                    : i === 2
+                    ? "bg-orange-600"
+                    : "bg-gray-300"
+                }`}
+              >
+                {entry.rank}
+              </div>
+              <div>
+                <p className="font-bold text-gray-800">{entry.name}</p>
+                <p className="text-sm text-gray-600">{entry.badge}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-lg text-gray-800">
+                {entry.donations} Donations
+              </p>
+              <p className="text-sm text-gray-600">{entry.points} pts</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+
   const renderDashboard = () => (
     <motion.div
       variants={container}
@@ -528,43 +713,16 @@ const DonorDashboard = () => {
         ))}
       </div>
 
-      {/* <motion.div
-        variants={item}
-        className="bg-gradient-to-r from-red-600 to-pink-600 rounded-3xl p-8 shadow-2xl"
-      >
-        <h3 className="text-3xl font-bold text-white mb-6 text-center">
-          Quick Donate Now
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-          {["O+", "A+", "B+", "AB+"].map((bt) => (
-            <motion.div
-              key={bt}
-              whileHover={{ scale: 1.15, rotateY: 180 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleDonate(bt, 1)}
-              className="relative preserve-3d cursor-pointer"
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <div className="absolute inset-0 backface-hidden bg-white/20 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center justify-center text-white font-bold shadow-lg">
-                <Droplets className="w-12 h-12 mb-2" />
-                <span className="text-2xl">{bt}</span>
-              </div>
-              <div className="absolute inset-0 rotate-y-180 backface-hidden bg-gradient-to-br from-red-700 to-pink-700 rounded-2xl p-6 flex items-center justify-center">
-                <motion.div
-                  animate={{ scale: [1, 1.3, 1] }}
-                  transition={{ duration: 0.6, repeat: Infinity }}
-                >
-                  <Droplets className="w-16 h-16 text-white" />
-                </motion.div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div> */}
+      {renderQuickDonate()}
 
       <div className="grid lg:grid-cols-2 gap-8">
         {renderDonationHistory()}
         {renderScheduleDonation()}
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8">
+        {renderLiveMap()}
+        {renderLeaderboard()}
       </div>
     </motion.div>
   );
@@ -969,14 +1127,19 @@ const DonorDashboard = () => {
       ? renderDashboard()
       : activeTab === "profile"
       ? renderProfile()
-      : renderEducationTab();
+      : activeTab === "education"
+      ? renderEducationTab()
+      : activeTab === "map"
+      ? renderLiveMap()
+      : activeTab === "leaderboard"
+      ? renderLeaderboard()
+      : renderDashboard();
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 font-inter relative overflow-hidden">
       <div className="absolute inset-0">
         <style>{`
-          @keyframes float { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; } 50% { transform: translateY(-60px) scale(1.1); opacity: 0.6; } }
           .preserve-3d { transform-style: preserve-3d; }
           .backface-hidden { backface-visibility: hidden; }
           .rotate-y-180 { transform: rotateY(180deg); }
@@ -995,7 +1158,9 @@ const DonorDashboard = () => {
         connectedWallet={isConnected}
         isLoading={web3Loading}
         user={userData}
+        extraTabs={["map", "leaderboard"]} // Pass to Header
       />
+
       <NotificationMessage
         success={toast.type === "success" ? toast.msg : ""}
         error={toast.type === "error" ? toast.msg : ""}
