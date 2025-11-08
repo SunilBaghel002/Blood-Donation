@@ -1,5 +1,5 @@
 // src/pages/BloodChainLanding.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Heart,
@@ -23,7 +23,6 @@ import {
   Stethoscope,
   UserCheck,
   ArrowRight,
-  Map,
   Trophy,
 } from "lucide-react";
 import { Bar } from "react-chartjs-2";
@@ -36,12 +35,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-  Marker,
-} from "react-simple-maps";
 import CountUp from "react-countup";
 
 ChartJS.register(
@@ -64,12 +57,91 @@ const BloodChainLanding = () => {
     { rank: 5, name: "Li Wei", donations: 29, city: "Beijing", avatar: "L" },
   ]);
 
+  const mapRef = useRef(null);
+  const mapInitialized = useRef(false);
+
   // Simulate live donations
   useEffect(() => {
     const interval = setInterval(() => {
       setDonationCount((prev) => prev + Math.floor(Math.random() * 3) + 1);
     }, 8000);
     return () => clearInterval(interval);
+  }, []);
+
+  // === MAPMYINDIA: LOAD SDK + INIT MAP ===
+  useEffect(() => {
+    if (mapInitialized.current) return;
+
+    const MAP_SDK_KEY = import.meta.env.VITE_APP_MAPMYINDIA_MAP_SDK_KEY;
+    if (!MAP_SDK_KEY) {
+      console.error("Add REACT_APP_MAPMYINDIA_MAP_SDK_KEY to .env");
+      return;
+    }
+
+    // Load MapmyIndia SDK
+    const script = document.createElement("script");
+    script.src = `https://apis.mappls.com/advancedmaps/api/${MAP_SDK_KEY}/map_sdk?v=3.0&layer=vector`;
+    script.async = true;
+
+    script.onload = () => {
+      if (!document.getElementById("mapmyindia-map")) return;
+
+      // Initialize Map
+      mapRef.current = new window.MapmyIndia.Map("mapmyindia-map", {
+        center: [20.5937, 78.9629],
+        zoom: 4,
+        zoomControl: true,
+        hybrid: false,
+        search: false,
+      });
+
+      // Indian cities with donor data
+      const donorLocations = [
+        { name: "Delhi", lat: 28.6139, lng: 77.209, donors: 18500 },
+        { name: "Mumbai", lat: 19.076, lng: 72.8777, donors: 15200 },
+        { name: "Bangalore", lat: 12.9716, lng: 77.5946, donors: 13800 },
+        { name: "Chennai", lat: 13.0827, lng: 80.2707, donors: 11200 },
+        { name: "Kolkata", lat: 22.5726, lng: 88.3639, donors: 9800 },
+        { name: "Hyderabad", lat: 17.385, lng: 78.4867, donors: 9500 },
+        { name: "Pune", lat: 18.5204, lng: 73.8567, donors: 8700 },
+        { name: "Ahmedabad", lat: 23.0225, lng: 72.5714, donors: 7900 },
+      ];
+
+      // Add markers
+      donorLocations.forEach((loc) => {
+        new window.MapmyIndia.Marker({
+          map: mapRef.current,
+          position: [loc.lat, loc.lng],
+          icon: "https://www.mapmyindia.com/api/advanced-maps/doc/sample/map_sdk/red_marker.png",
+          popup: {
+            html: `
+              <div style="font-family: system-ui; padding: 8px; min-width: 130px;">
+                <h4 style="margin: 0 0 4px; color: #dc2626; font-weight: bold; font-size: 14px;">
+                  ${loc.name}
+                </h4>
+                <p style="margin: 0; font-size: 13px; color: #374151;">
+                  ${loc.donors.toLocaleString()} donors
+                </p>
+              </div>
+            `,
+            offset: [0, -35],
+          },
+        });
+      });
+
+      mapInitialized.current = true;
+    };
+
+    script.onerror = () => {
+      console.error("Failed to load MapmyIndia SDK");
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+      if (mapRef.current && mapRef.current.remove) mapRef.current.remove();
+    };
   }, []);
 
   const fadeIn = {
@@ -151,17 +223,6 @@ const BloodChainLanding = () => {
       name: "Red Cross",
       logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Emblem_of_the_ICRC.svg/512px-Emblem_of_the_ICRC.svg.png",
     },
-  ];
-
-  const geoUrl =
-    "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
-
-  const donorLocations = [
-    { name: "New York", coordinates: [-74.006, 40.7128], donors: 12500 },
-    { name: "London", coordinates: [-0.1276, 51.5074], donors: 9800 },
-    { name: "Mumbai", coordinates: [72.8777, 19.076], donors: 15200 },
-    { name: "São Paulo", coordinates: [-46.6333, -23.5505], donors: 11000 },
-    { name: "Tokyo", coordinates: [139.6503, 35.6762], donors: 8700 },
   ];
 
   const chartData = {
@@ -446,7 +507,7 @@ const BloodChainLanding = () => {
         </div>
       </section>
 
-      {/* GLOBAL MAP */}
+      {/* GLOBAL MAP - MAPMYINDIA */}
       <section id="map" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
@@ -463,42 +524,24 @@ const BloodChainLanding = () => {
             </p>
           </motion.div>
 
-          <div className="bg-gray-50 rounded-2xl p-6 shadow-sm">
-            <ComposableMap projectionConfig={{ scale: 140 }}>
-              <Geographies geography={geoUrl}>
-                {({ geographies }) =>
-                  geographies.map((geo) => (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      fill="#e5e7eb"
-                      stroke="#d1d5db"
-                      style={{
-                        default: { outline: "none" },
-                        hover: { fill: "#dc2626", outline: "none" },
-                        pressed: { outline: "none" },
-                      }}
-                    />
-                  ))
-                }
-              </Geographies>
-              {donorLocations.map(({ name, coordinates, donors }) => (
-                <Marker key={name} coordinates={coordinates}>
-                  <circle r={8} fill="#dc2626" stroke="#fff" strokeWidth={2} />
-                  <text
-                    textAnchor="middle"
-                    y={-15}
-                    style={{
-                      fontSize: 12,
-                      fill: "#1f2937",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {donors.toLocaleString()}
-                  </text>
-                </Marker>
-              ))}
-            </ComposableMap>
+          <div className="bg-gray-50 rounded-2xl p-4 shadow-sm h-96 md:h-[500px] overflow-hidden">
+            <div
+              id="mapmyindia-map"
+              className="w-full h-full rounded-xl"
+              style={{ minHeight: "400px" }}
+            >
+              {!process.env.REACT_APP_MAPMYINDIA_MAP_SDK_KEY && (
+                <div className="flex items-center justify-center h-full bg-gray-200 text-gray-600 text-center p-4">
+                  <p className="text-sm">
+                    Add{" "}
+                    <code className="bg-gray-300 px-1 rounded">
+                      REACT_APP_MAPMYINDIA_MAP_SDK_KEY
+                    </code>{" "}
+                    in <code>.env</code>
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
