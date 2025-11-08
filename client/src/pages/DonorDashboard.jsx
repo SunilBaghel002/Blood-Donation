@@ -399,11 +399,11 @@ const DonorDashboard = () => {
       variants={container}
       initial="hidden"
       animate="show"
-      className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-red-100"
+      className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-red-100 overflow-y-scroll overflow-x-visible h-148"
     >
       <motion.div
         variants={item}
-        className="flex items-center justify-between mb-6"
+        className="flex items-center justify-between mb-6 "
       >
         <h3 className="text-2xl font-bold text-gray-800 flex items-center">
           <Heart className="w-7 h-7 mr-3 text-red-600" /> Donation Timeline

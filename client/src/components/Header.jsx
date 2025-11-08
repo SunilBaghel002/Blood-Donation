@@ -125,7 +125,7 @@ const Header = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 mt-3">
+        <div className="flex space-x-2 bg-white/10 backdrop-blur-md rounded-2xl p-2 mt-3 w-fit">
           {tabs.map((tab) => (
             <motion.button
               key={tab}
