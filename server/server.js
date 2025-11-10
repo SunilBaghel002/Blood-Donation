@@ -14,7 +14,7 @@ const BloodChainABI = require("./BloodChain.json").abi;
 const { z } = require("zod");
 const { calculateRewards } = require("./utils/rewards"); // Fixed path
 
-const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545")
+const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 const app = express();
@@ -241,7 +241,7 @@ const Event = mongoose.model("Event", eventSchema);
 const RecordDonationSchema = z.object({
   donorId: z.string().min(1, "Donor ID required"),
   bloodType: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]),
-  units: z.number().int().min(1).max(10),
+  units: z.coerce.number().int().min(1).max(10),
   ipfsHash: z.string().optional(),
 });
 
@@ -582,24 +582,22 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
 
 // Connect Wallet
 app.post("/api/auth/connect-wallet", authMiddleware, async (req, res) => {
-  const { email, walletAddress } = req.body;
-  if (!email || !walletAddress) {
-    return res
-      .status(400)
-      .json({ error: "Email and wallet address are required" });
+  const { walletAddress } = req.body; // <-- ONLY walletAddress
+
+  if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+    return res.status(400).json({ error: "Valid wallet address required" });
   }
+
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
     user.walletAddress = walletAddress;
     await user.save();
-    res
-      .status(200)
-      .json({ message: "Wallet connected successfully", walletAddress });
+
+    res.json({ message: "Wallet connected", walletAddress });
   } catch (error) {
-    console.error("Wallet connection error:", error);
+    console.error("Connect wallet error:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -620,23 +618,29 @@ app.get(
   }
 );
 
-app.post("/api/admin/grant-role", authMiddleware, adminMiddleware, async (req, res) => {
-  const { userWallet, role } = req.body; // e.g., "DONOR_ROLE"
-  if (!userWallet || !role) return res.status(400).json({ error: "userWallet and role required" });
+app.post(
+  "/api/admin/grant-role",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    const { userWallet, role } = req.body; // e.g., "DONOR_ROLE"
+    if (!userWallet || !role)
+      return res.status(400).json({ error: "userWallet and role required" });
 
-  try {
-    const adminWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-    const contract = getContract(adminWallet);
-    const roleBytes = ethers.id(role);
-    const tx = await contract.grantRoleToUser(roleBytes, userWallet);
-    const receipt = await tx.wait();
-    if (receipt.status !== 1) throw new Error("Role grant failed");
+    try {
+      const adminWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+      const contract = getContract(adminWallet);
+      const roleBytes = ethers.id(role);
+      const tx = await contract.grantRoleToUser(roleBytes, userWallet);
+      const receipt = await tx.wait();
+      if (receipt.status !== 1) throw new Error("Role grant failed");
 
-    res.json({ message: "Role granted", txHash: receipt.transactionHash });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+      res.json({ message: "Role granted", txHash: receipt.transactionHash });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
-});
+);
 
 app.put(
   "/api/admin/users/:id",
@@ -898,100 +902,89 @@ app.get("/api/bloodbank/registered", authMiddleware, async (req, res) => {
 // Improved endpoint
 // server.js or routes/bloodbank.js
 app.post("/api/bloodbank/record-donation", authMiddleware, async (req, res) => {
-  // 1. Role Check
   if (req.userRole !== "BloodBank") {
-    return res.status(403).json({ error: "Access denied: BloodBank only" });
+    return res.status(403).json({ error: "BloodBank only" });
   }
 
-  // 2. Validate Request Body
   const parseResult = RecordDonationSchema.safeParse(req.body);
   if (!parseResult.success) {
     return res.status(400).json({
-      error: "Invalid request",
+      error: "Invalid input",
       details: parseResult.error.format(),
     });
   }
 
   const { donorId, bloodType, units, ipfsHash = "" } = parseResult.data;
 
-  let session, receipt, transaction;
+  let session;
+  let receipt;
+  let donor;
+  let inventory;
 
   try {
     session = await mongoose.startSession();
     await session.withTransaction(async () => {
-      // === 1. Validate Donor ===
-      const donor = await User.findById(donorId).session(session);
-      if (!donor) throw new Error("Donor not found");
-      if (donor.role !== "Donor") throw new Error("User is not a donor");
+      // 1. Find Donor
+      donor = await User.findById(donorId).session(session);
+      if (!donor || donor.role !== "Donor") throw new Error("Invalid donor");
       if (!donor.walletAddress) throw new Error("Donor wallet not connected");
 
-      // === 2. Update Donor Stats & Rewards ===
+      // 2. Update Donor
       const oldPoints = donor.donorInfo?.rewards?.points || 0;
       const oldBadges = donor.donorInfo?.rewards?.badges || [];
+      const { newPoints, newBadges } = calculateRewards(
+        oldPoints,
+        units * 10,
+        oldBadges
+      );
 
-      const { newPoints, newBadges } = calculateRewards(oldPoints, units * 10, oldBadges);
-
-      donor.donorInfo = donor.donorInfo || {};
-      donor.donorInfo.donationCount = (donor.donorInfo.donationCount || 0) + 1;
-      donor.donorInfo.lastDonationDate = new Date();
-      donor.donorInfo.rewards = { points: newPoints, badges: newBadges };
-
+      donor.donorInfo = {
+        ...donor.donorInfo,
+        donationCount: (donor.donorInfo?.donationCount || 0) + 1,
+        lastDonationDate: new Date(),
+        rewards: { points: newPoints, badges: newBadges },
+      };
       await donor.save({ session });
 
-      // === 3. Update Blood Inventory ===
-      const expiryDate = new Date(Date.now() + 42 * 24 * 60 * 60 * 1000); // 42 days
+      // 3. Update Inventory
+      const expiryDate = new Date(Date.now() + 42 * 24 * 60 * 60 * 1000);
+      inventory = await BloodInventory.findOneAndUpdate(
+        { bloodBankId: req.userId, bloodType },
+        { $inc: { units } },
+        { upsert: true, new: true, session }
+      );
 
-      let inventory = await BloodInventory.findOne({
-        bloodBankId: req.userId,
-        bloodType,
-      }).session(session);
-
-      if (inventory) {
-        inventory.units += units;
-      } else {
-        inventory = new BloodInventory({
-          bloodBankId: req.userId,
-          bloodType,
-          units,
-          expiryDate,
-          demand: "Low",
-        });
+      if (!inventory.expiryDate) {
+        inventory.expiryDate = expiryDate;
       }
 
-      // Update demand level
-      const totalUnits = inventory.units;
+      // Update demand
+      const total = inventory.units;
       inventory.demand =
-        totalUnits < 10
+        total < 10
           ? "Critical"
-          : totalUnits < 20
+          : total < 20
           ? "High"
-          : totalUnits < 50
+          : total < 50
           ? "Medium"
           : "Low";
-
       await inventory.save({ session });
 
-      // === 4. Blockchain: Record Donation ===
-      const bloodBankWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-      const contract = getContract(bloodBankWallet);
-
+      // 4. Blockchain
+      const contract = getContract(wallet);
       const tx = await contract.recordDonation(
         donor.walletAddress,
         bloodType,
         units,
         ipfsHash,
-        Math.floor(expiryDate.getTime() / 1000), // Unix timestamp
+        Math.floor(expiryDate.getTime() / 1000),
         { gasLimit: 600000 }
       );
-
       receipt = await tx.wait();
+      if (receipt.status !== 1) throw new Error("Tx failed");
 
-      if (receipt.status !== 1) {
-        throw new Error("Blockchain transaction failed");
-      }
-
-      // === 5. Save Transaction Log ===
-      transaction = new Transaction({
+      // 5. Save Transaction
+      const transaction = new Transaction({
         type: "Donation",
         donorId,
         bloodBankId: req.userId,
@@ -1000,61 +993,66 @@ app.post("/api/bloodbank/record-donation", authMiddleware, async (req, res) => {
         status: "Confirmed",
         txHash: receipt.transactionHash,
         ipfsHash,
-        timestamp: new Date(),
       });
-
       await transaction.save({ session });
     });
 
-    // === SUCCESS RESPONSE ===
     res.json({
       success: true,
-      message: "Donation recorded successfully",
+      message: "Donation recorded",
       txHash: receipt.transactionHash,
-      blockNumber: receipt.blockNumber,
       donor: {
-        newPoints: donor.donorInfo.rewards.points,
-        newBadges: donor.donorInfo.rewards.badges,
-        totalDonations: donor.donorInfo.donationCount,
+        points: donor.donorInfo.rewards.points,
+        badges: donor.donorInfo.rewards.badges,
+        total: donor.donorInfo.donationCount,
       },
       inventory: {
         bloodType: inventory.bloodType,
         units: inventory.units,
         demand: inventory.demand,
-        expiryDate: inventory.expiryDate,
       },
-      transactionId: transaction._id,
     });
   } catch (error) {
     console.error("Record Donation Error:", error.message);
-
-    res.status(500).json({
-      error: "Failed to record donation",
-      details: error.message,
-    });
+    res.status(500).json({ error: error.message });
   } finally {
     if (session) session.endSession();
   }
 });
 // Hospital Routes - Existing
-app.post("/api/hospital/request-blood", authMiddleware, hospitalMiddleware, async (req, res) => {
-  const { bloodBankId, bloodType, quantity } = req.body;
-  if (!bloodBankId || !bloodType || !quantity) return res.status(400).json({ error: "Missing fields" });
+app.post(
+  "/api/hospital/request-blood",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    const { bloodBankId, bloodType, quantity } = req.body;
+    if (!bloodBankId || !bloodType || !quantity)
+      return res.status(400).json({ error: "Missing fields" });
 
-  try {
-    const hospitalWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider); // Use hospital's wallet in prod
-    const contract = getContract(hospitalWallet);
-    const tx = await contract.createRequest(bloodBankId, bloodType, quantity);
-    const receipt = await tx.wait();
+    try {
+      const hospitalWallet = new ethers.Wallet(
+        process.env.PRIVATE_KEY,
+        provider
+      ); // Use hospital's wallet in prod
+      const contract = getContract(hospitalWallet);
+      const tx = await contract.createRequest(bloodBankId, bloodType, quantity);
+      const receipt = await tx.wait();
 
-    const request = new Request({ hospitalId: req.userId, bloodBankId, bloodType, quantity, blockchainId: receipt.transactionHash });
-    await request.save();
+      const request = new Request({
+        hospitalId: req.userId,
+        bloodBankId,
+        bloodType,
+        quantity,
+        blockchainId: receipt.transactionHash,
+      });
+      await request.save();
 
-    res.json({ request, txHash: receipt.transactionHash });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+      res.json({ request, txHash: receipt.transactionHash });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
-});
+);
 
 app.get("/api/hospital/requests", authMiddleware, async (req, res) => {
   try {
@@ -1240,21 +1238,35 @@ app.delete(
   }
 );
 
-app.get("/api/hospital/stats", authMiddleware, hospitalMiddleware, async (req, res) => {
-  try {
-    const campaigns = await Campaign.find({ hospitalId: req.userId });
-    const active = campaigns.filter(c => c.status === "active").length;
-    const required = campaigns.reduce((sum, c) => sum + c.unitsNeeded, 0);
-    const received = campaigns.reduce((sum, c) => sum + c.unitsReceived, 0);
-    const donorsTotal = campaigns.reduce((sum, c) => sum + c.donors, 0); // Fixed
-    const completed = campaigns.filter(c => c.status === "completed").length;
-    const verified = campaigns.filter(c => c.verified).length;
+app.get(
+  "/api/hospital/stats",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    try {
+      const campaigns = await Campaign.find({ hospitalId: req.userId });
+      const active = campaigns.filter((c) => c.status === "active").length;
+      const required = campaigns.reduce((sum, c) => sum + c.unitsNeeded, 0);
+      const received = campaigns.reduce((sum, c) => sum + c.unitsReceived, 0);
+      const donorsTotal = campaigns.reduce((sum, c) => sum + c.donors, 0); // Fixed
+      const completed = campaigns.filter(
+        (c) => c.status === "completed"
+      ).length;
+      const verified = campaigns.filter((c) => c.verified).length;
 
-    res.json({ active, required, received, donors: donorsTotal, completed, verified });
-  } catch (error) {
-    res.status(500).json({ error: "Server error" });
+      res.json({
+        active,
+        required,
+        received,
+        donors: donorsTotal,
+        completed,
+        verified,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
 app.get(
   "/api/hospital/timeline",
@@ -1271,26 +1283,47 @@ app.get(
   }
 );
 
-app.get("/api/hospital/analytics", authMiddleware, hospitalMiddleware, async (req, res) => {
-  try {
-    const campaigns = await Campaign.find({ hospitalId: req.userId });
-    const distribution = await Commitment.aggregate([
-      { $match: { campaignId: { $in: campaigns.map(c => c._id) } } },
-      { $group: { _id: "$bloodType", units: { $sum: "$units" } } }
-    ]);
+app.get(
+  "/api/hospital/analytics",
+  authMiddleware,
+  hospitalMiddleware,
+  async (req, res) => {
+    try {
+      const campaigns = await Campaign.find({ hospitalId: req.userId });
+      const distribution = await Commitment.aggregate([
+        { $match: { campaignId: { $in: campaigns.map((c) => c._id) } } },
+        { $group: { _id: "$bloodType", units: { $sum: "$units" } } },
+      ]);
 
-    const bloodDist = [
-      { type: "O+", units: distribution.find(d => d._id === "O+")?.units || 96, percent: 35 },
-      { type: "A+", units: distribution.find(d => d._id === "A+")?.units || 77, percent: 28 },
-      { type: "B+", units: distribution.find(d => d._id === "B+")?.units || 55, percent: 20 },
-      { type: "AB+", units: distribution.find(d => d._id === "AB+")?.units || 47, percent: 17 },
-    ];
+      const bloodDist = [
+        {
+          type: "O+",
+          units: distribution.find((d) => d._id === "O+")?.units || 96,
+          percent: 35,
+        },
+        {
+          type: "A+",
+          units: distribution.find((d) => d._id === "A+")?.units || 77,
+          percent: 28,
+        },
+        {
+          type: "B+",
+          units: distribution.find((d) => d._id === "B+")?.units || 55,
+          percent: 20,
+        },
+        {
+          type: "AB+",
+          units: distribution.find((d) => d._id === "AB+")?.units || 47,
+          percent: 17,
+        },
+      ];
 
-    res.json({ bloodDistribution: bloodDist, keyMetrics: [] });
-  } catch (error) {
-    res.status(500).json({ error: "Server error" });
+      res.json({ bloodDistribution: bloodDist, keyMetrics: [] });
+    } catch (error) {
+      res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
 // Donor Routes - Existing
 app.post("/api/donor/schedule", authMiddleware, async (req, res) => {
@@ -1551,33 +1584,45 @@ app.post("/api/rewards/issue", authMiddleware, async (req, res) => {
 // Approve/Reject Request
 app.post("/api/bloodbank/request-action", authMiddleware, async (req, res) => {
   const { requestId, action } = req.body;
-  if (!["Approved", "Rejected"].includes(action)) return res.status(400).json({ error: "Invalid action" });
+  if (!["Approved", "Rejected"].includes(action)) {
+    return res.status(400).json({ error: "Invalid action" });
+  }
 
   try {
     const request = await Request.findById(requestId);
-    if (!request || request.bloodBankId.toString() !== req.userId) return res.status(400).json({ error: "Invalid request" });
+    if (!request || request.bloodBankId.toString() !== req.userId) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
 
     if (action === "Approved") {
-      const inventory = await BloodInventory.findOne({ bloodBankId: req.userId, bloodType: request.bloodType });
-      if (!inventory || inventory.units < request.quantity) return res.status(400).json({ error: "Low stock" });
+      const inventory = await BloodInventory.findOne({
+        bloodBankId: req.userId,
+        bloodType: request.bloodType,
+      });
+      if (!inventory || inventory.units < request.quantity) {
+        return res.status(400).json({ error: "Insufficient stock" });
+      }
 
-      const bloodBankWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-      const contract = getContract(bloodBankWallet);
-      const tx = await contract.approveRequest(requestId, []); // unitIds from contract
+      const contract = getContract(wallet);
+      const tx = await contract.approveRequest(requestId, []);
       const receipt = await tx.wait();
 
       inventory.units -= request.quantity;
       await inventory.save();
 
-      const transaction = new Transaction({
-        type: "Transfer", hospitalId: request.hospitalId, bloodBankId: req.userId,
-        bloodType: request.bloodType, quantity: request.quantity, txHash: receipt.transactionHash
+      await Transaction.create({
+        type: "Transfer",
+        hospitalId: request.hospitalId,
+        bloodBankId: req.userId,
+        bloodType: request.bloodType,
+        quantity: request.quantity,
+        txHash: receipt.transactionHash,
       });
-      await transaction.save();
     }
 
     request.status = action;
     await request.save();
+
     res.json({ message: `${action} successfully` });
   } catch (error) {
     res.status(500).json({ error: error.message });
