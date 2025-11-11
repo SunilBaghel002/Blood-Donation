@@ -17,9 +17,9 @@ contract BloodChain is AccessControl {
         address donor;
         string bloodType;
         uint256 quantity;
-        uint256 expiryDate; // Unix timestamp
-        string ipfsHash; // IPFS hash for additional data (e.g., photo for QR verification)
-        address currentOwner; // Blood bank or hospital
+        uint256 expiryDate; 
+        string ipfsHash; 
+        address currentOwner; 
         bool used;
     }
 
@@ -29,12 +29,12 @@ contract BloodChain is AccessControl {
         address bloodBank;
         string bloodType;
         uint256 quantity;
-        string status; // "Pending", "Approved", "Rejected", "Fulfilled"
+        string status; 
     }
 
     mapping(uint256 => BloodUnit) public bloodUnits;
     mapping(uint256 => Request) public requests;
-    mapping(address => uint256) public donorRewards; // Points for donors
+    mapping(address => uint256) public donorRewards; 
 
     event RoleGranted(bytes32 indexed role, address indexed account);
     event DonationRecorded(uint256 indexed unitId, address indexed donor, address indexed bloodBank, string bloodType, uint256 quantity, string ipfsHash);
@@ -50,13 +50,11 @@ contract BloodChain is AccessControl {
         _requestIdCounter = 0;
     }
 
-    // Admin grants roles to users (via their wallet addresses)
     function grantRoleToUser(bytes32 role, address user) public onlyRole(ADMIN_ROLE) {
         _grantRole(role, user);
         emit RoleGranted(role, user);
     }
 
-    // Blood Bank records a donation (creates a new blood unit)
     function recordDonation(
         address donor,
         string memory bloodType,
@@ -83,13 +81,11 @@ contract BloodChain is AccessControl {
             used: false
         });
 
-        // Reward donor
         donorRewards[donor] += quantity * 10;
 
         emit DonationRecorded(unitId, donor, msg.sender, bloodType, quantity, ipfsHash);
     }
 
-    // Hospital creates a blood request
     function createRequest(
         address bloodBank,
         string memory bloodType,
@@ -113,7 +109,6 @@ contract BloodChain is AccessControl {
         emit RequestCreated(requestId, msg.sender, bloodBank, bloodType, quantity);
     }
 
-    // Blood Bank approves a request and assigns specific units
     function approveRequest(uint256 requestId, uint256[] memory unitIds) public onlyRole(BLOOD_BANK_ROLE) {
         Request storage req = requests[requestId];
         require(keccak256(bytes(req.status)) == keccak256(bytes("Pending")), "Request not pending");
