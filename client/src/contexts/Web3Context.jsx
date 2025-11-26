@@ -1,5 +1,11 @@
 // src/contexts/Web3Context.jsx
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   createConfig,
   WagmiProvider,
@@ -22,157 +28,243 @@ import { NETWORK_CONFIG } from "../config/network.js";
 const PROJECT_ID = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID;
 
 if (!PROJECT_ID) {
-  console.warn(
-    "VITE_WALLET_CONNECT_PROJECT_ID is missing! WalletConnect disabled."
-  );
+  console.warn("⚠️ VITE_WALLET_CONNECT_PROJECT_ID missing");
 }
 
 /* -------------------------------------------------
-   2. Chain config (Hardhat: 31337)
+   2. Chain Config
    ------------------------------------------------- */
 const config = createConfig({
   chains: [hardhat],
   transports: {
-    [hardhat.id]: http(),
+    [hardhat.id]: http("http://127.0.0.1:8545"),
   },
 });
 
 /* -------------------------------------------------
    3. Web3Modal
    ------------------------------------------------- */
-const modal = createWeb3Modal({
-  wagmiConfig: config,
-  projectId: PROJECT_ID,
-  themeMode: "light",
-  metadata: {
-    name: "BloodChain",
-    description: "Blockchain blood donation platform",
-    url: import.meta.env.VITE_APP_URL || "http://localhost:5173",
-    icons: ["https://avatars.githubusercontent.com/u/37784886"],
-  },
-});
+let modal;
+if (PROJECT_ID) {
+  modal = createWeb3Modal({
+    wagmiConfig: config,
+    projectId: PROJECT_ID,
+    themeMode: "light",
+    metadata: {
+      name: "BloodChain",
+      description: "Blockchain blood donation platform",
+      url: import.meta.env.VITE_APP_URL || "http://localhost:5173",
+      icons: ["https://avatars.githubusercontent.com/u/37784886"],
+    },
+  });
+}
 
 /* -------------------------------------------------
    4. Context
    ------------------------------------------------- */
 const Web3Context = createContext();
 
-export const useWeb3 = () => useContext(Web3Context);
+export const useWeb3 = () => {
+  const context = useContext(Web3Context);
+  if (!context) {
+    throw new Error("useWeb3 must be used within Web3Provider");
+  }
+  return context;
+};
 
 /* -------------------------------------------------
-   5. Backend sync
+   5. Backend Sync (FIXED)
    ------------------------------------------------- */
 const syncBackend = async (address) => {
   const token = localStorage.getItem("token");
-  if (!token || !address) return;
+
+  if (!token) {
+    console.log("⚠️ No token found, skipping wallet sync");
+    return;
+  }
+
+  if (!address) {
+    console.log("⚠️ No wallet address, skipping sync");
+    return;
+  }
 
   try {
-    await fetch("http://localhost:5000/api/auth/connect-wallet", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        email: localStorage.getItem("email"),
-        walletAddress: address,
-      }),
-    });
+    console.log("🔄 Syncing wallet to backend:", address);
+
+    const response = await fetch(
+      "http://localhost:5000/api/auth/connect-wallet",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ walletAddress: address }), // ✅ Fixed: Only send walletAddress
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("❌ Backend sync failed:", error);
+      return;
+    }
+
+    const data = await response.json();
+    console.log("✅ Wallet synced:", data);
   } catch (error) {
-    console.error("Backend sync failed:", error);
+    console.error("❌ Backend sync error:", error.message);
   }
 };
 
 /* -------------------------------------------------
-   6. Web3Provider
+   6. Web3Provider (IMPROVED)
    ------------------------------------------------- */
 export const Web3Provider = ({ children }) => {
-  const queryClient = useRef(new QueryClient()).current;
+  const queryClient = useRef(
+    new QueryClient({
+      defaultOptions: {
+        queries: {
+          refetchOnWindowFocus: false,
+          retry: 1,
+        },
+      },
+    })
+  ).current;
 
   const InnerProvider = () => {
-    const { address, isConnected } = useAccount();
-    const { connect, connectors, isPending } = useConnect();
+    const { address, isConnected, chain } = useAccount();
+    const { connect, connectors, isPending, error } = useConnect();
     const { disconnect } = useDisconnect();
     const { data: balanceData } = useBalance({ address });
+
+    const [isSyncing, setIsSyncing] = useState(false);
+    const syncedRef = useRef(false);
 
     const contract = {
       address: CONTRACT_ADDRESS,
       abi: BloodChainABI,
     };
 
-    // Auto-sync
+    // ============ Auto-Sync (Only Once) ============
     useEffect(() => {
-      if (isConnected && address) {
+      if (isConnected && address && !syncedRef.current && !isSyncing) {
+        setIsSyncing(true);
         localStorage.setItem("walletAddress", address);
-        syncBackend(address);
-      }
-    }, [isConnected, address]);
 
-    // Auto-reconnect
+        syncBackend(address).finally(() => {
+          syncedRef.current = true;
+          setIsSyncing(false);
+        });
+      }
+    }, [isConnected, address, isSyncing]);
+
+    // ============ Auto-Reconnect ============
     useEffect(() => {
-      const saved = localStorage.getItem("walletAddress");
-      if (saved && !isConnected) {
+      const savedAddress = localStorage.getItem("walletAddress");
+      const token = localStorage.getItem("token");
+
+      if (savedAddress && token && !isConnected) {
+        console.log("🔄 Auto-reconnecting wallet...");
         const injected = connectors.find((c) => c.id === "injected");
-        if (injected) connect({ connector: injected });
+        if (injected) {
+          connect({ connector: injected });
+        }
       }
     }, [connectors, connect, isConnected]);
 
-    // Public API
+    // ============ Error Handling ============
+    useEffect(() => {
+      if (error) {
+        console.error("❌ Wallet connection error:", error.message);
+      }
+    }, [error]);
+
+    // ============ Public API ============
     const value = {
+      // MetaMask Connection
       connectMetaMask: async () => {
-        const injected = connectors.find((c) => c.id === "injected");
-        if (!injected) return;
-
         try {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [NETWORK_CONFIG],
-          });
-        } catch (err) {
-          if (err.code !== 4001)
-            console.warn("Chain already added or user skipped");
-        }
-
-        try {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: NETWORK_CONFIG.chainId }],
-          });
-        } catch (err) {
-          if (err.code === 4902) {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [NETWORK_CONFIG],
-            });
+          if (!window.ethereum) {
+            alert("Please install MetaMask!");
+            return;
           }
+
+          const injected = connectors.find((c) => c.id === "injected");
+          if (!injected) {
+            console.error("Injected connector not found");
+            return;
+          }
+
+          // Add/Switch to Hardhat network
+          try {
+            await window.ethereum.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: NETWORK_CONFIG.chainId }],
+            });
+          } catch (switchError) {
+            // Network doesn't exist, add it
+            if (switchError.code === 4902) {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [NETWORK_CONFIG],
+              });
+            } else {
+              throw switchError;
+            }
+          }
+
+          // Connect wallet
+          connect({ connector: injected });
+        } catch (error) {
+          console.error("MetaMask connection error:", error);
         }
-
-        connect({ connector: injected });
       },
+
+      // WalletConnect
       connectWalletConnect: () => {
-        if (PROJECT_ID) modal.open();
+        if (PROJECT_ID && modal) {
+          modal.open();
+        } else {
+          console.error("WalletConnect not configured");
+        }
       },
-      disconnectWallet: () => disconnect(),
-      account: address,
-      balance: balanceData ? balanceData.formatted : "0",
-      contract,
-      isConnected,
-      isLoading: isPending,
 
+      // Disconnect
+      disconnectWallet: () => {
+        disconnect();
+        localStorage.removeItem("walletAddress");
+        syncedRef.current = false;
+      },
+
+      // Shorthand for MetaMask
       connectWallet: async () => {
         const injected = connectors.find((c) => c.id === "injected");
         if (injected) {
           try {
             await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [NETWORK_CONFIG],
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: NETWORK_CONFIG.chainId }],
             });
           } catch (err) {
-            console.log("Chain already exists:", err);
+            if (err.code === 4902) {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [NETWORK_CONFIG],
+              });
+            }
           }
           connect({ connector: injected });
         }
       },
+
+      // State
+      account: address,
+      balance: balanceData ? balanceData.formatted : "0",
+      contract,
+      isConnected,
+      isLoading: isPending || isSyncing,
+      chain,
+      error,
     };
 
     return (

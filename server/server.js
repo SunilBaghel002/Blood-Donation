@@ -12,39 +12,47 @@ require("dotenv").config();
 
 const BloodChainABI = require("./BloodChain.json").abi;
 const { z } = require("zod");
-const { calculateRewards } = require("./utils/rewards"); // Fixed path
-
-const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
-const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+const { calculateRewards } = require("./utils/rewards");
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// ============ MIDDLEWARE (MUST BE BEFORE ROUTES) ============
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:3000"],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Request logger
 app.use((req, res, next) => {
-  console.log(`Request: ${req.method} ${req.url}`);
-  if (req.url.startsWith("http://") || req.url.startsWith("https://")) {
-    return res.status(400).json({ error: "Invalid URL" });
-  }
+  console.log(`📥 ${req.method} ${req.url}`);
   next();
 });
 
+// ============ BLOCKCHAIN SETUP ============
+const provider = new ethers.JsonRpcProvider(
+  process.env.HARDHAT_RPC_URL || "http://127.0.0.1:8545"
+);
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+
 const getContract = (signer) => {
   return new ethers.Contract(
-    process.env.CONTRACT_ADDRESS, // Use .env
+    process.env.CONTRACT_ADDRESS,
     BloodChainABI,
     signer
   );
 };
 
-// MongoDB Connection
+// ============ MONGODB CONNECTION ============
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB connected");
+    console.log("✅ MongoDB connected");
   } catch (error) {
-    console.error("MongoDB connection error:", error);
+    console.error("❌ MongoDB connection error:", error);
     process.exit(1);
   }
 };
@@ -248,7 +256,10 @@ const RecordDonationSchema = z.object({
 // === EMAIL ===
 const transporter = nodemailer.createTransport({
   service: "Gmail",
-  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
 const generateOTP = () => crypto.randomBytes(3).toString("hex").toUpperCase();
@@ -263,73 +274,126 @@ const sendOTPEmail = async (email, otp) => {
   await transporter.sendMail(mailOptions);
 };
 
-// === MIDDLEWARE ===
+// ============ MIDDLEWARE ============
 const authMiddleware = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "No token" });
   try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        error: "No token provided",
+        message: "Authorization header missing or malformed",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.userId;
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     req.userRole = user.role;
     req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ error: "Invalid token" });
+    console.error("🔒 Auth error:", error.message);
+    return res.status(401).json({
+      error: "Invalid token",
+      message: error.message,
+    });
   }
 };
 
 const adminMiddleware = (req, res, next) => {
-  if (req.userRole !== "Admin")
-    return res.status(403).json({ error: "Admin required" });
+  if (req.userRole !== "Admin") {
+    return res.status(403).json({ error: "Admin access required" });
+  }
   next();
 };
 
 const hospitalMiddleware = (req, res, next) => {
-  if (req.userRole !== "Hospital")
-    return res.status(403).json({ error: "Hospital required" });
+  if (req.userRole !== "Hospital") {
+    return res.status(403).json({ error: "Hospital access required" });
+  }
   next();
 };
 
 const donorMiddleware = (req, res, next) => {
-  if (req.userRole !== "Donor")
-    return res.status(403).json({ error: "Donor required" });
+  if (req.userRole !== "Donor") {
+    return res.status(403).json({ error: "Donor access required" });
+  }
   next();
 };
 
-// API Routes
+// ============ HEALTH CHECK ============
+app.get("/", (req, res) => {
+  res.json({
+    status: "running",
+    message: "BloodChain API v1.0",
+    endpoints: [
+      "/api/auth/*",
+      "/api/donor/*",
+      "/api/hospital/*",
+      "/api/bloodbank/*",
+    ],
+  });
+});
 
-// Step 1: Initiate Signup
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    mongodb:
+      mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    blockchain: wallet.address ? "connected" : "disconnected",
+  });
+});
+
+// ============ AUTH ROUTES ============
+
+// Test route
+app.get("/api/auth/test", (req, res) => {
+  res.json({ message: "Auth routes working!" });
+});
+
+// Signup
 app.post("/api/auth/signup", async (req, res) => {
   const { firstName, lastName, email, role } = req.body;
+
+  console.log("📝 Signup request:", { firstName, lastName, email, role });
+
   if (!email || !role) {
     return res.status(400).json({ error: "Email and role are required" });
   }
+
   if (!["Donor", "Hospital", "BloodBank", "Admin"].includes(role)) {
     return res.status(400).json({ error: "Invalid role" });
   }
+
   if (role === "Donor" && (!firstName || !lastName)) {
-    return res
-      .status(400)
-      .json({ error: "First name and last name are required for donors" });
+    return res.status(400).json({
+      error: "First name and last name are required for donors",
+    });
   }
-  if (role === "Admin" && (!firstName || !lastName)) {
-    return res
-      .status(400)
-      .json({ error: "First name and last name are required for admins" });
-  }
+
   if (!/\S+@\S+\.\S+/.test(email)) {
     return res.status(400).json({ error: "Invalid email format" });
   }
+
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered" });
     }
+
     const otp = generateOTP();
-    console.log("otp is", otp);
+    console.log(`🔐 OTP for ${email}: ${otp}`);
+
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
     const user = new User({
       firstName: role === "Donor" || role === "Admin" ? firstName : undefined,
       lastName: role === "Donor" || role === "Admin" ? lastName : undefined,
@@ -340,115 +404,147 @@ app.post("/api/auth/signup", async (req, res) => {
       adminInfo:
         role === "Admin" ? { name: `${firstName} ${lastName}` } : undefined,
     });
+
     await user.save();
     await sendOTPEmail(email, otp);
-    res.status(200).json({ message: "OTP sent to your email", email, role });
+
+    res.status(200).json({
+      message: "OTP sent to your email",
+      email,
+      role,
+    });
   } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("❌ Signup error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 });
 
-// Step 2: Verify OTP
+// Verify OTP
 app.post("/api/auth/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
+
+  console.log("🔍 Verify OTP:", { email, otp });
+
   if (!email || !otp) {
     return res.status(400).json({ error: "Email and OTP are required" });
   }
-  if (!/^\w{6}$/.test(otp)) {
-    return res.status(400).json({ error: "OTP must be a 6-character code" });
-  }
+
   try {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+
     if (user.isVerified) {
       return res.status(400).json({ error: "User already verified" });
     }
-    if (user.otp !== otp || user.otpExpires < Date.now()) {
+
+    if (user.otp !== otp.toUpperCase() || user.otpExpires < Date.now()) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
     }
+
     user.otp = null;
     user.otpExpires = null;
     user.isVerified = true;
     await user.save();
-    res
-      .status(200)
-      .json({ message: "OTP verified successfully", role: user.role });
+
+    res.status(200).json({
+      message: "OTP verified successfully",
+      role: user.role,
+    });
   } catch (error) {
-    console.error("OTP verification error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("❌ OTP verification error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 });
 
-// Step 3: Complete Signup
+// Complete Signup
 app.post("/api/auth/complete-signup", async (req, res) => {
   const { email, password, confirmPassword } = req.body;
+
+  console.log("🔒 Complete signup:", { email });
+
   if (!email || !password || !confirmPassword) {
     return res.status(400).json({ error: "All fields are required" });
   }
+
   if (password.length < 8) {
-    return res
-      .status(400)
-      .json({ error: "Password must be at least 8 characters" });
+    return res.status(400).json({
+      error: "Password must be at least 8 characters",
+    });
   }
+
   if (password !== confirmPassword) {
     return res.status(400).json({ error: "Passwords do not match" });
   }
+
   try {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+
     if (!user.isVerified) {
       return res.status(400).json({ error: "User not verified" });
     }
+
     if (user.password) {
       return res.status(400).json({ error: "Password already set" });
     }
+
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
     await user.save();
+
     res.status(200).json({
-      message: "Password set successfully. Please complete the questionnaire.",
+      message: "Password set successfully",
       role: user.role,
       email: user.email,
     });
   } catch (error) {
-    console.error("Complete signup error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("❌ Complete signup error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 });
 
-// Step 4: Submit Questionnaire
+// Submit Questionnaire
 app.post("/api/auth/submit-questionnaire", async (req, res) => {
   const { email, role, questionnaire } = req.body;
+
+  console.log("📋 Questionnaire:", { email, role });
+
   if (!email || !role || !questionnaire) {
-    return res
-      .status(400)
-      .json({ error: "Email, role, and questionnaire data are required" });
+    return res.status(400).json({
+      error: "Email, role, and questionnaire data are required",
+    });
   }
+
   try {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+
     if (!user.isVerified) {
       return res.status(400).json({ error: "User not verified" });
     }
+
     if (!user.password) {
       return res.status(400).json({ error: "Password not set" });
     }
+
+    // Update user based on role
     if (role === "Donor") {
       const { bloodGroup, donationCount, lastDonationDate, medicalConditions } =
         questionnaire;
+
       if (
         !bloodGroup ||
         !["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(bloodGroup)
       ) {
         return res.status(400).json({ error: "Invalid blood group" });
       }
+
       user.donorInfo = {
         bloodGroup,
         donationCount: Number(donationCount) || 0,
@@ -460,11 +556,13 @@ app.post("/api/auth/submit-questionnaire", async (req, res) => {
       };
     } else if (role === "Hospital") {
       const { name, location, bedCount, contactNumber } = questionnaire;
+
       if (!name || !location || !bedCount || !contactNumber) {
         return res
           .status(400)
           .json({ error: "All hospital fields are required" });
       }
+
       user.hospitalInfo = {
         name,
         location,
@@ -474,11 +572,13 @@ app.post("/api/auth/submit-questionnaire", async (req, res) => {
     } else if (role === "BloodBank") {
       const { name, location, bloodStorageCapacity, contactNumber } =
         questionnaire;
+
       if (!name || !location || !bloodStorageCapacity || !contactNumber) {
         return res
           .status(400)
           .json({ error: "All blood bank fields are required" });
       }
+
       user.bloodBankInfo = {
         name,
         location,
@@ -487,11 +587,13 @@ app.post("/api/auth/submit-questionnaire", async (req, res) => {
       };
     } else if (role === "Admin") {
       const { contactNumber } = questionnaire;
+
       if (!contactNumber) {
         return res
           .status(400)
           .json({ error: "Contact number is required for admin" });
       }
+
       user.adminInfo = {
         ...user.adminInfo,
         contactNumber,
@@ -499,10 +601,13 @@ app.post("/api/auth/submit-questionnaire", async (req, res) => {
     } else {
       return res.status(400).json({ error: "Invalid role" });
     }
+
     await user.save();
+
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "24h",
     });
+
     res.status(200).json({
       message: "Questionnaire submitted successfully",
       token,
@@ -518,32 +623,40 @@ app.post("/api/auth/submit-questionnaire", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Questionnaire submission error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("❌ Questionnaire error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 });
 
 // Login
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
+
+  console.log("🔐 Login attempt:", { email });
+
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
+
   try {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
+
     if (!user.isVerified) {
       return res.status(400).json({ error: "User not verified" });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
+
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "24h",
     });
+
     res.status(200).json({
       message: "Login successful",
       token,
@@ -552,6 +665,7 @@ app.post("/api/auth/login", async (req, res) => {
         role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
+        walletAddress: user.walletAddress,
         donorInfo: user.donorInfo,
         hospitalInfo: user.hospitalInfo,
         bloodBankInfo: user.bloodBankInfo,
@@ -559,8 +673,8 @@ app.post("/api/auth/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("❌ Login error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 });
 
@@ -575,30 +689,65 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
     }
     res.status(200).json({ user });
   } catch (error) {
-    console.error("Get user error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("❌ Get user error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 });
 
-// Connect Wallet
+// ============ CONNECT WALLET (FIXED) ============
 app.post("/api/auth/connect-wallet", authMiddleware, async (req, res) => {
-  const { walletAddress } = req.body; // <-- ONLY walletAddress
+  const { walletAddress } = req.body;
+
+  console.log("💳 Connect wallet request:", {
+    userId: req.userId,
+    walletAddress,
+  });
 
   if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-    return res.status(400).json({ error: "Valid wallet address required" });
+    return res.status(400).json({
+      error: "Valid wallet address required",
+      received: walletAddress,
+    });
   }
 
   try {
     const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if wallet already used by another user
+    const existingWallet = await User.findOne({
+      walletAddress,
+      _id: { $ne: req.userId },
+    });
+
+    if (existingWallet) {
+      return res.status(400).json({
+        error: "Wallet address already connected to another account",
+      });
+    }
 
     user.walletAddress = walletAddress;
     await user.save();
 
-    res.json({ message: "Wallet connected", walletAddress });
+    console.log("✅ Wallet connected:", { userId: req.userId, walletAddress });
+
+    res.json({
+      message: "Wallet connected successfully",
+      walletAddress,
+      user: {
+        email: user.email,
+        role: user.role,
+        walletAddress: user.walletAddress,
+      },
+    });
   } catch (error) {
-    console.error("Connect wallet error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("❌ Connect wallet error:", error);
+    res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
   }
 });
 
@@ -1629,8 +1778,42 @@ app.post("/api/bloodbank/request-action", authMiddleware, async (req, res) => {
   }
 });
 
-// Start Server
+app.use((err, req, res, next) => {
+  console.error("💥 Unhandled error:", err);
+  res.status(500).json({ 
+    error: "Internal server error",
+    message: err.message,
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined
+  });
+});
+
+// 404 Handler
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: "Route not found",
+    path: req.url,
+    method: req.method 
+  });
+});
+
+// ============ START SERVER ============
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`
+╔════════════════════════════════════════╗
+║   🩸 BloodChain API Server Running     ║
+║   Port: ${PORT}                           ║
+║   Environment: ${process.env.NODE_ENV || "development"}             ║
+║   MongoDB: ${mongoose.connection.readyState === 1 ? "✅ Connected" : "❌ Disconnected"}             ║
+║   Blockchain: ✅ Ready                 ║
+╚════════════════════════════════════════╝
+  `);
+});
+
+// Graceful shutdown
+process.on("SIGINT", async () => {
+  console.log("\n🛑 Shutting down gracefully...");
+  await mongoose.connection.close();
+  process.exit(0);
 });
