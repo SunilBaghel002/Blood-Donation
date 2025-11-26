@@ -58,6 +58,8 @@ import {
   Legend,
 } from "chart.js";
 import CountUp from "react-countup";
+import IndiaMap from "../components/IndiaMap";
+import "../styles/leaflet-custom.css";
 
 ChartJS.register(
   CategoryScale,
@@ -154,168 +156,168 @@ const BloodChainLanding = () => {
   }, []);
 
   // ============ MAPMYINDIA MAP INTEGRATION ============
-  useEffect(() => {
-    if (mapInitialized.current) return;
+  // useEffect(() => {
+  //   if (mapInitialized.current) return;
 
-    const MAP_SDK_KEY = import.meta.env.VITE_APP_MAPMYINDIA_MAP_SDK_KEY;
-    if (!MAP_SDK_KEY) {
-      console.error("⚠️ Add VITE_APP_MAPMYINDIA_MAP_SDK_KEY to .env");
-      setIsMapLoading(false);
-      return;
-    }
+  //   const MAP_SDK_KEY = import.meta.env.VITE_APP_MAPMYINDIA_MAP_SDK_KEY;
+  //   if (!MAP_SDK_KEY) {
+  //     console.error("⚠️ Add VITE_APP_MAPMYINDIA_MAP_SDK_KEY to .env");
+  //     setIsMapLoading(false);
+  //     return;
+  //   }
 
-    const script = document.createElement("script");
-    script.src = `https://apis.mappls.com/advancedmaps/api/${MAP_SDK_KEY}/map_sdk?v=3.0&layer=vector`;
-    script.async = true;
+  //   const script = document.createElement("script");
+  //   script.src = `https://apis.mappls.com/advancedmaps/api/${MAP_SDK_KEY}/map_sdk?v=3.0&layer=vector`;
+  //   script.async = true;
 
-    script.onload = () => {
-      if (!document.getElementById("mapmyindia-map")) return;
+  //   script.onload = () => {
+  //     if (!document.getElementById("mapmyindia-map")) return;
 
-      try {
-        mapRef.current = new window.MapmyIndia.Map("mapmyindia-map", {
-          center: [20.5937, 78.9629],
-          zoom: 5,
-          zoomControl: true,
-          hybrid: false,
-          search: false,
-        });
+  //     try {
+  //       mapRef.current = new window.MapmyIndia.Map("mapmyindia-map", {
+  //         center: [20.5937, 78.9629],
+  //         zoom: 5,
+  //         zoomControl: true,
+  //         hybrid: false,
+  //         search: false,
+  //       });
 
-        // Major Indian cities with realistic donor data
-        const indianCities = [
-          {
-            name: "Delhi NCR",
-            lat: 28.6139,
-            lng: 77.209,
-            donors: 45200,
-            banks: 87,
-          },
-          {
-            name: "Mumbai",
-            lat: 19.076,
-            lng: 72.8777,
-            donors: 38500,
-            banks: 72,
-          },
-          {
-            name: "Bangalore",
-            lat: 12.9716,
-            lng: 77.5946,
-            donors: 32800,
-            banks: 65,
-          },
-          {
-            name: "Chennai",
-            lat: 13.0827,
-            lng: 80.2707,
-            donors: 28200,
-            banks: 58,
-          },
-          {
-            name: "Kolkata",
-            lat: 22.5726,
-            lng: 88.3639,
-            donors: 25800,
-            banks: 54,
-          },
-          {
-            name: "Hyderabad",
-            lat: 17.385,
-            lng: 78.4867,
-            donors: 24500,
-            banks: 49,
-          },
-          {
-            name: "Pune",
-            lat: 18.5204,
-            lng: 73.8567,
-            donors: 22700,
-            banks: 43,
-          },
-          {
-            name: "Ahmedabad",
-            lat: 23.0225,
-            lng: 72.5714,
-            donors: 19900,
-            banks: 38,
-          },
-          {
-            name: "Surat",
-            lat: 21.1702,
-            lng: 72.8311,
-            donors: 15200,
-            banks: 28,
-          },
-          {
-            name: "Jaipur",
-            lat: 26.9124,
-            lng: 75.7873,
-            donors: 14100,
-            banks: 26,
-          },
-          {
-            name: "Lucknow",
-            lat: 26.8467,
-            lng: 80.9462,
-            donors: 13500,
-            banks: 24,
-          },
-          {
-            name: "Kochi",
-            lat: 9.9312,
-            lng: 76.2673,
-            donors: 12800,
-            banks: 22,
-          },
-        ];
+  //       // Major Indian cities with realistic donor data
+  //       const indianCities = [
+  //         {
+  //           name: "Delhi NCR",
+  //           lat: 28.6139,
+  //           lng: 77.209,
+  //           donors: 45200,
+  //           banks: 87,
+  //         },
+  //         {
+  //           name: "Mumbai",
+  //           lat: 19.076,
+  //           lng: 72.8777,
+  //           donors: 38500,
+  //           banks: 72,
+  //         },
+  //         {
+  //           name: "Bangalore",
+  //           lat: 12.9716,
+  //           lng: 77.5946,
+  //           donors: 32800,
+  //           banks: 65,
+  //         },
+  //         {
+  //           name: "Chennai",
+  //           lat: 13.0827,
+  //           lng: 80.2707,
+  //           donors: 28200,
+  //           banks: 58,
+  //         },
+  //         {
+  //           name: "Kolkata",
+  //           lat: 22.5726,
+  //           lng: 88.3639,
+  //           donors: 25800,
+  //           banks: 54,
+  //         },
+  //         {
+  //           name: "Hyderabad",
+  //           lat: 17.385,
+  //           lng: 78.4867,
+  //           donors: 24500,
+  //           banks: 49,
+  //         },
+  //         {
+  //           name: "Pune",
+  //           lat: 18.5204,
+  //           lng: 73.8567,
+  //           donors: 22700,
+  //           banks: 43,
+  //         },
+  //         {
+  //           name: "Ahmedabad",
+  //           lat: 23.0225,
+  //           lng: 72.5714,
+  //           donors: 19900,
+  //           banks: 38,
+  //         },
+  //         {
+  //           name: "Surat",
+  //           lat: 21.1702,
+  //           lng: 72.8311,
+  //           donors: 15200,
+  //           banks: 28,
+  //         },
+  //         {
+  //           name: "Jaipur",
+  //           lat: 26.9124,
+  //           lng: 75.7873,
+  //           donors: 14100,
+  //           banks: 26,
+  //         },
+  //         {
+  //           name: "Lucknow",
+  //           lat: 26.8467,
+  //           lng: 80.9462,
+  //           donors: 13500,
+  //           banks: 24,
+  //         },
+  //         {
+  //           name: "Kochi",
+  //           lat: 9.9312,
+  //           lng: 76.2673,
+  //           donors: 12800,
+  //           banks: 22,
+  //         },
+  //       ];
 
-        indianCities.forEach((city) => {
-          new window.MapmyIndia.Marker({
-            map: mapRef.current,
-            position: [city.lat, city.lng],
-            icon: "https://apis.mapmyindia.com/map_v3/1.png",
-            popup: {
-              html: `
-                <div style="font-family: system-ui; padding: 12px; min-width: 180px;">
-                  <h4 style="margin: 0 0 8px; color: #dc2626; font-weight: bold; font-size: 15px;">
-                    ${city.name}
-                  </h4>
-                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                    <span style="font-size: 12px; color: #6b7280;">👥 Donors:</span>
-                    <span style="font-weight: 600; color: #374151;">${city.donors.toLocaleString()}</span>
-                  </div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 12px; color: #6b7280;">🏥 Blood Banks:</span>
-                    <span style="font-weight: 600; color: #374151;">${
-                      city.banks
-                    }</span>
-                  </div>
-                </div>
-              `,
-              offset: [0, -35],
-            },
-          });
-        });
+  //       indianCities.forEach((city) => {
+  //         new window.MapmyIndia.Marker({
+  //           map: mapRef.current,
+  //           position: [city.lat, city.lng],
+  //           icon: "https://apis.mapmyindia.com/map_v3/1.png",
+  //           popup: {
+  //             html: `
+  //               <div style="font-family: system-ui; padding: 12px; min-width: 180px;">
+  //                 <h4 style="margin: 0 0 8px; color: #dc2626; font-weight: bold; font-size: 15px;">
+  //                   ${city.name}
+  //                 </h4>
+  //                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+  //                   <span style="font-size: 12px; color: #6b7280;">👥 Donors:</span>
+  //                   <span style="font-weight: 600; color: #374151;">${city.donors.toLocaleString()}</span>
+  //                 </div>
+  //                 <div style="display: flex; align-items: center; gap: 8px;">
+  //                   <span style="font-size: 12px; color: #6b7280;">🏥 Blood Banks:</span>
+  //                   <span style="font-weight: 600; color: #374151;">${
+  //                     city.banks
+  //                   }</span>
+  //                 </div>
+  //               </div>
+  //             `,
+  //             offset: [0, -35],
+  //           },
+  //         });
+  //       });
 
-        mapInitialized.current = true;
-        setIsMapLoading(false);
-      } catch (error) {
-        console.error("Map initialization error:", error);
-        setIsMapLoading(false);
-      }
-    };
+  //       mapInitialized.current = true;
+  //       setIsMapLoading(false);
+  //     } catch (error) {
+  //       console.error("Map initialization error:", error);
+  //       setIsMapLoading(false);
+  //     }
+  //   };
 
-    script.onerror = () => {
-      console.error("Failed to load MapmyIndia SDK");
-      setIsMapLoading(false);
-    };
+  //   script.onerror = () => {
+  //     console.error("Failed to load MapmyIndia SDK");
+  //     setIsMapLoading(false);
+  //   };
 
-    document.head.appendChild(script);
+  //   document.head.appendChild(script);
 
-    return () => {
-      if (script.parentNode) script.parentNode.removeChild(script);
-      if (mapRef.current && mapRef.current.remove) mapRef.current.remove();
-    };
-  }, []);
+  //   return () => {
+  //     if (script.parentNode) script.parentNode.removeChild(script);
+  //     if (mapRef.current && mapRef.current.remove) mapRef.current.remove();
+  //   };
+  // }, []);
 
   // ============ ANIMATION VARIANTS ============
   const fadeIn = {
@@ -1250,34 +1252,57 @@ const BloodChainLanding = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-gray-50 to-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200"
+            className="bg-gradient-to-br from-gray-50 to-white rounded-3xl shadow-2xl overflow-hidden border-2 border-gray-200 p-2"
           >
             <div className="relative h-[500px] lg:h-[600px]">
-              {isMapLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-gray-600">Loading India map...</p>
-                  </div>
+              {/* ✅ USE LEAFLET MAP */}
+              <IndiaMap />
+            </div>
+
+            {/* Map Info Footer */}
+            <div className="bg-white border-t-2 border-gray-100 p-4">
+              <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                  <span>Blood Bank Locations</span>
                 </div>
-              )}
-              <div id="mapmyindia-map" className="w-full h-full" />
-              {!import.meta.env.VITE_APP_MAPMYINDIA_MAP_SDK_KEY && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-50">
-                  <div className="text-center p-8 max-w-md">
-                    <MapPin className="w-16 h-16 text-red-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      Map Coming Soon
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Add your MapmyIndia API key to see our network
-                    </p>
-                    <code className="bg-gray-200 text-red-600 px-3 py-1 rounded text-sm">
-                      VITE_APP_MAPMYINDIA_MAP_SDK_KEY
-                    </code>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-red-600" />
+                  <span>18 Major Cities Covered</span>
                 </div>
-              )}
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-600" />
+                  <span>284,750+ Active Donors</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Powered by</span>
+                  <strong className="text-red-600">OpenStreetMap</strong>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* City Stats Grid */}
+          <motion.div
+            variants={fadeIn}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-3 gap-6 mt-12"
+          >
+            <div className="bg-gradient-to-br from-red-50 to-white p-6 rounded-2xl border border-red-100">
+              <div className="text-4xl font-bold text-red-600 mb-2">28</div>
+              <p className="text-gray-700 font-medium">States & UTs Covered</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl border border-blue-100">
+              <div className="text-4xl font-bold text-blue-600 mb-2">1,127</div>
+              <p className="text-gray-700 font-medium">Verified Blood Banks</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-50 to-white p-6 rounded-2xl border border-green-100">
+              <div className="text-4xl font-bold text-green-600 mb-2">24/7</div>
+              <p className="text-gray-700 font-medium">Emergency Support</p>
             </div>
           </motion.div>
         </div>
