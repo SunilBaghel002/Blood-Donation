@@ -1,3 +1,4 @@
+// src/pages/Signup.jsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,8 +15,12 @@ import {
   User,
   Fingerprint,
   Smartphone,
+  Loader,
 } from "lucide-react";
 import MultiStep from "../components/MultiStep";
+
+// ============ API BASE URL ============
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -33,14 +38,17 @@ const Signup = () => {
     role: "Donor",
     otp: "",
     questionnaire: {
+      // Donor fields
       bloodGroup: "",
       donationCount: "",
       lastDonationDate: "",
       medicalConditions: "",
+      // Hospital fields
       hospitalName: "",
       hospitalLocation: "",
       bedCount: "",
       hospitalContactNumber: "",
+      // Blood Bank fields
       name: "",
       location: "",
       bloodStorageCapacity: "",
@@ -49,7 +57,9 @@ const Signup = () => {
   });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
 
+  // Auto-dismiss messages
   useEffect(() => {
     if (success || errors.general) {
       const t = setTimeout(() => {
@@ -60,6 +70,15 @@ const Signup = () => {
     }
   }, [success, errors.general]);
 
+  // Resend OTP timer
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const t = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [resendTimer]);
+
+  // Particles animation
   useEffect(() => {
     const newParticles = Array.from({ length: 10 }, (_, i) => ({
       id: i,
@@ -118,7 +137,7 @@ const Signup = () => {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
-    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setErrors((prev) => ({ ...prev, [name]: "", general: "" }));
   };
 
   const validateStep = () => {
@@ -126,15 +145,17 @@ const Signup = () => {
     if (step === 1) {
       if (!formData.role) newErrors.role = "Role is required";
       if (formData.role === "Donor") {
-        if (!formData.firstName) newErrors.firstName = "First name required";
-        if (!formData.lastName) newErrors.lastName = "Last name required";
+        if (!formData.firstName?.trim())
+          newErrors.firstName = "First name required";
+        if (!formData.lastName?.trim())
+          newErrors.lastName = "Last name required";
       }
-      if (!formData.email) newErrors.email = "Email required";
+      if (!formData.email?.trim()) newErrors.email = "Email required";
       else if (!/\S+@\S+\.\S+/.test(formData.email))
         newErrors.email = "Invalid email";
     } else if (step === 2) {
-      if (!formData.otp || !/^\d{6}$/.test(formData.otp))
-        newErrors.otp = "Enter 6-digit OTP";
+      if (!formData.otp || !/^\w{6}$/.test(formData.otp))
+        newErrors.otp = "Enter 6-character OTP";
     } else if (step === 3) {
       if (!formData.password || formData.password.length < 8)
         newErrors.password = "Min 8 characters";
@@ -145,51 +166,262 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  // ============ API CALL: STEP 1 - SEND OTP ============
+  const sendOTP = async () => {
     if (!validateStep()) return;
-    if (step < 3) setStep(step + 1);
-    else if (step === 3) {
-      setStep(4);
-      setSubStep(1);
-    }
-  };
-
-  const handlePrev = () => setStep(step > 1 ? step - 1 : 1);
-  const handleNextQuestion = () => {
-    if (subStep < 4) setSubStep(subStep + 1);
-    else handleSubmit();
-  };
-  const handlePrevQuestion = () => {
-    if (subStep > 1) setSubStep(subStep - 1);
-  };
-
-  const handleSubmit = async () => {
-    if (step === 4 && subStep < 4) return;
     setIsLoading(true);
+    setErrors({});
+
     try {
-      if (step === 1) {
-        setSuccess("OTP sent to your email");
-        setStep(2);
-      } else if (step === 2) {
-        setSuccess("OTP verified!");
-        setStep(3);
-      } else if (step === 3) {
-        setSuccess("Password set!");
-        setStep(4);
-        setSubStep(1);
-      } else if (step === 4) {
-        setSuccess("Account created successfully!");
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 1500);
+      console.log("📤 Sending signup request...");
+
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          role: formData.role,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("📥 Server response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send OTP");
       }
-    } catch (err) {
-      setErrors({ general: err.message || "Something went wrong" });
+
+      setSuccess(`✅ OTP sent to ${formData.email}`);
+      setResendTimer(60); // 60 seconds cooldown
+      setStep(2);
+
+      // ⚠️ DEV ONLY: Auto-fill OTP if returned
+      if (data.otp && import.meta.env.DEV) {
+        console.log("🔐 Dev OTP:", data.otp);
+        setFormData((prev) => ({ ...prev, otp: data.otp }));
+      }
+    } catch (error) {
+      console.error("❌ Signup error:", error);
+      setErrors({ general: error.message || "Failed to send OTP" });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ============ API CALL: STEP 2 - VERIFY OTP ============
+  const verifyOTP = async () => {
+    if (!validateStep()) return;
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      console.log("📤 Verifying OTP...");
+
+      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          otp: formData.otp.toUpperCase(),
+        }),
+      });
+
+      const data = await response.json();
+      console.log("📥 Server response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Invalid OTP");
+      }
+
+      setSuccess("✅ OTP verified successfully!");
+      setStep(3);
+    } catch (error) {
+      console.error("❌ OTP verification error:", error);
+      setErrors({ otp: error.message || "Invalid OTP" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ============ API CALL: STEP 3 - SET PASSWORD ============
+  const setPassword = async () => {
+    if (!validateStep()) return;
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      console.log("📤 Setting password...");
+
+      const response = await fetch(`${API_URL}/api/auth/complete-signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("📥 Server response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to set password");
+      }
+
+      setSuccess("✅ Password set successfully!");
+      setStep(4);
+      setSubStep(1);
+    } catch (error) {
+      console.error("❌ Password error:", error);
+      setErrors({ general: error.message || "Failed to set password" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ============ API CALL: STEP 4 - SUBMIT QUESTIONNAIRE ============
+  const submitQuestionnaire = async () => {
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      console.log("📤 Submitting questionnaire...");
+
+      // Build questionnaire based on role
+      let questionnaireData = {};
+      if (formData.role === "Donor") {
+        questionnaireData = {
+          bloodGroup: formData.questionnaire.bloodGroup,
+          donationCount: formData.questionnaire.donationCount || "0",
+          lastDonationDate:
+            formData.questionnaire.donationCount === "0"
+              ? undefined
+              : formData.questionnaire.lastDonationDate,
+          medicalConditions: formData.questionnaire.medicalConditions || "",
+        };
+      } else if (formData.role === "Hospital") {
+        questionnaireData = {
+          name: formData.questionnaire.hospitalName,
+          location: formData.questionnaire.hospitalLocation,
+          bedCount: formData.questionnaire.bedCount,
+          contactNumber: formData.questionnaire.hospitalContactNumber,
+        };
+      } else if (formData.role === "BloodBank") {
+        questionnaireData = {
+          name: formData.questionnaire.name,
+          location: formData.questionnaire.location,
+          bloodStorageCapacity: formData.questionnaire.bloodStorageCapacity,
+          contactNumber: formData.questionnaire.contactNumber,
+        };
+      }
+
+      const response = await fetch(`${API_URL}/api/auth/submit-questionnaire`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          role: formData.role,
+          questionnaire: questionnaireData,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("📥 Server response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit questionnaire");
+      }
+
+      // Save token
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      setSuccess("🎉 Account created successfully!");
+
+      // Redirect based on role
+      setTimeout(() => {
+        const roleRoutes = {
+          Donor: "/donor-dashboard",
+          Hospital: "/hospital-dashboard",
+          BloodBank: "/bloodbank-dashboard",
+          Admin: "/admin-dashboard",
+        };
+        window.location.href = roleRoutes[formData.role] || "/dashboard";
+      }, 1500);
+    } catch (error) {
+      console.error("❌ Questionnaire error:", error);
+      setErrors({ general: error.message || "Failed to create account" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ============ NAVIGATION ============
+  const handleNext = () => {
+    if (step === 1) {
+      sendOTP();
+    } else if (step === 2) {
+      verifyOTP();
+    } else if (step === 3) {
+      setPassword();
+    }
+  };
+
+  const handlePrev = () => setStep(step > 1 ? step - 1 : 1);
+
+  const handleNextQuestion = () => {
+    if (subStep < 4) {
+      setSubStep(subStep + 1);
+    } else {
+      submitQuestionnaire();
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (subStep > 1) setSubStep(subStep - 1);
+  };
+
+  // ============ RESEND OTP ============
+  const handleResendOTP = async () => {
+    if (resendTimer > 0) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          role: formData.role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to resend OTP");
+      }
+
+      setSuccess("✅ New OTP sent!");
+      setResendTimer(60);
+
+      if (data.otp && import.meta.env.DEV) {
+        console.log("🔐 Dev OTP:", data.otp);
+        setFormData((prev) => ({ ...prev, otp: data.otp }));
+      }
+    } catch (error) {
+      setErrors({ general: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ============ RENDER QUESTIONNAIRE ============
   const renderQuestion = () => {
     const q = formData.questionnaire;
     if (formData.role === "Donor") {
@@ -229,6 +461,7 @@ const Signup = () => {
                 value={q.donationCount}
                 onChange={handleInputChange}
                 placeholder="0"
+                min="0"
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-center"
               />
             </div>
@@ -245,6 +478,7 @@ const Signup = () => {
                 name="questionnaire.lastDonationDate"
                 value={q.lastDonationDate}
                 onChange={handleInputChange}
+                max={new Date().toISOString().split("T")[0]}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
               />
             </div>
@@ -259,16 +493,142 @@ const Signup = () => {
                 name="questionnaire.medicalConditions"
                 value={q.medicalConditions}
                 onChange={handleInputChange}
-                placeholder="e.g. Diabetes, Hypertension..."
+                placeholder="e.g. Diabetes, Hypertension (optional)"
                 rows="3"
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none"
               />
             </div>
           );
       }
+    } else if (formData.role === "Hospital") {
+      switch (subStep) {
+        case 1:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">Hospital Name</h3>
+              <input
+                type="text"
+                name="questionnaire.hospitalName"
+                value={q.hospitalName}
+                onChange={handleInputChange}
+                placeholder="Enter hospital name"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          );
+        case 2:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">Location</h3>
+              <input
+                type="text"
+                name="questionnaire.hospitalLocation"
+                value={q.hospitalLocation}
+                onChange={handleInputChange}
+                placeholder="City, State"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          );
+        case 3:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">Bed Count</h3>
+              <input
+                type="number"
+                name="questionnaire.bedCount"
+                value={q.bedCount}
+                onChange={handleInputChange}
+                placeholder="Number of beds"
+                min="1"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          );
+        case 4:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">
+                Contact Number
+              </h3>
+              <input
+                type="tel"
+                name="questionnaire.hospitalContactNumber"
+                value={q.hospitalContactNumber}
+                onChange={handleInputChange}
+                placeholder="+91 1234567890"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          );
+      }
+    } else if (formData.role === "BloodBank") {
+      switch (subStep) {
+        case 1:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">
+                Blood Bank Name
+              </h3>
+              <input
+                type="text"
+                name="questionnaire.name"
+                value={q.name}
+                onChange={handleInputChange}
+                placeholder="Enter blood bank name"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          );
+        case 2:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">Location</h3>
+              <input
+                type="text"
+                name="questionnaire.location"
+                value={q.location}
+                onChange={handleInputChange}
+                placeholder="City, State"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          );
+        case 3:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">
+                Storage Capacity (units)
+              </h3>
+              <input
+                type="number"
+                name="questionnaire.bloodStorageCapacity"
+                value={q.bloodStorageCapacity}
+                onChange={handleInputChange}
+                placeholder="Number of units"
+                min="1"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          );
+        case 4:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">
+                Contact Number
+              </h3>
+              <input
+                type="tel"
+                name="questionnaire.contactNumber"
+                value={q.contactNumber}
+                onChange={handleInputChange}
+                placeholder="+91 1234567890"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+              />
+            </div>
+          );
+      }
     }
-    // Hospital & BloodBank questions (similar structure)
-    // ... (same as your original logic – kept for brevity)
   };
 
   return (
@@ -287,7 +647,8 @@ const Signup = () => {
           <BloodDroplet key={p.id} p={p} />
         ))}
 
-        <div className="fixed top-4 right-4 z-50 space-y-2">
+        {/* Messages */}
+        <div className="fixed top-4 right-4 z-50 space-y-2 max-w-md">
           <AnimatePresence>
             {errors.general && (
               <motion.div
@@ -295,9 +656,9 @@ const Signup = () => {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm flex items-center"
+                className="p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm flex items-start gap-2"
               >
-                <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-700">{errors.general}</p>
               </motion.div>
             )}
@@ -307,22 +668,23 @@ const Signup = () => {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="p-4 bg-green-50 border border-green-200 rounded-lg shadow-sm flex items-center"
+                className="p-4 bg-green-50 border border-green-200 rounded-lg shadow-sm flex items-start gap-2"
               >
-                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-green-700">{success}</p>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
+        {/* Back Button */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => window.history.back()}
-          className="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-red-600 z-10"
+          className="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-red-600 z-10 transition"
         >
-          <ArrowLeft className="w-5 h-5" />{" "}
+          <ArrowLeft className="w-5 h-5" />
           <span className="text-sm font-medium">Back</span>
         </motion.button>
 
@@ -331,7 +693,7 @@ const Signup = () => {
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-full max-w-md sm:scale-115 scale-100"
+            className="w-full max-w-md"
           >
             <div className="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-red-100">
               <div className="flex justify-center mb-6">
@@ -354,10 +716,11 @@ const Signup = () => {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleSubmit();
+                  handleNext();
                 }}
                 className="space-y-5"
               >
+                {/* STEP 1: Basic Info */}
                 {step === 1 && (
                   <>
                     <div className="relative">
@@ -387,6 +750,11 @@ const Signup = () => {
                             className="pl-10 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
                           />
                           <label className="floating-label">First Name</label>
+                          {errors.firstName && (
+                            <p className="text-xs text-red-600 mt-1">
+                              {errors.firstName}
+                            </p>
+                          )}
                         </div>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -399,6 +767,11 @@ const Signup = () => {
                             className="pl-10 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
                           />
                           <label className="floating-label">Last Name</label>
+                          {errors.lastName && (
+                            <p className="text-xs text-red-600 mt-1">
+                              {errors.lastName}
+                            </p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -414,50 +787,59 @@ const Signup = () => {
                         className="pl-10 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
                       />
                       <label className="floating-label">Email</label>
+                      {errors.email && (
+                        <p className="text-xs text-red-600 mt-1">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
-
-                    <button
-                      type="button"
-                      className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-                    >
-                      <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path
-                          fill="#4285F4"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="#EA4335"
-                          d="M12 6.75c1.63 0 3.06.56 4.21 1.65l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                      Continue with Google
-                    </button>
                   </>
                 )}
 
+                {/* STEP 2: OTP Verification */}
                 {step === 2 && (
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="otp"
-                      value={formData.otp}
-                      onChange={handleInputChange}
-                      maxLength="6"
-                      placeholder=" "
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-center text-lg tracking-widest"
-                    />
-                    <label className="floating-label">6-digit OTP</label>
+                  <div className="space-y-4">
+                    <div className="text-center mb-4">
+                      <p className="text-sm text-gray-600">
+                        We've sent a 6-character OTP to
+                      </p>
+                      <p className="font-semibold text-gray-900">
+                        {formData.email}
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="otp"
+                        value={formData.otp}
+                        onChange={handleInputChange}
+                        maxLength="6"
+                        placeholder=" "
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none text-center text-lg tracking-widest uppercase"
+                      />
+                      <label className="floating-label">6-Character OTP</label>
+                      {errors.otp && (
+                        <p className="text-xs text-red-600 mt-1">
+                          {errors.otp}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={handleResendOTP}
+                        disabled={resendTimer > 0 || isLoading}
+                        className="text-sm text-red-600 hover:text-red-700 font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {resendTimer > 0
+                          ? `Resend OTP in ${resendTimer}s`
+                          : "Resend OTP"}
+                      </button>
+                    </div>
                   </div>
                 )}
 
+                {/* STEP 3: Password */}
                 {step === 3 && (
                   <>
                     <div className="relative">
@@ -482,6 +864,11 @@ const Signup = () => {
                           <Eye className="w-5 h-5" />
                         )}
                       </button>
+                      {errors.password && (
+                        <p className="text-xs text-red-600 mt-1">
+                          {errors.password}
+                        </p>
+                      )}
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -507,10 +894,16 @@ const Signup = () => {
                           <Eye className="w-5 h-5" />
                         )}
                       </button>
+                      {errors.confirmPassword && (
+                        <p className="text-xs text-red-600 mt-1">
+                          {errors.confirmPassword}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
 
+                {/* STEP 4: Questionnaire */}
                 {step === 4 && (
                   <div className="space-y-6">
                     {renderQuestion()}
@@ -519,7 +912,8 @@ const Signup = () => {
                         <button
                           type="button"
                           onClick={handlePrevQuestion}
-                          className="px-4 py-2 text-gray-600 border border-red-200 bg-red-50 rounded-lg font-medium flex items-center gap-2"
+                          disabled={isLoading}
+                          className="px-4 py-2 text-gray-600 border border-gray-300 bg-white rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50 disabled:opacity-50"
                         >
                           <ArrowLeft className="w-4 h-4" /> Back
                         </button>
@@ -528,13 +922,13 @@ const Signup = () => {
                         type="button"
                         onClick={handleNextQuestion}
                         disabled={isLoading}
-                        className="flex-1 ml-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg flex items-center justify-center gap-2"
+                        className="flex-1 ml-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         {isLoading ? (
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <Loader className="w-5 h-5 animate-spin" />
                         ) : (
                           <>
-                            {subStep < 4 ? "Next" : "Submit"}{" "}
+                            {subStep < 4 ? "Next" : "Submit"}
                             <ChevronRight className="w-4 h-4" />
                           </>
                         )}
@@ -543,28 +937,34 @@ const Signup = () => {
                   </div>
                 )}
 
+                {/* Navigation for Steps 1-3 */}
                 {step < 4 && (
                   <div className="flex justify-between mt-6">
                     {step > 1 && (
                       <button
                         type="button"
                         onClick={handlePrev}
-                        className="px-4 py-2 text-gray-600 border border-red-200 bg-red-50 rounded-lg font-medium flex items-center gap-2"
+                        disabled={isLoading}
+                        className="px-4 py-2 text-gray-600 border border-gray-300 bg-white rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50 disabled:opacity-50"
                       >
                         <ArrowLeft className="w-4 h-4" /> Back
                       </button>
                     )}
                     <button
-                      type="button"
-                      onClick={handleNext}
+                      type="submit"
                       disabled={isLoading}
-                      className="flex-1 ml-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg flex items-center justify-center gap-2"
+                      className="flex-1 ml-2 bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition"
                     >
                       {isLoading ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <Loader className="w-5 h-5 animate-spin" />
                       ) : (
                         <>
-                          Next <ChevronRight className="w-4 h-4" />
+                          {step === 1
+                            ? "Send OTP"
+                            : step === 2
+                            ? "Verify OTP"
+                            : "Set Password"}
+                          <ChevronRight className="w-4 h-4" />
                         </>
                       )}
                     </button>
@@ -574,25 +974,28 @@ const Signup = () => {
 
               <p className="text-center mt-6 text-sm text-gray-600">
                 Have an account?{" "}
-                <a href="/login" className="text-red-600 font-medium">
+                <a
+                  href="/login"
+                  className="text-red-600 font-medium hover:underline"
+                >
                   Sign in
                 </a>
               </p>
 
               <div className="mt-8 grid grid-cols-3 gap-3 text-center">
-                <div className="bg-red-50 rounded-lg p-3 border border-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all">
+                <div className="bg-red-50 rounded-lg p-3 border border-red-100 hover:shadow-sm transition-all">
                   <Shield className="w-6 h-6 text-green-600 mx-auto mb-2" />
                   <p className="text-xs text-gray-500 font-medium">
                     Bank-level Security
                   </p>
                 </div>
-                <div className="bg-red-50 rounded-lg p-3 border border-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all">
+                <div className="bg-red-50 rounded-lg p-3 border border-red-100 hover:shadow-sm transition-all">
                   <Heart className="w-6 h-6 text-red-500 mx-auto mb-2" />
                   <p className="text-xs text-gray-500 font-medium">
                     1000+ Lives Saved
                   </p>
                 </div>
-                <div className="bg-red-50 rounded-lg p-3 border border-red-100 hover:shadow-sm hover:shadow-red-500/50 transition-all">
+                <div className="bg-red-50 rounded-lg p-3 border border-red-100 hover:shadow-sm transition-all">
                   <CheckCircle className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                   <p className="text-xs text-gray-500 font-medium">
                     100% Verified

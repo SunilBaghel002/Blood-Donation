@@ -7,10 +7,21 @@ import { Web3Provider } from "./contexts/Web3Context.jsx";
 import "leaflet/dist/leaflet.css";
 import "./styles/leaflet-custom.css";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <Web3Provider>
-      <App />
-    </Web3Provider>
-  </React.StrictMode>
-);
+import { fixMetaMaskConflict } from "./utils/walletfix.js";
+fixMetaMaskConflict();
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+if (import.meta.env.DEV) {
+  // Development: No StrictMode to avoid double API calls
+  root.render(<App />);
+} else {
+  // Production: Use StrictMode
+  root.render(
+    <React.StrictMode>
+      <Web3Provider>
+        <App />
+      </Web3Provider>
+    </React.StrictMode>
+  );
+}

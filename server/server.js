@@ -260,18 +260,93 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false, // For development only
+  },
+});
+
+// ✅ Verify transporter configuration on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ Email configuration error:", error);
+    console.log("\n⚠️  Please check your EMAIL_USER and EMAIL_PASS in .env");
+  } else {
+    console.log("✅ Email service ready");
+  }
 });
 
 const generateOTP = () => crypto.randomBytes(3).toString("hex").toUpperCase();
 
+// ✅ Improved sendOTPEmail with error handling
 const sendOTPEmail = async (email, otp) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "BloodChain OTP Verification",
-    html: `<h3>${otp}</h3><p>Valid for 10 minutes.</p>`,
-  };
-  await transporter.sendMail(mailOptions);
+  try {
+    console.log(`📧 Attempting to send OTP to ${email}...`);
+
+    const mailOptions = {
+      from: `"BloodChain Platform" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "🩸 BloodChain - OTP Verification Code",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+            .otp-box { background: white; border: 2px dashed #dc2626; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px; }
+            .otp-code { font-size: 32px; font-weight: bold; color: #dc2626; letter-spacing: 8px; }
+            .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🩸 BloodChain</h1>
+              <p>Verify Your Email Address</p>
+            </div>
+            <div class="content">
+              <p>Hello,</p>
+              <p>Thank you for registering with BloodChain. Please use the following OTP to complete your verification:</p>
+              
+              <div class="otp-box">
+                <div class="otp-code">${otp}</div>
+              </div>
+              
+              <p><strong>This code will expire in 10 minutes.</strong></p>
+              
+              <p>If you didn't request this code, please ignore this email.</p>
+              
+              <div class="footer">
+                <p>© 2025 BloodChain. All rights reserved.</p>
+                <p>This is an automated email. Please do not reply.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Your BloodChain OTP verification code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, please ignore this email.`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log("✅ Email sent successfully!");
+    console.log("📬 Message ID:", info.messageId);
+    console.log("📨 Accepted:", info.accepted);
+    console.log("❌ Rejected:", info.rejected);
+
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("❌ Email sending failed:");
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
+    console.error("Error response:", error.response);
+
+    // Throw error to be caught by signup route
+    throw new Error(`Failed to send OTP email: ${error.message}`);
+  }
 };
 
 // ============ MIDDLEWARE ============
@@ -360,11 +435,13 @@ app.get("/api/auth/test", (req, res) => {
 });
 
 // Signup
+// Signup Route (IMPROVED)
 app.post("/api/auth/signup", async (req, res) => {
   const { firstName, lastName, email, role } = req.body;
 
   console.log("📝 Signup request:", { firstName, lastName, email, role });
 
+  // Validation
   if (!email || !role) {
     return res.status(400).json({ error: "Email and role are required" });
   }
@@ -384,16 +461,19 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 
   try {
+    // Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
+    // Generate OTP
     const otp = generateOTP();
-    console.log(`🔐 OTP for ${email}: ${otp}`);
+    console.log(`🔐 Generated OTP for ${email}: ${otp}`);
 
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
+    // Create user
     const user = new User({
       firstName: role === "Donor" || role === "Admin" ? firstName : undefined,
       lastName: role === "Donor" || role === "Admin" ? lastName : undefined,
@@ -406,16 +486,45 @@ app.post("/api/auth/signup", async (req, res) => {
     });
 
     await user.save();
-    await sendOTPEmail(email, otp);
+    console.log(`✅ User created with ID: ${user._id}`);
 
-    res.status(200).json({
-      message: "OTP sent to your email",
-      email,
-      role,
-    });
+    // ✅ Send OTP email with error handling
+    try {
+      const emailResult = await sendOTPEmail(email, otp);
+      console.log("✅ OTP email sent successfully:", emailResult);
+
+      res.status(200).json({
+        success: true,
+        message: "OTP sent to your email",
+        email,
+        role,
+        // ⚠️ REMOVE IN PRODUCTION
+        ...(process.env.NODE_ENV === "development" && { otp }), // Only for testing
+      });
+    } catch (emailError) {
+      console.error("❌ Email sending failed:", emailError.message);
+
+      // Delete the user since OTP couldn't be sent
+      await User.deleteOne({ _id: user._id });
+      console.log("🗑️  User deleted due to email failure");
+
+      return res.status(500).json({
+        error: "Failed to send OTP email",
+        details: "Please check your email configuration",
+        // Show OTP in development mode as fallback
+        ...(process.env.NODE_ENV === "development" && {
+          otp,
+          message:
+            "Email service unavailable. Use this OTP (dev mode only): " + otp,
+        }),
+      });
+    }
   } catch (error) {
     console.error("❌ Signup error:", error);
-    res.status(500).json({ error: "Server error", details: error.message });
+    res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
   }
 });
 
@@ -1780,19 +1889,19 @@ app.post("/api/bloodbank/request-action", authMiddleware, async (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error("💥 Unhandled error:", err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: "Internal server error",
     message: err.message,
-    stack: process.env.NODE_ENV === "development" ? err.stack : undefined
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 });
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: "Route not found",
     path: req.url,
-    method: req.method 
+    method: req.method,
   });
 });
 
@@ -1805,7 +1914,9 @@ app.listen(PORT, () => {
 ║   🩸 BloodChain API Server Running     ║
 ║   Port: ${PORT}                           ║
 ║   Environment: ${process.env.NODE_ENV || "development"}             ║
-║   MongoDB: ${mongoose.connection.readyState === 1 ? "✅ Connected" : "❌ Disconnected"}             ║
+║   MongoDB: ${
+    mongoose.connection.readyState === 1 ? "✅ Connected" : "❌ Disconnected"
+  }             ║
 ║   Blockchain: ✅ Ready                 ║
 ╚════════════════════════════════════════╝
   `);
