@@ -1887,6 +1887,25 @@ app.post("/api/bloodbank/request-action", authMiddleware, async (req, res) => {
   }
 });
 
+app.get("/api/bloodbank/transactions", authMiddleware, async (req, res) => {
+  try {
+    if (req.userRole !== "BloodBank") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const transactions = await Transaction.find({ bloodBankId: req.userId })
+      .populate("donorId", "firstName lastName donorInfo.bloodGroup")
+      .populate("hospitalId", "hospitalInfo.name")
+      .sort({ timestamp: -1 })
+      .limit(50);
+
+    res.status(200).json({ transactions });
+  } catch (error) {
+    console.error("❌ Get transactions error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error("💥 Unhandled error:", err);
   res.status(500).json({
