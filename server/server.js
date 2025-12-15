@@ -1278,36 +1278,141 @@ app.post("/api/bloodbank/record-donation", authMiddleware, async (req, res) => {
   }
 });
 // Hospital Routes - Existing
+// Hospital Routes - FIXED request-blood endpoint
 app.post(
   "/api/hospital/request-blood",
   authMiddleware,
   hospitalMiddleware,
   async (req, res) => {
     const { bloodBankId, bloodType, quantity } = req.body;
-    if (!bloodBankId || !bloodType || !quantity)
-      return res.status(400).json({ error: "Missing fields" });
+
+    console.log("📥 Blood request received:", {
+      bloodBankId,
+      bloodType,
+      quantity,
+    });
+
+    // Validation
+    if (!bloodBankId || !bloodType || !quantity) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (
+      !["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(bloodType)
+    ) {
+      return res.status(400).json({ error: "Invalid blood type" });
+    }
+
+    if (quantity < 1 || quantity > 100) {
+      return res
+        .status(400)
+        .json({ error: "Quantity must be between 1 and 100" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(bloodBankId)) {
+      return res.status(400).json({ error: "Invalid blood bank ID" });
+    }
 
     try {
-      const hospitalWallet = new ethers.Wallet(
-        process.env.PRIVATE_KEY,
-        provider
-      ); // Use hospital's wallet in prod
-      const contract = getContract(hospitalWallet);
-      const tx = await contract.createRequest(bloodBankId, bloodType, quantity);
-      const receipt = await tx.wait();
+      // Verify blood bank exists
+      const bloodBank = await User.findById(bloodBankId);
+      if (!bloodBank || bloodBank.role !== "BloodBank") {
+        return res.status(400).json({ error: "Blood bank not found" });
+      }
 
+      // Check if blood bank has inventory for requested blood type
+      const inventory = await BloodInventory.findOne({
+        bloodBankId: bloodBankId,
+        bloodType: bloodType,
+      });
+
+      if (!inventory || inventory.units < quantity) {
+        console.log("⚠️ Insufficient inventory:", {
+          available: inventory?.units || 0,
+          requested: quantity,
+        });
+        // Still allow request but warn
+      }
+
+      // Create the request in database first
       const request = new Request({
         hospitalId: req.userId,
-        bloodBankId,
+        bloodBankId: bloodBankId,
         bloodType,
-        quantity,
-        blockchainId: receipt.transactionHash,
+        quantity: parseInt(quantity),
+        status: "Pending",
       });
-      await request.save();
 
-      res.json({ request, txHash: receipt.transactionHash });
+      await request.save();
+      console.log("✅ Request saved to database:", request._id);
+
+      // Try blockchain transaction if both parties have wallets
+      let txHash = null;
+      try {
+        const hospital = await User.findById(req.userId);
+
+        if (hospital?.walletAddress && bloodBank?.walletAddress) {
+          const contract = getContract(wallet);
+
+          // Check if contract has the createRequest function
+          if (contract.createRequest) {
+            const tx = await contract.createRequest(
+              bloodBank.walletAddress, // Use wallet address, not MongoDB ID
+              bloodType,
+              quantity,
+              { gasLimit: 300000 }
+            );
+            const receipt = await tx.wait();
+
+            if (receipt.status === 1) {
+              txHash = receipt.hash || receipt.transactionHash;
+              request.blockchainId = txHash;
+              await request.save();
+              console.log("✅ Blockchain transaction successful:", txHash);
+            }
+          } else {
+            console.log(
+              "ℹ️ Contract does not have createRequest function, skipping blockchain"
+            );
+          }
+        } else {
+          console.log("ℹ️ Wallet addresses not available, skipping blockchain");
+        }
+      } catch (blockchainError) {
+        console.error(
+          "⚠️ Blockchain error (non-fatal):",
+          blockchainError.message
+        );
+        // Don't fail the request, just log the blockchain error
+      }
+
+      // Populate the response
+      const populatedRequest = await Request.findById(request._id).populate(
+        "bloodBankId",
+        "bloodBankInfo.name"
+      );
+
+      res.status(201).json({
+        success: true,
+        message: "Blood request submitted successfully",
+        request: {
+          _id: populatedRequest._id,
+          hospitalId: populatedRequest.hospitalId,
+          bloodBankId: populatedRequest.bloodBankId,
+          bloodType: populatedRequest.bloodType,
+          quantity: populatedRequest.quantity,
+          status: populatedRequest.status,
+          createdAt: populatedRequest.createdAt,
+          blockchainId: txHash,
+        },
+        txHash,
+      });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error("❌ Request blood error:", error);
+      res.status(500).json({
+        error: "Failed to submit blood request",
+        details: error.message,
+      });
     }
   }
 );
@@ -1842,48 +1947,169 @@ app.post("/api/rewards/issue", authMiddleware, async (req, res) => {
 // Approve/Reject Request
 app.post("/api/bloodbank/request-action", authMiddleware, async (req, res) => {
   const { requestId, action } = req.body;
+  
+  console.log("📥 Request action received:", { requestId, action });
+
+  // Validation
+  if (!requestId || !action) {
+    return res.status(400).json({ error: "Request ID and action are required" });
+  }
+
   if (!["Approved", "Rejected"].includes(action)) {
-    return res.status(400).json({ error: "Invalid action" });
+    return res.status(400).json({ error: "Invalid action. Must be 'Approved' or 'Rejected'" });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(requestId)) {
+    return res.status(400).json({ error: "Invalid request ID format" });
   }
 
   try {
-    const request = await Request.findById(requestId);
-    if (!request || request.bloodBankId.toString() !== req.userId) {
-      return res.status(400).json({ error: "Invalid request" });
+    // Find the request
+    const request = await Request.findById(requestId)
+      .populate("hospitalId", "hospitalInfo.name walletAddress")
+      .populate("bloodBankId", "bloodBankInfo.name walletAddress");
+
+    if (!request) {
+      return res.status(404).json({ error: "Request not found" });
     }
 
+    // Verify blood bank ownership
+    if (request.bloodBankId._id.toString() !== req.userId) {
+      return res.status(403).json({ error: "You can only approve/reject your own requests" });
+    }
+
+    // Check if already processed
+    if (request.status !== "Pending") {
+      return res.status(400).json({ 
+        error: `Request already ${request.status.toLowerCase()}` 
+      });
+    }
+
+    let txHash = null;
+
+    // Handle Approval
     if (action === "Approved") {
+      // Check inventory
       const inventory = await BloodInventory.findOne({
         bloodBankId: req.userId,
         bloodType: request.bloodType,
       });
-      if (!inventory || inventory.units < request.quantity) {
-        return res.status(400).json({ error: "Insufficient stock" });
+
+      if (!inventory) {
+        return res.status(400).json({ 
+          error: `No ${request.bloodType} blood in inventory` 
+        });
       }
 
-      const contract = getContract(wallet);
-      const tx = await contract.approveRequest(requestId, []);
-      const receipt = await tx.wait();
+      if (inventory.units < request.quantity) {
+        return res.status(400).json({ 
+          error: `Insufficient stock. Available: ${inventory.units}, Requested: ${request.quantity}` 
+        });
+      }
 
+      // Try blockchain transaction (optional, non-blocking)
+      try {
+        const bloodBank = await User.findById(req.userId);
+        const hospital = await User.findById(request.hospitalId._id);
+
+        if (bloodBank?.walletAddress && hospital?.walletAddress) {
+          const contract = getContract(wallet);
+
+          // Check if contract has the approveRequest function
+          if (contract.approveRequest && typeof contract.approveRequest === "function") {
+            // Try to call with wallet addresses instead of ObjectId
+            const tx = await contract.approveRequest(
+              hospital.walletAddress,
+              request.bloodType,
+              request.quantity,
+              { gasLimit: 300000 }
+            );
+            const receipt = await tx.wait();
+
+            if (receipt.status === 1) {
+              txHash = receipt.hash || receipt.transactionHash;
+              console.log("✅ Blockchain approval successful:", txHash);
+            }
+          } else {
+            console.log("ℹ️ Contract does not have approveRequest function, skipping blockchain");
+          }
+        } else {
+          console.log("ℹ️ Wallet addresses not available for blockchain transaction");
+        }
+      } catch (blockchainError) {
+        console.error("⚠️ Blockchain error (non-fatal):", blockchainError.message);
+        // Don't fail the approval, just log the error
+      }
+
+      // Update inventory (reduce units)
       inventory.units -= request.quantity;
+      
+      // Update demand based on new inventory level
+      const total = inventory.units;
+      inventory.demand =
+        total < 10
+          ? "Critical"
+          : total < 20
+          ? "High"
+          : total < 50
+          ? "Medium"
+          : "Low";
+      
       await inventory.save();
+      console.log(`✅ Inventory updated: ${request.bloodType} - ${inventory.units} units remaining`);
 
-      await Transaction.create({
+      // Create transaction record
+      const transaction = new Transaction({
         type: "Transfer",
-        hospitalId: request.hospitalId,
+        hospitalId: request.hospitalId._id,
         bloodBankId: req.userId,
         bloodType: request.bloodType,
         quantity: request.quantity,
-        txHash: receipt.transactionHash,
+        status: "In Transit",
+        txHash: txHash,
+        timestamp: new Date(),
       });
+      await transaction.save();
+      console.log("✅ Transaction record created:", transaction._id);
     }
 
+    // Update request status
     request.status = action;
+    if (txHash) {
+      request.blockchainId = txHash;
+    }
     await request.save();
 
-    res.json({ message: `${action} successfully` });
+    console.log(`✅ Request ${action}:`, requestId);
+
+    res.status(200).json({
+      success: true,
+      message: `Request ${action.toLowerCase()} successfully`,
+      request: {
+        _id: request._id,
+        status: request.status,
+        bloodType: request.bloodType,
+        quantity: request.quantity,
+        hospitalName: request.hospitalId.hospitalInfo?.name || "Unknown",
+      },
+      txHash,
+      ...(action === "Approved" && {
+        inventory: {
+          bloodType: request.bloodType,
+          remainingUnits: (await BloodInventory.findOne({
+            bloodBankId: req.userId,
+            bloodType: request.bloodType,
+          }))?.units || 0,
+        },
+      }),
+    });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("❌ Request action error:", error);
+    res.status(500).json({
+      error: "Failed to process request",
+      details: error.message,
+    });
   }
 });
 

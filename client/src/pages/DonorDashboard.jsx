@@ -32,6 +32,16 @@ import {
   Map,
   Globe,
   TrendingUp,
+  Package,
+  Navigation,
+  Search,
+  ArrowRight,
+  Clock,
+  AlertCircle,
+  Truck,
+  Hospital,
+  UserCheck,
+  Zap,
 } from "lucide-react";
 
 import { useWeb3 } from "../contexts/Web3Context.jsx";
@@ -137,6 +147,8 @@ const DonorDashboard = () => {
   const [quizScore, setQuizScore] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ type: "", msg: "" });
+  const [selectedDonation, setSelectedDonation] = useState(null);
+  const [searchTxHash, setSearchTxHash] = useState("");
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -200,12 +212,72 @@ const DonorDashboard = () => {
     const mapped = (hist.history || []).map((tx) => ({
       _id: tx._id,
       date: new Date(tx.timestamp).toLocaleDateString(),
+      fullDate: new Date(tx.timestamp),
       bloodType: tx.bloodType,
       status: tx.status,
       quantity: tx.quantity,
       location:
         bloodBanks.find((b) => b._id === tx.bloodBankId)?.name || "Unknown",
       txHash: tx.txHash || null,
+      // Mock tracking stages (in production, fetch from blockchain/backend)
+      trackingStages: [
+        {
+          stage: "Collected",
+          status: "completed",
+          date: new Date(tx.timestamp),
+          location: bloodBanks.find((b) => b._id === tx.bloodBankId)?.name,
+        },
+        {
+          stage: "Tested",
+          status:
+            tx.status === "Confirmed" ||
+            tx.status === "In Transit" ||
+            tx.status === "Used"
+              ? "completed"
+              : "pending",
+          date:
+            tx.status === "Confirmed"
+              ? new Date(new Date(tx.timestamp).getTime() + 2 * 60 * 60 * 1000)
+              : null,
+          location: "Lab Facility",
+        },
+        {
+          stage: "Stored",
+          status:
+            tx.status === "Confirmed" ||
+            tx.status === "In Transit" ||
+            tx.status === "Used"
+              ? "completed"
+              : "pending",
+          date:
+            tx.status === "Confirmed"
+              ? new Date(new Date(tx.timestamp).getTime() + 4 * 60 * 60 * 1000)
+              : null,
+          location: "Blood Bank Storage",
+        },
+        {
+          stage: "In Transit",
+          status:
+            tx.status === "In Transit" || tx.status === "Used"
+              ? "completed"
+              : "pending",
+          date:
+            tx.status === "In Transit"
+              ? new Date(new Date(tx.timestamp).getTime() + 24 * 60 * 60 * 1000)
+              : null,
+          location: "Hospital Transport",
+        },
+        {
+          stage: "Used",
+          status: tx.status === "Used" ? "completed" : "pending",
+          date:
+            tx.status === "Used"
+              ? new Date(new Date(tx.timestamp).getTime() + 48 * 60 * 60 * 1000)
+              : null,
+          location: "Emergency Ward, City Hospital",
+          impact: "Saved 1 life in surgery",
+        },
+      ],
     }));
     setDonationHistory(mapped);
     setRewards(rew.rewards || { points: 0, badges: [] });
@@ -220,7 +292,9 @@ const DonorDashboard = () => {
         txHash: e.transactionHash,
         bloodType: e.args.bloodType,
         units: Number(e.args.units),
+        quantity: Number(e.args.units),
         date: new Date(Number(e.args.timestamp) * 1000).toLocaleDateString(),
+        fullDate: new Date(Number(e.args.timestamp) * 1000),
         location: "Blockchain",
         status: "Confirmed",
       }));
@@ -229,7 +303,9 @@ const DonorDashboard = () => {
         chainHist.forEach((c) => {
           if (!merged.some((m) => m.txHash === c.txHash)) merged.push(c);
         });
-        return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+        return merged.sort(
+          (a, b) => new Date(b.fullDate) - new Date(a.fullDate)
+        );
       });
     } catch (err) {
       console.warn("On-chain fetch failed:", err);
@@ -252,45 +328,6 @@ const DonorDashboard = () => {
     };
     init();
   }, [isConnected]);
-
-  const handleDonate = async (bloodType, units = 1) => {
-    if (!isConnected) return showToast("error", "Connect MetaMask first");
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const donorId = localStorage.getItem("userId") || userData?._id;
-      const res = await fetch(
-        "http://localhost:5000/api/bloodbank/record-donation",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ donorId, bloodType, units }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Donation failed");
-
-      showToast("success", `Donated ${units} unit(s) of ${bloodType}!`);
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ["#ef4444", "#ec4899", "#f43f5e", "#f97316"],
-        scalar: 1.3,
-        ticks: 100,
-      });
-
-      await fetchDonorMongo();
-      await fetchOnChainDonations();
-    } catch (err) {
-      showToast("error", err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleScheduleDonation = async (e) => {
     e.preventDefault();
@@ -327,28 +364,47 @@ const DonorDashboard = () => {
     setQuizSubmitted(true);
   };
 
+  const handleTrackDonation = (donation) => {
+    setSelectedDonation(donation);
+    setActiveTab("tracker");
+  };
+
+  const handleSearchTxHash = () => {
+    const found = donationHistory.find(
+      (d) =>
+        d.txHash && d.txHash.toLowerCase().includes(searchTxHash.toLowerCase())
+    );
+    if (found) {
+      setSelectedDonation(found);
+      setActiveTab("tracker");
+      showToast("success", "Donation found!");
+    } else {
+      showToast("error", "Transaction not found");
+    }
+  };
+
   const educationalContent = {
     title: "Learn About Blood Donation",
     articles: [
       {
         title: "The Importance of Blood Donation",
         content:
-          "Blood donation is a critical act that can save up to three lives per donation...",
+          "Blood donation is a critical act that can save up to three lives per donation. Every day, thousands of people require blood transfusions for surgeries, cancer treatment, chronic illnesses, and traumatic injuries. Your single donation can make a life-or-death difference.",
       },
       {
         title: "Who Can Donate?",
         content:
-          "Healthy adults aged 17-65, weighing at least 110 lbs (50 kg)...",
+          "Healthy adults aged 17-65, weighing at least 110 lbs (50 kg), can donate blood. You must be in good health, well-rested, and have eaten a meal before donation. Certain medical conditions and medications may temporarily or permanently defer you from donating.",
       },
       {
         title: "The Donation Process",
         content:
-          "The blood donation process is simple and safe, taking about 30-45 minutes...",
+          "The blood donation process is simple and safe, taking about 30-45 minutes total. This includes registration, a mini-physical, the actual donation (8-10 minutes), and refreshments. Professional staff ensure your comfort and safety throughout.",
       },
       {
         title: "Benefits of Donating",
         content:
-          "Donating blood not only saves lives but also benefits the donor...",
+          "Donating blood not only saves lives but also benefits the donor. It provides a free mini-health screening, may reduce iron levels (beneficial for some), and gives you a sense of purpose and community contribution.",
       },
     ],
     facts: [
@@ -450,16 +506,351 @@ const DonorDashboard = () => {
   };
   const item = { hidden: { y: 30, opacity: 0 }, show: { y: 0, opacity: 1 } };
 
+  // ============ DONATION TRACKER COMPONENT ============
+  const renderDonationTracker = () => {
+    const getStageIcon = (stage) => {
+      switch (stage) {
+        case "Collected":
+          return Droplets;
+        case "Tested":
+          return Shield;
+        case "Stored":
+          return Package;
+        case "In Transit":
+          return Truck;
+        case "Used":
+          return Heart;
+        default:
+          return CheckCircle;
+      }
+    };
+
+    const getStageColor = (status) => {
+      switch (status) {
+        case "completed":
+          return "from-green-500 to-emerald-600";
+        case "active":
+          return "from-blue-500 to-cyan-600";
+        case "pending":
+          return "from-gray-300 to-gray-400";
+        default:
+          return "from-gray-300 to-gray-400";
+      }
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="p-6 space-y-8"
+      >
+        {/* Search Bar */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-red-100"
+        >
+          <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+            <Search className="w-7 h-7 mr-3 text-blue-600" />
+            Track Your Donation
+          </h3>
+          <div className="flex gap-4">
+            <input
+              type="text"
+              placeholder="Enter transaction hash..."
+              value={searchTxHash}
+              onChange={(e) => setSearchTxHash(e.target.value)}
+              className="flex-1 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-400 outline-none font-mono text-sm"
+            />
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSearchTxHash}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-lg"
+            >
+              <Search className="w-5 h-5" />
+              Track
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Recent Donations Quick Access */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-red-100"
+        >
+          <h3 className="text-xl font-bold text-gray-800 mb-4">
+            Your Recent Donations
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {donationHistory.slice(0, 6).map((donation) => (
+              <motion.div
+                key={donation._id || donation.txHash}
+                whileHover={{ scale: 1.02 }}
+                onClick={() => handleTrackDonation(donation)}
+                className="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 cursor-pointer border-2 border-red-100 hover:border-red-300 transition-all"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl font-bold text-red-600">
+                    {donation.bloodType}
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      donation.status === "Confirmed"
+                        ? "bg-green-100 text-green-700"
+                        : donation.status === "In Transit"
+                        ? "bg-blue-100 text-blue-700"
+                        : donation.status === "Used"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {donation.status}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">{donation.date}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {donation.location}
+                </p>
+                <div className="mt-3 flex items-center text-blue-600 text-sm font-medium">
+                  Track Journey <ArrowRight className="w-4 h-4 ml-1" />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Detailed Tracking View */}
+        {selectedDonation && (
+          <motion.div
+            initial={{ y: 20, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border-2 border-blue-200"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                  Donation Journey Tracker
+                </h2>
+                <p className="text-gray-600">
+                  Track your life-saving impact in real-time
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full font-bold text-lg">
+                  <Droplets className="w-6 h-6" />
+                  {selectedDonation.bloodType}
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  {selectedDonation.quantity} unit(s)
+                </p>
+              </div>
+            </div>
+
+            {/* Blockchain Verification */}
+            {selectedDonation.txHash && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-8 border-2 border-blue-200"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">
+                        Blockchain Verified
+                      </p>
+                      <p className="text-sm text-gray-600 font-mono">
+                        {selectedDonation.txHash.substring(0, 20)}...
+                        {selectedDonation.txHash.substring(
+                          selectedDonation.txHash.length - 10
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={`${EXPLORER_URL}${selectedDonation.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                  >
+                    View on Explorer <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Timeline */}
+            <div className="space-y-6">
+              {selectedDonation.trackingStages?.map((stage, index) => {
+                const StageIcon = getStageIcon(stage.stage);
+                const isCompleted = stage.status === "completed";
+                const isActive =
+                  stage.status === "completed" &&
+                  (index === selectedDonation.trackingStages.length - 1 ||
+                    selectedDonation.trackingStages[index + 1].status ===
+                      "pending");
+
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="relative pl-16"
+                  >
+                    {/* Connector Line */}
+                    {index < selectedDonation.trackingStages.length - 1 && (
+                      <div
+                        className={`absolute left-7 top-16 w-1 h-full ${
+                          isCompleted ? "bg-green-300" : "bg-gray-200"
+                        }`}
+                      />
+                    )}
+
+                    {/* Stage Icon */}
+                    <div
+                      className={`absolute left-0 top-0 w-14 h-14 bg-gradient-to-br ${getStageColor(
+                        stage.status
+                      )} rounded-full flex items-center justify-center shadow-xl ${
+                        isActive ? "ring-4 ring-blue-300 animate-pulse" : ""
+                      }`}
+                    >
+                      <StageIcon className="w-7 h-7 text-white" />
+                    </div>
+
+                    {/* Stage Content */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className={`bg-gradient-to-r ${
+                        isCompleted
+                          ? "from-green-50 to-emerald-50 border-green-200"
+                          : "from-gray-50 to-gray-100 border-gray-200"
+                      } rounded-2xl p-6 border-2 shadow-md`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xl font-bold text-gray-800">
+                          {stage.stage}
+                        </h4>
+                        {isCompleted && (
+                          <CheckCircle className="w-6 h-6 text-green-600" />
+                        )}
+                        {stage.status === "pending" && (
+                          <Clock className="w-6 h-6 text-gray-400" />
+                        )}
+                      </div>
+
+                      <div className="space-y-2 text-sm text-gray-600">
+                        {stage.date && (
+                          <p className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            {stage.date.toLocaleString()}
+                          </p>
+                        )}
+                        {stage.location && (
+                          <p className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            {stage.location}
+                          </p>
+                        )}
+                        {stage.impact && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-3 bg-purple-100 border-2 border-purple-300 rounded-lg p-3"
+                          >
+                            <p className="flex items-center gap-2 text-purple-800 font-semibold">
+                              <Sparkles className="w-5 h-5" />
+                              Impact: {stage.impact}
+                            </p>
+                          </motion.div>
+                        )}
+                      </div>
+
+                      {/* Status Messages */}
+                      {stage.status === "pending" && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="mt-3 flex items-center gap-2 text-amber-600 text-sm font-medium"
+                        >
+                          <AlertCircle className="w-4 h-4" />
+                          Awaiting next stage...
+                        </motion.div>
+                      )}
+
+                      {isActive && (
+                        <motion.div
+                          animate={{ opacity: [1, 0.5, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="mt-3 flex items-center gap-2 text-blue-600 text-sm font-bold"
+                        >
+                          <Zap className="w-4 h-4" />
+                          Current Stage - In Progress
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Impact Summary */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="mt-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white shadow-2xl"
+            >
+              <h3 className="text-2xl font-bold mb-4 flex items-center">
+                <Heart className="w-7 h-7 mr-3" />
+                Your Life-Saving Impact
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <p className="text-4xl font-bold mb-2">
+                    {selectedDonation.quantity * 3}
+                  </p>
+                  <p className="text-purple-100">Potential Lives Saved</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-4xl font-bold mb-2">100%</p>
+                  <p className="text-purple-100">Blockchain Verified</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-4xl font-bold mb-2">
+                    {selectedDonation.trackingStages?.filter(
+                      (s) => s.status === "completed"
+                    ).length || 0}
+                    /{selectedDonation.trackingStages?.length || 0}
+                  </p>
+                  <p className="text-purple-100">Stages Completed</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </motion.div>
+    );
+  };
+
   const renderDonationHistory = () => (
     <motion.div
       variants={container}
       initial="hidden"
       animate="show"
-      className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-red-100 overflow-y-scroll overflow-x-visible h-148"
+      className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-red-100 max-h-[600px] overflow-y-auto"
     >
       <motion.div
         variants={item}
-        className="flex items-center justify-between mb-6 "
+        className="flex items-center justify-between mb-6"
       >
         <h3 className="text-2xl font-bold text-gray-800 flex items-center">
           <Heart className="w-7 h-7 mr-3 text-red-600" /> Donation Timeline
@@ -506,6 +897,18 @@ const DonorDashboard = () => {
                     </span>
                   </div>
                 </div>
+
+                {/* Track Journey Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleTrackDonation(d)}
+                  className="mt-4 w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 rounded-lg font-semibold flex items-center justify-center gap-2 hover:from-blue-600 hover:to-blue-700 transition"
+                >
+                  <Navigation className="w-4 h-4" />
+                  Track Journey
+                </motion.button>
+
                 {d.txHash && (
                   <motion.a
                     whileHover={{ x: 5 }}
@@ -547,42 +950,6 @@ const DonorDashboard = () => {
         isLoading={isLoading}
         onSubmit={handleScheduleDonation}
       />
-    </motion.div>
-  );
-
-  const renderQuickDonate = () => (
-    <motion.div
-      variants={item}
-      className="bg-gradient-to-r from-red-600 to-pink-600 rounded-3xl p-8 shadow-2xl"
-    >
-      <h3 className="text-3xl font-bold text-white mb-6 text-center">
-        Quick Donate Now
-      </h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-        {["O+", "A+", "B+", "AB+"].map((bt) => (
-          <motion.div
-            key={bt}
-            whileHover={{ scale: 1.15, rotateY: 180 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleDonate(bt, 1)}
-            className="relative preserve-3d cursor-pointer h-32"
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            <div className="absolute inset-0 backface-hidden bg-white/20 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center justify-center text-white font-bold shadow-lg">
-              <Droplets className="w-12 h-12 mb-2" />
-              <span className="text-2xl">{bt}</span>
-            </div>
-            <div className="absolute inset-0 rotate-y-180 backface-hidden bg-gradient-to-br from-red-700 to-pink-700 rounded-2xl p-6 flex items-center justify-center">
-              <motion.div
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ duration: 0.6, repeat: Infinity }}
-              >
-                <Droplets className="w-16 h-16 text-white" />
-              </motion.div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
     </motion.div>
   );
 
@@ -712,8 +1079,6 @@ const DonorDashboard = () => {
           </motion.div>
         ))}
       </div>
-
-      {renderQuickDonate()}
 
       <div className="grid lg:grid-cols-2 gap-8">
         {renderDonationHistory()}
@@ -909,6 +1274,7 @@ const DonorDashboard = () => {
             data={educationalContent.bloodTypeData}
             options={{
               responsive: true,
+              maintainAspectRatio: false,
               plugins: { legend: { position: "top" } },
               scales: { y: { beginAtZero: true } },
             }}
@@ -1133,6 +1499,8 @@ const DonorDashboard = () => {
       ? renderLiveMap()
       : activeTab === "leaderboard"
       ? renderLeaderboard()
+      : activeTab === "tracker"
+      ? renderDonationTracker()
       : renderDashboard();
   };
 
@@ -1158,7 +1526,7 @@ const DonorDashboard = () => {
         connectedWallet={isConnected}
         isLoading={web3Loading}
         user={userData}
-        extraTabs={["map", "leaderboard"]} // Pass to Header
+        extraTabs={["tracker", "map", "leaderboard"]}
       />
 
       <NotificationMessage

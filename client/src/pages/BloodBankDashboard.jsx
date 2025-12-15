@@ -40,12 +40,9 @@ import {
   User,
   Settings,
   LogOut,
+  Hash,
 } from "lucide-react";
 import Header from "../components/Header";
-import BloodDroplet from "../components/BloodDroplet";
-import NotificationMessage from "../components/NotificationMessage";
-import MetricCard from "../components/MetricCard";
-import Table from "../components/Table";
 import { useWeb3 } from "../contexts/Web3Context";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -222,6 +219,8 @@ const BloodBankDashboard = () => {
       const requestsData = await requestsRes.json();
       const transactionsData = await transactionsRes.json();
 
+      console.log("📥 Transactions API Response:", transactionsData);
+
       if (!donorsRes.ok)
         throw new Error(donorsData.error || "Failed to fetch donors");
       if (!inventoryRes.ok)
@@ -255,21 +254,36 @@ const BloodBankDashboard = () => {
         })) || []
       );
 
-      // ✅ Set real blockchain transactions
+      // ✅ Set real blockchain transactions - Check multiple possible field names
       setTransactions(
-        transactionsData.transactions?.map((tx) => ({
-          _id: tx._id,
-          txHash: tx.txHash || "N/A",
-          type: tx.type,
-          bloodType: tx.bloodType,
-          quantity: tx.quantity,
-          status: tx.status,
-          timestamp: tx.timestamp,
-          donorName: tx.donorId
-            ? `${tx.donorId.firstName} ${tx.donorId.lastName}`
-            : "N/A",
-          hospitalName: tx.hospitalId?.hospitalInfo?.name || "N/A",
-        })) || []
+        transactionsData.transactions?.map((tx) => {
+          console.log("📦 Transaction Object:", tx);
+          return {
+            _id: tx._id,
+            // Check multiple possible hash field names
+            txHash:
+              tx.txHash ||
+              tx.transactionHash ||
+              tx.hash ||
+              tx.blockHash ||
+              tx.receipt?.transactionHash ||
+              "N/A",
+            blockNumber: tx.blockNumber || tx.receipt?.blockNumber || null,
+            type: tx.type || "Donation",
+            bloodType: tx.bloodType,
+            quantity: tx.quantity || tx.units || 1,
+            status: tx.status || "Confirmed",
+            timestamp: tx.timestamp || tx.createdAt,
+            donorName: tx.donorId
+              ? `${tx.donorId.firstName || ""} ${
+                  tx.donorId.lastName || ""
+                }`.trim()
+              : "N/A",
+            hospitalName: tx.hospitalId?.hospitalInfo?.name || "N/A",
+            fromAddress: tx.fromAddress || tx.from || null,
+            toAddress: tx.toAddress || tx.to || null,
+          };
+        }) || []
       );
     } catch (err) {
       console.error("❌ Fetch blood bank data error:", err);
@@ -299,11 +313,12 @@ const BloodBankDashboard = () => {
     }
   };
 
-  // Copy wallet address
-  const copyAddress = () => {
-    if (account) {
-      navigator.clipboard.writeText(account);
+  // Copy wallet address or transaction hash
+  const copyToClipboard = (text, type = "address") => {
+    if (text) {
+      navigator.clipboard.writeText(text);
       setCopied(true);
+      setSuccess(`✅ ${type} copied to clipboard!`);
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -312,13 +327,11 @@ const BloodBankDashboard = () => {
   const handleRecordDonation = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!donationRecord.donorId) {
       setError("Please select a donor");
       return;
     }
 
-    // ✅ Check if selected blood type matches donor's blood type
     if (
       selectedDonor &&
       donationRecord.bloodType !== selectedDonor.donorInfo?.bloodGroup
@@ -369,8 +382,9 @@ const BloodBankDashboard = () => {
         throw new Error(data.error || "Failed to record donation");
       }
 
+      const txHashDisplay = data.txHash || data.transactionHash || data.hash;
       setSuccess(
-        `✅ Donation recorded! Tx: ${data.txHash?.substring(0, 10)}...`
+        `✅ Donation recorded! Tx: ${txHashDisplay?.substring(0, 10)}...`
       );
       setDonationRecord({ donorId: "", bloodType: "", units: 1 });
       setSelectedDonor(null);
@@ -415,8 +429,6 @@ const BloodBankDashboard = () => {
       }
 
       setSuccess(`✅ Request ${action.toLowerCase()} successfully!`);
-
-      // Refresh data
       await fetchBloodBankData(localStorage.getItem("token"));
     } catch (err) {
       console.error("❌ Request action error:", err);
@@ -533,9 +545,16 @@ const BloodBankDashboard = () => {
     }
   };
 
+  // Truncate hash for display
+  const truncateHash = (hash) => {
+    if (!hash || hash === "N/A") return "N/A";
+    if (hash.length <= 16) return hash;
+    return `${hash.substring(0, 8)}...${hash.substring(hash.length - 6)}`;
+  };
+
   // ============ RENDER DASHBOARD ============
   const renderDashboard = () => (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div
@@ -653,7 +672,7 @@ const BloodBankDashboard = () => {
             </div>
           </div>
           <button
-            onClick={copyAddress}
+            onClick={() => copyToClipboard(account, "Wallet address")}
             className="text-green-700 hover:text-green-900 p-3 hover:bg-green-100 rounded-lg transition"
           >
             {copied ? (
@@ -955,7 +974,7 @@ const BloodBankDashboard = () => {
 
   // ============ RENDER INVENTORY ============
   const renderInventory = () => (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1046,7 +1065,7 @@ const BloodBankDashboard = () => {
     });
 
     return (
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1138,6 +1157,14 @@ const BloodBankDashboard = () => {
             </div>
           </div>
 
+          {/* Debug Info - Remove in production */}
+          {transactions.length > 0 && (
+            <div className="mb-4 p-4 bg-gray-100 rounded-lg text-xs font-mono overflow-auto">
+              <p className="font-bold mb-2">Debug: First Transaction Object</p>
+              <pre>{JSON.stringify(transactions[0], null, 2)}</pre>
+            </div>
+          )}
+
           {/* Transactions Table */}
           {filteredTransactions.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
@@ -1159,7 +1186,10 @@ const BloodBankDashboard = () => {
                 <thead className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2 border-blue-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">
-                      Transaction Hash
+                      <div className="flex items-center gap-2">
+                        <Hash className="w-4 h-4" />
+                        Transaction Hash
+                      </div>
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">
                       Type
@@ -1179,6 +1209,9 @@ const BloodBankDashboard = () => {
                     <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">
                       Status
                     </th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1192,20 +1225,38 @@ const BloodBankDashboard = () => {
                     >
                       <td className="px-6 py-4">
                         {tx.txHash && tx.txHash !== "N/A" ? (
-                          <a
-                            href={`https://etherscan.io/tx/${tx.txHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-mono text-sm font-medium"
-                          >
-                            {tx.txHash.substring(0, 10)}...
-                            {tx.txHash.substring(tx.txHash.length - 6)}
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm text-blue-600 font-medium">
+                              {truncateHash(tx.txHash)}
+                            </span>
+                            <button
+                              onClick={() =>
+                                copyToClipboard(tx.txHash, "Transaction hash")
+                              }
+                              className="p-1 hover:bg-blue-100 rounded transition"
+                              title="Copy full hash"
+                            >
+                              <Copy className="w-3 h-3 text-gray-400 hover:text-blue-600" />
+                            </button>
+                            <a
+                              href={`https://etherscan.io/tx/${tx.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 hover:bg-blue-100 rounded transition"
+                              title="View on Etherscan"
+                            >
+                              <ExternalLink className="w-3 h-3 text-gray-400 hover:text-blue-600" />
+                            </a>
+                          </div>
                         ) : (
-                          <span className="text-gray-400 font-mono text-sm">
-                            N/A
+                          <span className="text-gray-400 font-mono text-sm italic">
+                            No hash available
                           </span>
+                        )}
+                        {tx.blockNumber && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Block #{tx.blockNumber}
+                          </p>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -1262,6 +1313,21 @@ const BloodBankDashboard = () => {
                           {tx.status}
                         </span>
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {tx.txHash && tx.txHash !== "N/A" && (
+                            <button
+                              onClick={() =>
+                                copyToClipboard(tx.txHash, "Transaction hash")
+                              }
+                              className="p-2 bg-gray-100 hover:bg-blue-100 rounded-lg transition"
+                              title="Copy hash"
+                            >
+                              <Copy className="w-4 h-4 text-gray-600" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </motion.tr>
                   ))}
                 </tbody>
@@ -1314,7 +1380,7 @@ const BloodBankDashboard = () => {
 
   // ============ RENDER PROFILE ============
   const renderProfile = () => (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Profile Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -1701,7 +1767,7 @@ const BloodBankDashboard = () => {
                 </div>
               </div>
               <button
-                onClick={copyAddress}
+                onClick={() => copyToClipboard(account, "Wallet address")}
                 className="p-3 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition"
               >
                 {copied ? (
@@ -1812,14 +1878,6 @@ const BloodBankDashboard = () => {
     </div>
   );
 
-  // ============ TAB CONFIGURATION ============
-  const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: Activity },
-    { id: "inventory", label: "Inventory", icon: Droplets },
-    { id: "transactions", label: "Transactions", icon: Database },
-    { id: "profile", label: "Profile", icon: User },
-  ];
-
   // ============ MAIN RENDER ============
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50 to-pink-50">
@@ -1849,8 +1907,17 @@ const BloodBankDashboard = () => {
         ))}
       </div>
 
-      {/* Header */}
-      <Header userType={userType} notifications={notifications} />
+      {/* Header - Use Header component with tab switching */}
+      <Header
+        userType={userType}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        notifications={notifications}
+        connectWallet={handleConnectWallet}
+        connectedWallet={isConnected ? account : null}
+        isLoading={walletLoading}
+        user={userData}
+      />
 
       {/* Notification Messages */}
       <AnimatePresence>
@@ -1859,7 +1926,7 @@ const BloodBankDashboard = () => {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50"
+            className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50"
           >
             <div className="bg-red-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3">
               <AlertCircle className="w-6 h-6" />
@@ -1878,7 +1945,7 @@ const BloodBankDashboard = () => {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50"
+            className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50"
           >
             <div className="bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3">
               <CheckCircle className="w-6 h-6" />
@@ -1905,34 +1972,8 @@ const BloodBankDashboard = () => {
         </div>
       )}
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 relative z-10">
-        {/* Tab Navigation */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-xl p-2 mb-8 border-2 border-gray-100"
-        >
-          <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => (
-              <motion.button
-                key={tab.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-                  activeTab === tab.id
-                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                <tab.icon className="w-5 h-5" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
+      {/* Main Content - NO DUPLICATE TAB NAVIGATION */}
+      <main className="max-w-7xl mx-auto px-4 py-8 relative z-10">
         {/* Tab Content */}
         <AnimatePresence mode="wait">
           <motion.div
